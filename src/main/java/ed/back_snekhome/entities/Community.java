@@ -8,7 +8,7 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@Table(name = "communities", uniqueConstraints = @UniqueConstraint(columnNames = {"id_name"} ) )
+@Table(name = "communities", uniqueConstraints = @UniqueConstraint(columnNames = {"groupname"} ) )
 @NoArgsConstructor
 @Getter
 @Setter
@@ -21,7 +21,7 @@ public class Community {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idCommunity;
 
-    private String idName;
+    private String groupname; //id
     private String name;
 
 
