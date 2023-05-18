@@ -21,15 +21,15 @@ public class CommunityRole {
     private Community community;
 
     private String title;
-    private String bannerColor;
+    private String bannerColor; //HEX
 
 
     //moderation permissions:
     private boolean editId;
-    private boolean banCitizen; //if democracy
     private boolean editDescription; //image,
     private boolean deletePosts;
     private boolean banUser;
+    private boolean banCitizen; //if democracy
 
     //other permissions
     private boolean makePosts;
