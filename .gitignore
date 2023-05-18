@@ -19,6 +19,7 @@ target/
 *.iml
 *.ipr
 src/main/resources/application.properties
+imageStorage/
 
 ### NetBeans ###
 /nbproject/private/
@@ -32,3 +33,4 @@ build/
 
 ### VS Code ###
 .vscode/
+
