@@ -1,4 +1,4 @@
-package ed.back_snekhome.dto;
+package ed.back_snekhome.dto.communityDTOs;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,9 +7,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class LoginDto {
+public class NewCommunityDto {
 
-    private String login;
-    private String password;
+
 
 }

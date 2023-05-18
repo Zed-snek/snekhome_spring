@@ -1,5 +1,4 @@
-package ed.back_snekhome.dto;
-
+package ed.back_snekhome.dto.userDTOs;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,9 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ChangePasswordDto {
+public class LoginDto {
 
-    private String oldPass;
-    private String newPass;
+    private String login;
+    private String password;
 
 }

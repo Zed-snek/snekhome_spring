@@ -1,6 +1,6 @@
 package ed.back_snekhome.services;
 
-import ed.back_snekhome.dto.*;
+import ed.back_snekhome.dto.userDTOs.*;
 import ed.back_snekhome.email.ConfirmationToken;
 import ed.back_snekhome.email.ConfirmationTokenService;
 import ed.back_snekhome.email.ConfirmationType;

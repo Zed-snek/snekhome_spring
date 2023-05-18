@@ -10,10 +10,9 @@ import lombok.Setter;
 @NoArgsConstructor
 public class OwnSuccessResponse {
 
-    private int status = 200;
+    private final int status = 200;
     private String message;
     private long timestamp;
-
 
     public OwnSuccessResponse(String message) {
         this.message = message;

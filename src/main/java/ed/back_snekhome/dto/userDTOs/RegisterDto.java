@@ -1,19 +1,18 @@
-package ed.back_snekhome.dto;
-
+package ed.back_snekhome.dto.userDTOs;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter
 @Getter
+@Setter
 @AllArgsConstructor
-public class UserUpdateDto {
+public class RegisterDto {
 
-    private String email;
     private String name;
     private String surname;
     private String nickname;
-    private String nicknameColor;
+    private String email;
+    private String password;
 
 }

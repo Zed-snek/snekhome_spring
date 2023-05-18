@@ -1,7 +1,6 @@
 package ed.back_snekhome.controllers;
 
-import ed.back_snekhome.dto.*;
-import ed.back_snekhome.email.ConfirmationToken;
+import ed.back_snekhome.dto.userDTOs.*;
 import ed.back_snekhome.email.ConfirmationTokenService;
 import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.response.OwnSuccessResponse;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Map;
 
 
 @RestController
