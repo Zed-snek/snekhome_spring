@@ -24,7 +24,7 @@ public class InfoTag {
 
     private String title;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     private String text;
 
 

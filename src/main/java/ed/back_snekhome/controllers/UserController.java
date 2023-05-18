@@ -2,7 +2,6 @@ package ed.back_snekhome.controllers;
 
 import ed.back_snekhome.dto.UserPrivateDto;
 import ed.back_snekhome.dto.UserPublicDto;
-import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

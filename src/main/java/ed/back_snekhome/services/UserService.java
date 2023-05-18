@@ -18,17 +18,14 @@ import ed.back_snekhome.security.JwtService;
 import ed.back_snekhome.security.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 
 
 @Service
@@ -129,7 +126,7 @@ public class UserService {
 
     private void changeEmailActionConfirmation(ConfirmationToken token) { //confirms action "change email"
         var account = getUserById(token.getIdUser());
-        throwErrIfTokenExpired(token, "Confirmation token is expired");
+        throwErrIfTokenExpired(token);
 
         var newToken = new ConfirmationToken(
                 account.getIdAccount(),
@@ -148,7 +145,7 @@ public class UserService {
 
     private void changeEmailLastConfirmation(ConfirmationToken token) { //new email confirmation
         var account = getUserById(token.getIdUser());
-        throwErrIfTokenExpired(token, "Confirmation token is expired");
+        throwErrIfTokenExpired(token);
 
         account.setEmail(token.getMessage());
         userRepository.save(account);
@@ -224,9 +221,9 @@ public class UserService {
             throw new UserAlreadyExistsException("User with email: " + email + " exists");
         }
     }
-    private void throwErrIfTokenExpired(ConfirmationToken token, String message) {
+    private void throwErrIfTokenExpired(ConfirmationToken token) {
         if ( !token.isNotExpired() ) {
-            throw new TokenExpiredException(message);
+            throw new TokenExpiredException("Confirmation token is expired");
         }
     }
 
