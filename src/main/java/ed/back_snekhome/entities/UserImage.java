@@ -19,7 +19,7 @@ public class UserImage {
 
     private String name;
 
-    @ManyToOne(optional = false, cascade = CascadeType.ALL) //CascadeType.ALL = removes all images if user is removed
+    @ManyToOne(cascade = CascadeType.ALL) //CascadeType.ALL = removes all images if user is removed
     @JoinColumn(name = "id_account")
     private UserEntity user;
 

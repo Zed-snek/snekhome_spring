@@ -1,6 +1,6 @@
 package ed.back_snekhome.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ed.back_snekhome.security.Role;
 import jakarta.persistence.*;
 import lombok.*;

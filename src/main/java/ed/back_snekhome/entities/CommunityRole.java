@@ -26,7 +26,7 @@ public class CommunityRole {
 
     //moderation permissions:
     private boolean editId;
-    private boolean editDescription; //image,
+    private boolean editDescription; //image, name, description
     private boolean deletePosts;
     private boolean banUser;
     private boolean banCitizen; //if democracy
@@ -35,7 +35,7 @@ public class CommunityRole {
     private boolean makePosts;
     private boolean inviteUsers; //for closed communities only
 
-    //for democracy communities: vote and becoming president
-    private boolean isCitizen;
+
+    private boolean isCitizen; //for democracy communities: vote and becoming president
 
 }

@@ -19,6 +19,7 @@ target/
 *.iml
 *.ipr
 src/main/resources/application.properties
+src/main/java/ed.back_snekhome/controllers/TestController
 imageStorage/
 
 ### NetBeans ###

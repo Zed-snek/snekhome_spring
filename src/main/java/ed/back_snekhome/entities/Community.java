@@ -28,6 +28,10 @@ public class Community {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @OneToMany(mappedBy = "community", fetch = FetchType.LAZY) //LAZY = loads only when is required. EAGER = loads all elements
+    private List<CommunityImage> images;
+    
+
     @Enumerated(EnumType.STRING)
     private CommunityType type;
 
@@ -39,11 +43,13 @@ public class Community {
     @OneToMany(mappedBy = "community", fetch = FetchType.EAGER)
     private List<CommunityRole> roles;
 
-    private boolean isAnonymous; //allows or disallows to make anonymous posts in community
+    private boolean anonAllowed; //allows or disallows to make anonymous posts in community
     private boolean isClosed; //community is closed, only users can invite
 
-    //CommunityRoles<>;
 
-
+    //for democracy, citizen requirements:
+    @OneToOne(mappedBy = "community", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private CommunityCitizenParameters citizenParameters;
 
 }

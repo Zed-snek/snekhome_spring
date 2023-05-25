@@ -21,7 +21,6 @@ public class UserManagementController {
 
 
     private final UserService userService;
-    private final ConfirmationTokenService confirmationTokenService;
 
 
     @PostMapping("/user/login")
