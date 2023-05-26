@@ -22,6 +22,7 @@ public class CommunityRole {
 
     private String title;
     private String bannerColor; //HEX
+    private String textColor; //HEX || "black"/"blue"/.. from CSS
 
 
     //moderation permissions:
@@ -33,8 +34,6 @@ public class CommunityRole {
 
     //other permissions
     private boolean makePosts;
-    private boolean inviteUsers; //for closed communities only
-
 
     private boolean isCitizen; //for democracy communities: vote and becoming president
 

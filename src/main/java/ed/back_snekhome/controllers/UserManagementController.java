@@ -1,7 +1,6 @@
 package ed.back_snekhome.controllers;
 
 import ed.back_snekhome.dto.userDTOs.*;
-import ed.back_snekhome.email.ConfirmationTokenService;
 import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.UserService;

@@ -2,12 +2,10 @@ package ed.back_snekhome.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
+@Builder
 @Getter
 @Setter
 @Table(name = "citizen_parameters")
@@ -30,5 +28,7 @@ public class CommunityCitizenParameters {
 
     private int days;
     private int rating;
+
+    private int electionDays;
 
 }

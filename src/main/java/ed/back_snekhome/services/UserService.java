@@ -9,6 +9,7 @@ import ed.back_snekhome.entities.InfoTag;
 import ed.back_snekhome.entities.UserEntity;
 import ed.back_snekhome.entities.UserImage;
 import ed.back_snekhome.exceptionHandler.exceptions.*;
+import ed.back_snekhome.repositories.CommunityRepository;
 import ed.back_snekhome.repositories.InfoTagRepository;
 import ed.back_snekhome.repositories.UserImageRepository;
 import ed.back_snekhome.repositories.UserRepository;
@@ -42,6 +43,7 @@ public class UserService {
     private final InfoTagRepository infoTagRepository;
     private final FileService fileService;
     private final UserImageRepository userImageRepository;
+    private final CommunityRepository communityRepository;
 
 
     public AuthenticationResponse loginUser(LoginDto loginDto) {
@@ -201,7 +203,7 @@ public class UserService {
         return userRepository.findByNickname(nickname)
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
-    private UserEntity getCurrentUser() {
+    public UserEntity getCurrentUser() {
         return userRepository.findByEmail( SecurityContextHolder.getContext().getAuthentication().getName() )
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
@@ -211,9 +213,9 @@ public class UserService {
         else
             throw new UnauthorizedException("Entity is not belonged to authorized user");
     }
-    private void throwErrIfExistsByNickname(String nickname) {
-        if ( userRepository.existsByNickname(nickname) ) {
-            throw new UserAlreadyExistsException("Name: " + nickname + " is already taken"); /*|| communitiesRepository.existsByNickname(registerDto.getNickname())*/
+    public void throwErrIfExistsByNickname(String nickname) {
+        if ( userRepository.existsByNickname(nickname) || communityRepository.existsByGroupname(nickname) ) {
+            throw new UserAlreadyExistsException("Name: " + nickname + " is already taken");
         }
     }
     private void throwErrIfExistsByEmail(String email) {

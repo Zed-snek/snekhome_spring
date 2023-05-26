@@ -45,6 +45,7 @@ public class Community {
 
     private boolean anonAllowed; //allows or disallows to make anonymous posts in community
     private boolean isClosed; //community is closed, only users can invite
+    private boolean isInviteUsers; //for closed communities, sets if anyone can invite users, otherwise will be able only the ranked ones
 
 
     //for democracy, citizen requirements:

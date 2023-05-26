@@ -22,5 +22,10 @@ public class NewCommunityDto {
     //for democracy only, to make citizen rank
     private String title;
     private String bannerColor;
+    private String textColor;
+    private int citizenDays;
+    private int citizenRating;
+    private int electionDays;
 
 }
+
