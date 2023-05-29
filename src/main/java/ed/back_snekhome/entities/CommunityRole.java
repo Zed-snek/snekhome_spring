@@ -1,6 +1,7 @@
 package ed.back_snekhome.entities;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,6 +19,7 @@ public class CommunityRole {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_community")
+    @JsonIgnore
     private Community community;
 
     private String title;
@@ -32,8 +34,7 @@ public class CommunityRole {
     private boolean banUser;
     private boolean banCitizen; //if democracy
 
-    //other permissions
-    private boolean makePosts;
+
 
     private boolean isCitizen; //for democracy communities: vote and becoming president
 

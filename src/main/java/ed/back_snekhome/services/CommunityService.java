@@ -1,16 +1,19 @@
 package ed.back_snekhome.services;
 
 import ed.back_snekhome.dto.communityDTOs.NewCommunityDto;
-import ed.back_snekhome.entities.Community;
-import ed.back_snekhome.entities.CommunityCitizenParameters;
-import ed.back_snekhome.entities.CommunityRole;
+import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
+import ed.back_snekhome.entities.*;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.repositories.CitizenParametersRepository;
 import ed.back_snekhome.repositories.CommunityRepository;
 import ed.back_snekhome.repositories.CommunityRoleRepository;
+import ed.back_snekhome.utils.ListFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class CommunityService {
                 .isClosed( dto.isClosed() )
                 .isInviteUsers( dto.isInviteUsers() )
                 .owner( userService.getCurrentUser() )
+                .creation( LocalDate.now() )
                 .build();
 
 
@@ -49,7 +53,6 @@ public class CommunityService {
                     .title( dto.getTitle() )
                     .bannerColor( dto.getBannerColor() )
                     .textColor( dto.getTextColor() )
-                    .makePosts( true )
                     .isCitizen( true )
                     .community( community )
                     .build();
@@ -70,6 +73,26 @@ public class CommunityService {
         userService.throwErrIfExistsByNickname(name);
 
         return true;
+    }
+
+    public PublicCommunityDto getPublicCommunityDto(String name) {
+        var community = communityRepository.findByGroupname(name);
+        var dto = PublicCommunityDto.builder()
+                .community( community )
+                .members( 66 )
+                .ownerNickname( community.getOwner().getNickname() )
+                .ownerImage( ListFunctions.getTopImageOfList(community.getOwner().getImages()) )
+                .build();
+        return dto;
+    }
+
+    private String getTopImageOfCommunity(List<CommunityImage> images) {
+        if (images.size() == 0) {
+            return "";
+        }
+        else {
+            return  images.get( images.size() - 1 ).getName();
+        }
     }
 
 }

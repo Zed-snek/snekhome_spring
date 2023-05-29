@@ -17,6 +17,7 @@ import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.security.JwtService;
 import ed.back_snekhome.security.Role;
+import ed.back_snekhome.utils.ListFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -269,7 +270,7 @@ public class UserService {
         var currentUser = getCurrentUser();
 
         return UserPublicDto.builder()
-                .image( getTopImageOfUser(currentUser.getImages()) )
+                .image( ListFunctions.getTopImageOfList(currentUser.getImages()) )
                 .nickname( currentUser.getNickname() )
                 .nicknameColor( currentUser.getNicknameColor() )
                 .build();
@@ -282,7 +283,7 @@ public class UserService {
         var user = getUserByNickname(nickname);
 
         return UserPublicDto.builder()
-                .image( getTopImageOfUser(user.getImages()) )
+                .image( ListFunctions.getTopImageOfList(user.getImages()) )
                 .nickname( user.getNickname() )
                 .nicknameColor( user.getNicknameColor() )
                 .name( user.getName() )
@@ -303,16 +304,6 @@ public class UserService {
                 .surname( currentUser.getSurname() )
                 .tags( currentUser.getTags() )
                 .build();
-    }
-
-
-    private String getTopImageOfUser(List<UserImage> images) {
-        if (images.size() == 0) {
-            return "";
-        }
-        else {
-            return  images.get( images.size() - 1 ).getName();
-        }
     }
 
     public void newTag(TagDto tagDto) {

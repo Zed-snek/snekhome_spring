@@ -1,6 +1,7 @@
 package ed.back_snekhome.entities;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.security.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,9 +24,7 @@ import java.util.List;
 public class UserEntity implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idAccount;
-
 
     private String password;
     private String name;

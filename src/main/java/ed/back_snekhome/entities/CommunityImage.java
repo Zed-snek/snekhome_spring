@@ -1,6 +1,8 @@
 package ed.back_snekhome.entities;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import ed.back_snekhome.entities.helpful.Image;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,7 +13,7 @@ import lombok.*;
 @Setter
 @Builder
 @AllArgsConstructor
-public class CommunityImage {
+public class CommunityImage extends Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +23,7 @@ public class CommunityImage {
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_community")
+    @JsonIgnore
     private Community community;
 
 }

@@ -1,6 +1,7 @@
 package ed.back_snekhome.entities;
 
 
+import ed.back_snekhome.entities.helpful.Image;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,7 +12,7 @@ import lombok.*;
 @Setter
 @Builder
 @AllArgsConstructor
-public class UserImage {
+public class UserImage extends Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
