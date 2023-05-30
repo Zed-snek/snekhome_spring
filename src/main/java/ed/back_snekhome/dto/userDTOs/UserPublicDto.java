@@ -1,6 +1,7 @@
 package ed.back_snekhome.dto.userDTOs;
 
 import ed.back_snekhome.entities.InfoTag;
+import ed.back_snekhome.enums.FriendshipType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,5 +24,7 @@ public class UserPublicDto {
     private int communities;
 
     private List<InfoTag> tags;
+
+    private FriendshipType friendshipType;
 
 }

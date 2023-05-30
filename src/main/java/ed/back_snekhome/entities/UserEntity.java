@@ -2,6 +2,7 @@ package ed.back_snekhome.entities;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ed.back_snekhome.entities.relations.Friendship;
 import ed.back_snekhome.security.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,10 +44,8 @@ public class UserEntity implements UserDetails {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY) //LAZY = loads only when is required. EAGER = loads all elements
     private List<UserImage> images;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<InfoTag> tags;
-
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

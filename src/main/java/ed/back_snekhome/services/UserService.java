@@ -8,11 +8,9 @@ import ed.back_snekhome.email.EmailSendService;
 import ed.back_snekhome.entities.InfoTag;
 import ed.back_snekhome.entities.UserEntity;
 import ed.back_snekhome.entities.UserImage;
+import ed.back_snekhome.enums.FriendshipType;
 import ed.back_snekhome.exceptionHandler.exceptions.*;
-import ed.back_snekhome.repositories.CommunityRepository;
-import ed.back_snekhome.repositories.InfoTagRepository;
-import ed.back_snekhome.repositories.UserImageRepository;
-import ed.back_snekhome.repositories.UserRepository;
+import ed.back_snekhome.repositories.*;
 import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.security.JwtService;
@@ -27,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 
 
 @Service
@@ -45,6 +42,7 @@ public class UserService {
     private final FileService fileService;
     private final UserImageRepository userImageRepository;
     private final CommunityRepository communityRepository;
+    private final FriendshipRepository friendshipRepository;
 
 
     public AuthenticationResponse loginUser(LoginDto loginDto) {
@@ -208,6 +206,10 @@ public class UserService {
         return userRepository.findByEmail( SecurityContextHolder.getContext().getAuthentication().getName() )
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
+    public boolean isContextUser() {
+        String s = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toArray()[0].toString();
+        return !s.equals("ROLE_ANONYMOUS");
+    }
     public boolean isCurrentUserEqual(UserEntity user2) {
         if (getCurrentUser().equals(user2))
             return true;
@@ -248,7 +250,6 @@ public class UserService {
             user.setNickname(userUpdateDto.getNickname());
         }
 
-
         userRepository.save(user);
     }
 
@@ -261,7 +262,7 @@ public class UserService {
                 .build();
         userImageRepository.save(userImage);
 
-        return new OwnSuccessResponse( newName ); //returns new name of uploaded file
+        return new OwnSuccessResponse(newName); //returns new name of uploaded file
     }
 
 
@@ -276,22 +277,51 @@ public class UserService {
                 .build();
     }
 
-
+    private int countFriends(Long id) {
+        int friends = 0;
+        friends += friendshipRepository.countAllByIdFirstUserAndIsFirstUserAndIsSecondUser(id, true, true);
+        friends += friendshipRepository.countAllByIdSecondUserAndIsFirstUserAndIsSecondUser(id, true, true);
+        return friends;
+    }
 
     public UserPublicDto getUserInfo(String nickname) {
 
         var user = getUserByNickname(nickname);
 
-        return UserPublicDto.builder()
+        var dto = UserPublicDto.builder()
                 .image( ListFunctions.getTopImageOfList(user.getImages()) )
                 .nickname( user.getNickname() )
                 .nicknameColor( user.getNicknameColor() )
                 .name( user.getName() )
                 .surname( user.getSurname() )
-                .friends( 56 )
+                .friends( countFriends(user.getIdAccount()) )
                 .communities( 8 )
                 .tags( user.getTags() )
                 .build();
+
+        //Checks the relation between current user and related one: are friends/aren't friends/context user follows related/related follows context user
+        if (isContextUser() && !getCurrentUser().getNickname().equals(nickname)) {
+            var friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(getCurrentUser().getIdAccount(), user.getIdAccount());
+            dto.setFriendshipType(FriendshipType.NOT_FRIENDS);
+            if (friendship.isEmpty()) {
+                friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(user.getIdAccount(), getCurrentUser().getIdAccount());
+            }
+
+            if (friendship.isPresent()) {
+                if (friendship.get().isFirstUser() && friendship.get().isSecondUser()) {
+                    dto.setFriendshipType(FriendshipType.FRIENDS);
+                }
+                else if (friendship.get().getIdFirstUser().equals(getCurrentUser().getIdAccount()) && friendship.get().isFirstUser()
+                        || friendship.get().getIdSecondUser().equals(getCurrentUser().getIdAccount()) && friendship.get().isSecondUser()
+                ) {
+                    dto.setFriendshipType(FriendshipType.CURRENT_FOLLOW);
+                }
+                else {
+                    dto.setFriendshipType(FriendshipType.SECOND_FOLLOW);
+                }
+            }
+        }
+        return dto;
     }
 
 
@@ -306,6 +336,7 @@ public class UserService {
                 .build();
     }
 
+
     public void newTag(TagDto tagDto) {
         var infoTag = InfoTag.builder()
                 .user( getCurrentUser() )
@@ -315,7 +346,6 @@ public class UserService {
 
         infoTagRepository.save(infoTag);
     }
-
     public void updateTag(TagDto tagDto) {
         var tag = infoTagRepository.findById(tagDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
@@ -323,7 +353,6 @@ public class UserService {
         tag.setTitle(tagDto.getTitle());
         infoTagRepository.save(tag);
     }
-
     public void delTag(Long id) {
         var tag = infoTagRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
