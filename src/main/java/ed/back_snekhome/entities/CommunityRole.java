@@ -35,7 +35,6 @@ public class CommunityRole {
     private boolean banCitizen; //if democracy
 
 
-
     private boolean isCitizen; //for democracy communities: vote and becoming president
 
 }

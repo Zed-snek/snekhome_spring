@@ -1,6 +1,10 @@
 package ed.back_snekhome.services;
 
+import ed.back_snekhome.entities.Community;
+import ed.back_snekhome.entities.UserEntity;
 import ed.back_snekhome.entities.relations.Friendship;
+import ed.back_snekhome.entities.relations.Membership;
+import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.repositories.FriendshipRepository;
 import ed.back_snekhome.repositories.MembershipRepository;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +52,22 @@ public class RelationsService {
                 .idFirstUser(firstUser)
                 .idSecondUser(secondUser)
                 .build());
+    }
+
+    public Membership getMembership(UserEntity user, Community community) {
+        return membershipRepository.findByCommunityAndUser(community, user).orElseThrow(() -> new EntityNotFoundException("User is not a member"));
+    }
+
+    public void joinCommunity(String groupname) {
+        var membership = Membership.builder()
+                .user( userService.getCurrentUser() )
+                .community( communityService.getCommunityByName(groupname) )
+                .build();
+        membershipRepository.save(membership);
+    }
+    public void leaveCommunity(String groupname) {
+        var membership = getMembership(userService.getCurrentUser(), communityService.getCommunityByName(groupname));
+        membershipRepository.delete(membership);
     }
 
 

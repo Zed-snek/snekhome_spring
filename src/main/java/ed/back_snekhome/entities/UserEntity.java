@@ -41,10 +41,10 @@ public class UserEntity implements UserDetails {
 
     private boolean enabled; //used in UserDetails service
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY) //LAZY = loads only when is required. EAGER = loads all elements
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL) //LAZY = loads only when is required. EAGER = loads all elements
     private List<UserImage> images;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<InfoTag> tags;
 
     @Override

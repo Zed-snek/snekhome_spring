@@ -17,7 +17,7 @@ public class InfoTag {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idTag;
 
-    @ManyToOne(optional = false, cascade = CascadeType.ALL)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "id_account")
     @JsonIgnore
     private UserEntity user;

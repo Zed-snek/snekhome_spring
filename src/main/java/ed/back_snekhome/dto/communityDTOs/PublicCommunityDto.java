@@ -11,9 +11,11 @@ import lombok.Setter;
 public class PublicCommunityDto {
 
     private Community community;
+    private boolean isMember;
     private int members;
 
     private String ownerNickname;
     private String ownerImage;
+
 
 }

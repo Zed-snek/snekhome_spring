@@ -341,7 +341,7 @@ public class UserService {
         var infoTag = InfoTag.builder()
                 .user( getCurrentUser() )
                 .title( tagDto.getTitle() )
-                .text(tagDto.getText() )
+                .text( tagDto.getText() )
                 .build();
 
         infoTagRepository.save(infoTag);
@@ -357,7 +357,7 @@ public class UserService {
         var tag = infoTagRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
 
-        if ( isCurrentUserEqual(tag.getUser()) ) {
+        if (isCurrentUserEqual(tag.getUser())) {
             infoTagRepository.delete(tag);
         }
     }

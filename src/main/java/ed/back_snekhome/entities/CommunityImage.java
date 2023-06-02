@@ -21,7 +21,7 @@ public class CommunityImage extends Image {
 
     private String name;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_community")
     @JsonIgnore
     private Community community;

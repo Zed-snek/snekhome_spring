@@ -30,7 +30,7 @@ public class Community {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @OneToMany(mappedBy = "community", fetch = FetchType.LAZY) //LAZY = loads only when is required. EAGER = loads all elements
+    @OneToMany(mappedBy = "community", fetch = FetchType.LAZY, cascade = CascadeType.ALL) //LAZY = loads only when is required. EAGER = loads all elements
     private List<CommunityImage> images;
 
     private LocalDate creation;
