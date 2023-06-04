@@ -43,6 +43,7 @@ public class CommunityController {
         communityService.updateCommunity(dto);
         var response = new OwnSuccessResponse("Community has been updated");
         return new ResponseEntity<>(response, HttpStatus.OK);
+
     }
 
     @DeleteMapping("/auth/community/{name}")
