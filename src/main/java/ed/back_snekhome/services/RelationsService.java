@@ -5,6 +5,7 @@ import ed.back_snekhome.entities.UserEntity;
 import ed.back_snekhome.entities.relations.Friendship;
 import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
+import ed.back_snekhome.repositories.CommunityRoleRepository;
 import ed.back_snekhome.repositories.FriendshipRepository;
 import ed.back_snekhome.repositories.MembershipRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class RelationsService {
     private final CommunityService communityService;
     private final FriendshipRepository friendshipRepository;
     private final MembershipRepository membershipRepository;
+    private final CommunityRoleRepository communityRoleRepository;
 
 
     public void addFriend(String nickname) {
@@ -59,10 +61,14 @@ public class RelationsService {
     }
 
     public void joinCommunity(String groupname) {
+        var current = userService.getCurrentUser();
+        var community = communityService.getCommunityByName(groupname);
         var membership = Membership.builder()
-                .user( userService.getCurrentUser() )
-                .community( communityService.getCommunityByName(groupname) )
+                .user( current )
+                .community( community )
                 .build();
+        if (community.getOwner().equals(current))
+            membership.setRole(communityRoleRepository.findTopByCommunityAndIsCreator(community, true).orElse(null));
         membershipRepository.save(membership);
     }
     public void leaveCommunity(String groupname) {

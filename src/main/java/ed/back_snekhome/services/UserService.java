@@ -43,6 +43,7 @@ public class UserService {
     private final UserImageRepository userImageRepository;
     private final CommunityRepository communityRepository;
     private final FriendshipRepository friendshipRepository;
+    private final MembershipRepository membershipRepository;
 
 
     public AuthenticationResponse loginUser(LoginDto loginDto) {
@@ -283,6 +284,11 @@ public class UserService {
         friends += friendshipRepository.countAllByIdSecondUserAndIsFirstUserAndIsSecondUser(id, true, true);
         return friends;
     }
+    private int countCommunities(UserEntity user) {
+        int communities = 0;
+        communities += membershipRepository.countAllByUser(user);
+        return communities;
+    }
 
     public UserPublicDto getUserInfo(String nickname) {
 
@@ -295,7 +301,7 @@ public class UserService {
                 .name( user.getName() )
                 .surname( user.getSurname() )
                 .friends( countFriends(user.getIdAccount()) )
-                .communities( 8 )
+                .communities( countCommunities(user) )
                 .tags( user.getTags() )
                 .build();
 

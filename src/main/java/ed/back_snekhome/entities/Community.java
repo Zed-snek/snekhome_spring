@@ -2,6 +2,7 @@ package ed.back_snekhome.entities;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.enums.CommunityType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,13 +44,16 @@ public class Community {
     @JsonIgnore
     private UserEntity owner;
 
-    @OneToMany(mappedBy = "community", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "community", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<CommunityRole> roles;
 
     private boolean anonAllowed; //allows or disallows to make anonymous posts in community
     private boolean isClosed; //community is closed, only users can invite
     private boolean isInviteUsers; //for closed communities, sets if anyone can invite users, otherwise will be able only the ranked ones
 
+    @OneToMany(mappedBy = "community", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Membership> memberships;
 
     //for democracy, citizen requirements:
     @OneToOne(mappedBy = "community", cascade = CascadeType.ALL)

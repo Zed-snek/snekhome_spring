@@ -9,4 +9,5 @@ public interface CommunityRepository extends JpaRepository<Community, Long> {
 
     boolean existsByGroupname(String groupname);
     Optional<Community> findByGroupname(String groupname);
+
 }

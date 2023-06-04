@@ -2,8 +2,11 @@ package ed.back_snekhome.entities;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ed.back_snekhome.entities.relations.Membership;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @NoArgsConstructor
@@ -15,6 +18,7 @@ public class CommunityRole {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     private Long idRole;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,7 +30,6 @@ public class CommunityRole {
     private String bannerColor; //HEX
     private String textColor; //HEX || "black"/"blue"/.. from CSS
 
-
     //moderation permissions:
     private boolean editId;
     private boolean editDescription; //image, name, description
@@ -34,7 +37,11 @@ public class CommunityRole {
     private boolean banUser;
     private boolean banCitizen; //if democracy
 
-
     private boolean isCitizen; //for democracy communities: vote and becoming president
+    private boolean isCreator;
+
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Membership> memberships;
 
 }

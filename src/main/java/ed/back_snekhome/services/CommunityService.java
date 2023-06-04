@@ -1,11 +1,14 @@
 package ed.back_snekhome.services;
 
 import ed.back_snekhome.dto.communityDTOs.NewCommunityDto;
+import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
+import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
 import ed.back_snekhome.entities.*;
 import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
+import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.CitizenParametersRepository;
 import ed.back_snekhome.repositories.CommunityRepository;
 import ed.back_snekhome.repositories.CommunityRoleRepository;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -50,20 +54,23 @@ public class CommunityService {
         }
         communityRepository.save(community);
 
-
         var membership = Membership.builder()
                 .user(owner)
                 .community(community)
                 .build();
 
-
         CommunityRole ownerRole;
         if (!(dto.getType() == CommunityType.ANARCHY)) {
             String title;
-            if (dto.getType() == CommunityType.DEMOCRACY)
+            boolean isCitizen;
+            if (dto.getType() == CommunityType.DEMOCRACY) {
                 title = "president";
-            else
+                isCitizen = true;
+            }
+            else {
                 title = "owner";
+                isCitizen = false;
+            }
 
             ownerRole = CommunityRole.builder()
                     .title(title)
@@ -75,7 +82,8 @@ public class CommunityService {
                     .editDescription(true)
                     .banUser(true)
                     .editId(true)
-                    .isCitizen(false)
+                    .isCitizen(isCitizen)
+                    .isCreator(true)
                     .build();
         }
         else {
@@ -90,12 +98,12 @@ public class CommunityService {
                     .banUser(false)
                     .editId(false)
                     .isCitizen(false)
+                    .isCreator(true)
                     .build();
         }
         communityRoleRepository.save(ownerRole);
         membership.setRole(ownerRole);
         membershipRepository.save(membership);
-
 
         if (dto.getType() == CommunityType.DEMOCRACY) {
             var citizenRole = CommunityRole.builder()
@@ -118,6 +126,14 @@ public class CommunityService {
 
     }
 
+    public void deleteCommunity(String name) {
+        var community = getCommunityByName(name);
+        if (community.getOwner().equals(userService.getCurrentUser()) && community.getType() != CommunityType.DEMOCRACY)
+            communityRepository.delete(community);
+        else
+            throw new UnauthorizedException("User doesn't have permissions to delete the community");
+    }
+
     public boolean isNameTaken(String name) {
         userService.throwErrIfExistsByNickname(name);
         return true;
@@ -126,6 +142,7 @@ public class CommunityService {
     private int countMembers(String name) {
         return membershipRepository.countAllByCommunity(getCommunityByName(name));
     }
+
 
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = getCommunityByName(name);
@@ -138,14 +155,55 @@ public class CommunityService {
         dto.setMember(false);
         if (userService.isContextUser()) {
             var membership = membershipRepository.findByCommunityAndUser(community, userService.getCurrentUser());
-            if (membership.isPresent())
+            if (membership.isPresent()) {
                 dto.setMember(true);
+                dto.setCurrentUserRole(membership.get().getRole());
+            }
         }
         return dto;
     }
 
     public Community getCommunityByName(String name) {
         return communityRepository.findByGroupname(name).orElseThrow(() -> new EntityNotFoundException("Community is not found"));
+    }
+
+    public ArrayList<PublicCommunityCardDto> getHomeCards() {
+        var list = membershipRepository.findTop4ByUser(userService.getCurrentUser());
+        var array = new ArrayList<PublicCommunityCardDto>();
+        list.forEach(o ->
+                array.add(PublicCommunityCardDto.builder()
+                        .image( ListFunctions.getTopImageOfList(o.getCommunity().getImages()) )
+                        .groupname( o.getCommunity().getGroupname() )
+                        .build()));
+        return array;
+    }
+
+    public void updateCommunity(UpdateCommunityDto dto) {
+        var user = userService.getCurrentUser();
+        var community = getCommunityByName(dto.getOldGroupname());
+        var membership = membershipRepository.findByCommunityAndUser(community, user);
+        if (membership.isPresent() && membership.get().getRole() != null) {
+            var role = membership.get().getRole();
+
+            if (dto.getGroupname() != null) {
+                if (role.isEditId()) {
+                    isNameTaken(dto.getGroupname());
+                    community.setGroupname(dto.getGroupname());
+                }
+                else
+                    throw new UnauthorizedException("User doesn't have permissions");
+            }
+            else if (role.isEditDescription()) {
+                if (dto.getDescription() != null)
+                    community.setDescription(dto.getDescription());
+                else if (dto.getName() != null)
+                    community.setName(dto.getName());
+            }
+            else
+                throw new UnauthorizedException("User doesn't have permissions");
+            communityRepository.save(community);
+        }
+
     }
 
 }

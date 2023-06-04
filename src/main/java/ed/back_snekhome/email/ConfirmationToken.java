@@ -1,5 +1,6 @@
 package ed.back_snekhome.email;
 
+import ed.back_snekhome.utils.GenerationFunctions;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

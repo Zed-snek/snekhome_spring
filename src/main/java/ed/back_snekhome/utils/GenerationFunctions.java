@@ -1,4 +1,4 @@
-package ed.back_snekhome.email;
+package ed.back_snekhome.utils;
 
 import java.util.Random;
 

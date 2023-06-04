@@ -1,6 +1,7 @@
 package ed.back_snekhome.dto.communityDTOs;
 
 import ed.back_snekhome.entities.Community;
+import ed.back_snekhome.entities.CommunityRole;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,5 +18,6 @@ public class PublicCommunityDto {
     private String ownerNickname;
     private String ownerImage;
 
+    private CommunityRole currentUserRole;
 
 }

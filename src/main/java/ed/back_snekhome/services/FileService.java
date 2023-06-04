@@ -1,6 +1,6 @@
 package ed.back_snekhome.services;
 
-import ed.back_snekhome.email.GenerationFunctions;
+import ed.back_snekhome.utils.GenerationFunctions;
 import org.apache.commons.io.IOUtils;;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
