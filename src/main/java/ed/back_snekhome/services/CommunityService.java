@@ -9,15 +9,15 @@ import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
-import ed.back_snekhome.repositories.CitizenParametersRepository;
-import ed.back_snekhome.repositories.CommunityRepository;
-import ed.back_snekhome.repositories.CommunityRoleRepository;
-import ed.back_snekhome.repositories.MembershipRepository;
+import ed.back_snekhome.repositories.*;
+import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.utils.ListFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -30,6 +30,8 @@ public class CommunityService {
     private final CitizenParametersRepository citizenParametersRepository;
     private final UserService userService;
     private final MembershipRepository membershipRepository;
+    private final FileService fileService;
+    private final CommunityImageRepository communityImageRepository;
 
     @Transactional
     public void newCommunity(NewCommunityDto dto) {
@@ -203,7 +205,17 @@ public class CommunityService {
                 throw new UnauthorizedException("User doesn't have permissions");
             communityRepository.save(community);
         }
+    }
 
+    public OwnSuccessResponse uploadCommunityImage(MultipartFile file, String groupname) throws IOException {
+
+        String newName = fileService.uploadImageNameReturned(file);
+        var image = CommunityImage.builder()
+                .name(newName)
+                .community(getCommunityByName(groupname))
+                .build();
+        communityImageRepository.save(image);
+        return new OwnSuccessResponse(newName); //returns new name of uploaded file
     }
 
 }

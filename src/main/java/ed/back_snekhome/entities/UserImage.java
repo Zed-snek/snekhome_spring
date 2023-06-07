@@ -1,6 +1,7 @@
 package ed.back_snekhome.entities;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.helpful.Image;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,6 +17,7 @@ public class UserImage extends Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     private Long idImage;
 
     private String name;

@@ -17,6 +17,7 @@ public class CommunityImage extends Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     private Long idImage;
 
     private String name;

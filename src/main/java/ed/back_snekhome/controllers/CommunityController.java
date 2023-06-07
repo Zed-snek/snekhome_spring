@@ -11,7 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 @RestController
@@ -79,6 +81,17 @@ public class CommunityController {
     public ArrayList<PublicCommunityCardDto> getHomeCards() { //
 
         return communityService.getHomeCards();
+    }
+
+    @PostMapping(path = "/auth/community/image/{groupname}", consumes = "multipart/form-data")
+    public ResponseEntity<OwnSuccessResponse> newImage(
+            @RequestParam("image") MultipartFile image,
+            @PathVariable String groupname
+    ) throws IOException {
+
+        var response = communityService.uploadCommunityImage(image, groupname);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }
