@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 
 
 @RestController
@@ -55,6 +56,11 @@ public class UserController {
 
         var response = new OwnSuccessResponse("Friend has deleted successfully");
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/user/friends/{nickname}")
+    public ArrayList<UserPublicDto> getFriends(@PathVariable String nickname) {
+        return relationsService.getFriends(nickname);
     }
 
 

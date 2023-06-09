@@ -78,7 +78,7 @@ public class CommunityController {
     }
 
     @GetMapping("/auth/communities/home_cards")
-    public ArrayList<PublicCommunityCardDto> getHomeCards() { //
+    public ArrayList<PublicCommunityCardDto> getHomeCards() {
 
         return communityService.getHomeCards();
     }
@@ -93,5 +93,11 @@ public class CommunityController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    /*@GetMapping("/community_list/{nickname}")
+    public ArrayList<> getCommunityList(@PathVariable String nickname) {
+
+
+    }*/
 
 }

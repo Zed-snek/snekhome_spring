@@ -8,6 +8,7 @@ import ed.back_snekhome.email.EmailSendService;
 import ed.back_snekhome.entities.InfoTag;
 import ed.back_snekhome.entities.UserEntity;
 import ed.back_snekhome.entities.UserImage;
+import ed.back_snekhome.entities.relations.Friendship;
 import ed.back_snekhome.enums.FriendshipType;
 import ed.back_snekhome.exceptionHandler.exceptions.*;
 import ed.back_snekhome.repositories.*;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 
 @Service
@@ -307,29 +309,29 @@ public class UserService {
 
         //Checks the relation between current user and related one: are friends/aren't friends/context user follows related/related follows context user
         if (isContextUser() && !getCurrentUser().getNickname().equals(nickname)) {
-            var friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(getCurrentUser().getIdAccount(), user.getIdAccount());
-            dto.setFriendshipType(FriendshipType.NOT_FRIENDS);
-            if (friendship.isEmpty()) {
-                friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(user.getIdAccount(), getCurrentUser().getIdAccount());
-            }
-
-            if (friendship.isPresent()) {
-                if (friendship.get().isFirstUser() && friendship.get().isSecondUser()) {
-                    dto.setFriendshipType(FriendshipType.FRIENDS);
-                }
-                else if (friendship.get().getIdFirstUser().equals(getCurrentUser().getIdAccount()) && friendship.get().isFirstUser()
-                        || friendship.get().getIdSecondUser().equals(getCurrentUser().getIdAccount()) && friendship.get().isSecondUser()
-                ) {
-                    dto.setFriendshipType(FriendshipType.CURRENT_FOLLOW);
-                }
-                else {
-                    dto.setFriendshipType(FriendshipType.SECOND_FOLLOW);
-                }
-            }
+            dto.setFriendshipType(getFriendshipType(getCurrentUser().getIdAccount(), user.getIdAccount()));
         }
+
         return dto;
     }
 
+    public FriendshipType getFriendshipType(Long idUser1, Long idUser2) {
+        var friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(idUser1, idUser2);
+        if (friendship.isEmpty()) {
+            friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(idUser2, idUser1);
+        }
+        if (friendship.isPresent()) {
+            if (friendship.get().isFirstUser() && friendship.get().isSecondUser())
+                return FriendshipType.FRIENDS;
+            else if (friendship.get().getIdFirstUser().equals(idUser1) && friendship.get().isFirstUser()
+                    || friendship.get().getIdSecondUser().equals(idUser1) && friendship.get().isSecondUser())
+                return FriendshipType.CURRENT_FOLLOW;
+            else
+                return FriendshipType.SECOND_FOLLOW;
+        }
+        else
+            return FriendshipType.NOT_FRIENDS;
+    }
 
     public UserPrivateDto getCurrentUserInfo() {
         var currentUser = getCurrentUser();
