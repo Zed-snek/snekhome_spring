@@ -16,4 +16,7 @@ public class PublicCommunityCardDto {
     private CommunityType type;
     private int members;
 
+    private String name;
+
+
 }

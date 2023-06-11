@@ -13,5 +13,6 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
     int countAllByCommunity(Community community);
     int countAllByUser(UserEntity user);
     Iterable<Membership> findTop4ByUser(UserEntity user);
+    Iterable<Membership> findAllByUser(UserEntity user);
 
 }

@@ -323,6 +323,8 @@ public class UserService {
         if (friendship.isPresent()) {
             if (friendship.get().isFirstUser() && friendship.get().isSecondUser())
                 return FriendshipType.FRIENDS;
+            else if (!friendship.get().isFirstUser() && !friendship.get().isSecondUser())
+                return FriendshipType.NOT_FRIENDS;
             else if (friendship.get().getIdFirstUser().equals(idUser1) && friendship.get().isFirstUser()
                     || friendship.get().getIdSecondUser().equals(idUser1) && friendship.get().isSecondUser())
                 return FriendshipType.CURRENT_FOLLOW;

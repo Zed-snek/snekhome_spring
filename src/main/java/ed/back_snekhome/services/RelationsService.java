@@ -1,5 +1,6 @@
 package ed.back_snekhome.services;
 
+import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import ed.back_snekhome.entities.Community;
 import ed.back_snekhome.entities.UserEntity;
@@ -59,13 +60,13 @@ public class RelationsService {
                 .build());
     }
 
-    private Iterable<Friendship> getFriendshipByUserId(Long id) {
+    private Iterable<Friendship> getFriendshipsByUserId(Long id) {
         return friendshipRepository.findAllByIdFirstUserOrIdSecondUser(id, id);
     }
 
     public ArrayList<UserPublicDto> getFriends(String nickname) {
         var user = userService.getUserByNickname(nickname);
-        var friendships = getFriendshipByUserId(user.getIdAccount());
+        var friendships = getFriendshipsByUserId(user.getIdAccount());
         var array = new ArrayList<UserPublicDto>();
         for (Friendship f : friendships) {
             UserEntity friend;
@@ -89,6 +90,9 @@ public class RelationsService {
     public Membership getMembership(UserEntity user, Community community) {
         return membershipRepository.findByCommunityAndUser(community, user).orElseThrow(() -> new EntityNotFoundException("User is not a member"));
     }
+    public Iterable<Membership> getMembershipsByUser(UserEntity user) {
+        return membershipRepository.findAllByUser(user);
+    }
 
     public void joinCommunity(String groupname) {
         var current = userService.getCurrentUser();
@@ -104,6 +108,23 @@ public class RelationsService {
     public void leaveCommunity(String groupname) {
         var membership = getMembership(userService.getCurrentUser(), communityService.getCommunityByName(groupname));
         membershipRepository.delete(membership);
+    }
+
+    public ArrayList<PublicCommunityCardDto> getJoinedCommunitiesByNickname(String nickname) {
+        var user = userService.getUserByNickname(nickname);
+        var memberships = getMembershipsByUser(user);
+        var array = new ArrayList<PublicCommunityCardDto>();
+        memberships.forEach(
+                m -> array.add(PublicCommunityCardDto
+                        .builder()
+                                .image( ListFunctions.getTopImageOfList(m.getCommunity().getImages()) )
+                                .name( m.getCommunity().getName() )
+                                .groupname( m.getCommunity().getGroupname() )
+                                .description( m.getCommunity().getDescription() )
+                                .members( communityService.countMembers(m.getCommunity()) )
+                        .build())
+        );
+        return array;
     }
 
 

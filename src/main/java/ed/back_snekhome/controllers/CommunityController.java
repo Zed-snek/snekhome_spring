@@ -94,10 +94,9 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    /*@GetMapping("/community_list/{nickname}")
-    public ArrayList<> getCommunityList(@PathVariable String nickname) {
-
-
-    }*/
+    @GetMapping("/community_list/{nickname}")
+    public ArrayList<PublicCommunityCardDto> getCommunityList(@PathVariable String nickname) {
+        return relationsService.getJoinedCommunitiesByNickname(nickname);
+    }
 
 }

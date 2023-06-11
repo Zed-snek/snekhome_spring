@@ -141,8 +141,8 @@ public class CommunityService {
         return true;
     }
 
-    private int countMembers(String name) {
-        return membershipRepository.countAllByCommunity(getCommunityByName(name));
+    public int countMembers(Community community) {
+        return membershipRepository.countAllByCommunity(community);
     }
 
 
@@ -150,7 +150,7 @@ public class CommunityService {
         var community = getCommunityByName(name);
         var dto = PublicCommunityDto.builder()
                 .community( community )
-                .members( countMembers(name) )
+                .members( countMembers(community) )
                 .ownerNickname( community.getOwner().getNickname() )
                 .ownerImage( ListFunctions.getTopImageOfList(community.getOwner().getImages()) )
                 .build();
