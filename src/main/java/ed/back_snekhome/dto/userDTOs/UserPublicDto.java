@@ -1,5 +1,6 @@
 package ed.back_snekhome.dto.userDTOs;
 
+import ed.back_snekhome.entities.CommunityRole;
 import ed.back_snekhome.entities.InfoTag;
 import ed.back_snekhome.enums.FriendshipType;
 import lombok.Builder;
@@ -26,5 +27,7 @@ public class UserPublicDto {
     private List<InfoTag> tags;
 
     private FriendshipType friendshipType;
+
+    private CommunityRole communityRole;
 
 }

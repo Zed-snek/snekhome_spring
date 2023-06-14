@@ -1,8 +1,10 @@
 package ed.back_snekhome.services;
 
+import ed.back_snekhome.dto.MembersDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import ed.back_snekhome.entities.Community;
+import ed.back_snekhome.entities.CommunityRole;
 import ed.back_snekhome.entities.UserEntity;
 import ed.back_snekhome.entities.relations.Friendship;
 import ed.back_snekhome.entities.relations.Membership;
@@ -90,8 +92,13 @@ public class RelationsService {
     public Membership getMembership(UserEntity user, Community community) {
         return membershipRepository.findByCommunityAndUser(community, user).orElseThrow(() -> new EntityNotFoundException("User is not a member"));
     }
+
     public Iterable<Membership> getMembershipsByUser(UserEntity user) {
         return membershipRepository.findAllByUser(user);
+    }
+
+    public Iterable<Membership> getMembershipsByCommunity(Community community) {
+        return membershipRepository.findAllByCommunity(community);
     }
 
     public void joinCommunity(String groupname) {
@@ -115,19 +122,42 @@ public class RelationsService {
         var memberships = getMembershipsByUser(user);
         var array = new ArrayList<PublicCommunityCardDto>();
         memberships.forEach(
-                m -> array.add(PublicCommunityCardDto
-                        .builder()
-                                .image( ListFunctions.getTopImageOfList(m.getCommunity().getImages()) )
-                                .name( m.getCommunity().getName() )
-                                .groupname( m.getCommunity().getGroupname() )
-                                .description( m.getCommunity().getDescription() )
-                                .members( communityService.countMembers(m.getCommunity()) )
+                m -> array.add(PublicCommunityCardDto.builder()
+                        .image( ListFunctions.getTopImageOfList(m.getCommunity().getImages()) )
+                        .name( m.getCommunity().getName() )
+                        .groupname( m.getCommunity().getGroupname() )
+                        .description( m.getCommunity().getDescription() )
+                        .members( communityService.countMembers(m.getCommunity()) )
                         .build())
         );
         return array;
     }
 
 
-
+    public MembersDto getMembersByCommunity(String groupname) {
+        var community = communityService.getCommunityByName(groupname);
+        var memberships = getMembershipsByCommunity(community);
+        var users = new ArrayList<UserPublicDto>();
+        for (Membership m : memberships) {
+            var user = m.getUser();
+            users.add(UserPublicDto.builder()
+                            .name(user.getName())
+                            .surname(user.getSurname())
+                            .nickname(user.getNickname())
+                            .image(ListFunctions.getTopImageOfList(user.getImages()))
+                            .communityRole(m.getRole())
+                            .build());
+        }
+        var roles = new ArrayList<String>();
+        for (CommunityRole r : communityRoleRepository.findAllByCommunity(community)) {
+            if (!r.isCreator())
+                roles.add(r.getTitle());
+        }
+        return MembersDto.builder()
+                .users(users)
+                .roles(roles)
+                .isContextUserAccess(communityService.isUserAccess(community))
+                .build();
+    }
 
 }

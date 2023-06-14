@@ -1,9 +1,11 @@
 package ed.back_snekhome.controllers;
 
+import ed.back_snekhome.dto.MembersDto;
 import ed.back_snekhome.dto.communityDTOs.NewCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
+import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.CommunityService;
 import ed.back_snekhome.services.RelationsService;
@@ -97,6 +99,11 @@ public class CommunityController {
     @GetMapping("/community_list/{nickname}")
     public ArrayList<PublicCommunityCardDto> getCommunityList(@PathVariable String nickname) {
         return relationsService.getJoinedCommunitiesByNickname(nickname);
+    }
+
+    @GetMapping("/members/{groupname}")
+    public MembersDto getMembers(@PathVariable String groupname) {
+        return relationsService.getMembersByCommunity(groupname);
     }
 
 }

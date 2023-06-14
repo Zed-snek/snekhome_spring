@@ -145,6 +145,14 @@ public class CommunityService {
         return membershipRepository.countAllByCommunity(community);
     }
 
+    public boolean isUserAccess(Community community) {
+        if (userService.isContextUser()) {
+            var membership = membershipRepository.findByCommunityAndUser(community, userService.getCurrentUser());
+            return membership.isPresent();
+        }
+        return false;
+    }
+
 
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = getCommunityByName(name);
@@ -155,12 +163,10 @@ public class CommunityService {
                 .ownerImage( ListFunctions.getTopImageOfList(community.getOwner().getImages()) )
                 .build();
         dto.setMember(false);
-        if (userService.isContextUser()) {
+        if (isUserAccess(community)) {
             var membership = membershipRepository.findByCommunityAndUser(community, userService.getCurrentUser());
-            if (membership.isPresent()) {
-                dto.setMember(true);
-                dto.setCurrentUserRole(membership.get().getRole());
-            }
+            dto.setMember(true);
+            dto.setCurrentUserRole(membership.get().getRole());
         }
         return dto;
     }
