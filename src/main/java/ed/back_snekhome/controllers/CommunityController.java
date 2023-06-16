@@ -1,5 +1,6 @@
 package ed.back_snekhome.controllers;
 
+import ed.back_snekhome.dto.CommunityRoleDto;
 import ed.back_snekhome.dto.MembersDto;
 import ed.back_snekhome.dto.communityDTOs.NewCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
@@ -96,6 +97,7 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @GetMapping("/community_list/{nickname}")
     public ArrayList<PublicCommunityCardDto> getCommunityList(@PathVariable String nickname) {
         return relationsService.getJoinedCommunitiesByNickname(nickname);
@@ -104,6 +106,13 @@ public class CommunityController {
     @GetMapping("/members/{groupname}")
     public MembersDto getMembers(@PathVariable String groupname) {
         return relationsService.getMembersByCommunity(groupname);
+    }
+
+    @PostMapping("/auth/community/role/{groupname}")
+    public ResponseEntity<OwnSuccessResponse> newRole(@RequestBody CommunityRoleDto dto, @PathVariable String groupname) {
+        communityService.newRole(dto, groupname);
+        var response = new OwnSuccessResponse("Role is created");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }

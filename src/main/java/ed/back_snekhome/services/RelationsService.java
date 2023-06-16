@@ -79,7 +79,7 @@ public class RelationsService {
             array.add(UserPublicDto.builder()
                             .image(ListFunctions.getTopImageOfList(friend.getImages()))
                             .nickname(friend.getNickname())
-                            .friendshipType(userService.getFriendshipType(f.getIdFirstUser(), f.getIdSecondUser()))
+                            .friendshipType(userService.getFriendshipType(user.getIdAccount(), friend.getIdAccount()))
                             .name(friend.getName())
                             .surname(friend.getSurname())
                     .build());

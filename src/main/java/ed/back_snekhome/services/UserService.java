@@ -8,7 +8,6 @@ import ed.back_snekhome.email.EmailSendService;
 import ed.back_snekhome.entities.InfoTag;
 import ed.back_snekhome.entities.UserEntity;
 import ed.back_snekhome.entities.UserImage;
-import ed.back_snekhome.entities.relations.Friendship;
 import ed.back_snekhome.enums.FriendshipType;
 import ed.back_snekhome.exceptionHandler.exceptions.*;
 import ed.back_snekhome.repositories.*;
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 
 @Service

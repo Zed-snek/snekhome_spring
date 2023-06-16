@@ -1,5 +1,6 @@
 package ed.back_snekhome.services;
 
+import ed.back_snekhome.dto.CommunityRoleDto;
 import ed.back_snekhome.dto.communityDTOs.NewCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
@@ -7,6 +8,7 @@ import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
 import ed.back_snekhome.entities.*;
 import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.enums.CommunityType;
+import ed.back_snekhome.exceptionHandler.exceptions.EntityAlreadyExistsException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.*;
@@ -222,6 +224,32 @@ public class CommunityService {
                 .build();
         communityImageRepository.save(image);
         return new OwnSuccessResponse(newName); //returns new name of uploaded file
+    }
+
+    public void newRole(CommunityRoleDto dto, String groupname) {
+        var community = getCommunityByName(groupname);
+        if (community.getOwner().equals(userService.getCurrentUser()) || community.getType() == CommunityType.ANARCHY) {
+            if (communityRoleRepository.existsByCommunityAndTitle(community, dto.getTitle())) {
+                throw new EntityAlreadyExistsException("Role with entered name is already exists");
+            }
+            else {
+                var role = CommunityRole.builder()
+                        .community(community)
+                        .title(dto.getTitle())
+                        .bannerColor(dto.getBannerColor())
+                        .textColor(dto.getTextColor())
+                        .deletePosts(dto.isDeletePosts())
+                        .banUser(dto.isBanUser())
+                        .banCitizen(dto.isBanCitizen())
+                        .editId(dto.isEditId())
+                        .editDescription(dto.isEditDescription())
+                        .build();
+                communityRoleRepository.save(role);
+            }
+        }
+        else {
+            throw new UnauthorizedException("User doesn't have permissions to create new roles");
+        }
     }
 
 }

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 
 @ControllerAdvice
-public class UserExceptionHandler {
+public class MyExceptionHandler {
 
 
     @ExceptionHandler(LoginNotFoundException.class)
@@ -71,7 +71,7 @@ public class UserExceptionHandler {
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<OwnErrorResponse> userErrorHandler(EntityNotFoundException e) {
+    public ResponseEntity<OwnErrorResponse> entityNotFoundHandler(EntityNotFoundException e) {
 
         var errorResponse = new OwnErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
@@ -83,6 +83,17 @@ public class UserExceptionHandler {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<OwnErrorResponse> userErrorHandler(UserAlreadyExistsException e) {
+
+        var errorResponse = new OwnErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                e.getMessage()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST); //400
+    }
+
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public ResponseEntity<OwnErrorResponse> entityErrorHandler(EntityAlreadyExistsException e) {
 
         var errorResponse = new OwnErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
