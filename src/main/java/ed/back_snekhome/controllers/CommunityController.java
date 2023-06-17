@@ -7,6 +7,7 @@ import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
 import ed.back_snekhome.dto.userDTOs.UserPublicDto;
+import ed.back_snekhome.entities.CommunityRole;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.CommunityService;
 import ed.back_snekhome.services.RelationsService;
@@ -113,6 +114,22 @@ public class CommunityController {
         communityService.newRole(dto, groupname);
         var response = new OwnSuccessResponse("Role is created");
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/auth/community/role/{groupname}/{oldRoleName}")
+    public ResponseEntity<OwnSuccessResponse> updateRole(
+            @RequestBody CommunityRoleDto dto,
+            @PathVariable String groupname,
+            @PathVariable String oldRoleName
+    ) {
+        communityService.updateRole(dto, groupname, oldRoleName);
+        var response = new OwnSuccessResponse("Role is updated");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/community/roles/{groupname}")
+    public Iterable<CommunityRole> getRoles(@PathVariable String groupname) {
+        return communityService.getRoles(groupname);
     }
 
 }

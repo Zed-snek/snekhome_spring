@@ -252,4 +252,32 @@ public class CommunityService {
         }
     }
 
+    public void updateRole(CommunityRoleDto dto, String groupname, String oldRoleName) {
+        var community = getCommunityByName(groupname);
+        if (community.getOwner().equals(userService.getCurrentUser()) || community.getType() == CommunityType.ANARCHY) {
+            if (!dto.getTitle().equals(oldRoleName) && communityRoleRepository.existsByCommunityAndTitle(community, dto.getTitle())) {
+                throw new EntityAlreadyExistsException("Role with entered name is already exists");
+            }
+            else {
+                var role = communityRoleRepository
+                        .findByCommunityAndTitle(community, oldRoleName)
+                        .orElseThrow(() -> new EntityNotFoundException("Role is not found"));
+                role.setTitle(dto.getTitle());
+                role.setTextColor(dto.getTextColor());
+                role.setBannerColor(dto.getBannerColor());
+                role.setBanUser(dto.isBanUser());
+                role.setBanCitizen(dto.isBanCitizen());
+                role.setDeletePosts(dto.isDeletePosts());
+                role.setEditDescription(dto.isEditDescription());
+                role.setEditId(dto.isBanUser());
+                communityRoleRepository.save(role);
+            }
+        }
+    }
+
+    public Iterable<CommunityRole> getRoles(String groupname) {
+        var community = getCommunityByName(groupname);
+        return communityRoleRepository.findAllByCommunity(community);
+    }
+
 }

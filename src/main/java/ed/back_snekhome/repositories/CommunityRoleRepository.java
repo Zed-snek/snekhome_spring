@@ -11,4 +11,5 @@ public interface CommunityRoleRepository extends JpaRepository<CommunityRole, Lo
     Optional<CommunityRole> findTopByCommunityAndIsCreator(Community community, boolean isCreator);
     Iterable<CommunityRole> findAllByCommunity(Community community);
     boolean existsByCommunityAndTitle(Community community, String title);
+    Optional<CommunityRole> findByCommunityAndTitle(Community community, String title);
 }
