@@ -44,7 +44,7 @@ public class Community {
     @JsonIgnore
     private UserEntity owner;
 
-    @OneToMany(mappedBy = "community", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "community", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<CommunityRole> roles;
 
     private boolean anonAllowed; //allows or disallows to make anonymous posts in community

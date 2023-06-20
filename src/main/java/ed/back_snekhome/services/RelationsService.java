@@ -136,6 +136,11 @@ public class RelationsService {
 
     public MembersDto getMembersByCommunity(String groupname) {
         var community = communityService.getCommunityByName(groupname);
+        if (community.isClosed() && !communityService.isContextUserMember(community)) {
+            return MembersDto.builder()
+                    .isContextUserAccess(false)
+                    .build();
+        }
         var memberships = getMembershipsByCommunity(community);
         var users = new ArrayList<UserPublicDto>();
         for (Membership m : memberships) {
@@ -156,7 +161,7 @@ public class RelationsService {
         return MembersDto.builder()
                 .users(users)
                 .roles(roles)
-                .isContextUserAccess(communityService.isUserAccess(community))
+                .isContextUserAccess(true)
                 .build();
     }
 

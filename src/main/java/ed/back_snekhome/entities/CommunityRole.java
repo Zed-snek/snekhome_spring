@@ -14,6 +14,7 @@ import java.util.List;
 @Builder
 @Getter
 @Setter
+@ToString
 public class CommunityRole {
 
     @Id
@@ -40,7 +41,7 @@ public class CommunityRole {
     private boolean isCitizen; //for democracy communities: vote and becoming president
     private boolean isCreator;
 
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Membership> memberships;
 

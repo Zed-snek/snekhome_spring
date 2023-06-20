@@ -127,6 +127,16 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @DeleteMapping("/auth/community/role/{groupname}/{roleName}")
+    public ResponseEntity<OwnSuccessResponse> deleteRole(
+            @PathVariable String groupname,
+            @PathVariable String roleName
+    ) {
+        communityService.deleteRole(groupname, roleName);
+        var response = new OwnSuccessResponse("Role is deleted");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @GetMapping("/community/roles/{groupname}")
     public Iterable<CommunityRole> getRoles(@PathVariable String groupname) {
         return communityService.getRoles(groupname);

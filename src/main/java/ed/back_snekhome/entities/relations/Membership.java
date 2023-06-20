@@ -29,7 +29,7 @@ public class Membership {
     @JoinColumn(name = "id_community")
     private Community community;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_role")
     private CommunityRole role;
 
