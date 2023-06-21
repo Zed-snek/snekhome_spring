@@ -9,6 +9,7 @@ import ed.back_snekhome.entities.UserEntity;
 import ed.back_snekhome.entities.relations.Friendship;
 import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
+import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.CommunityRoleRepository;
 import ed.back_snekhome.repositories.FriendshipRepository;
 import ed.back_snekhome.repositories.MembershipRepository;
@@ -93,20 +94,24 @@ public class RelationsService {
         return membershipRepository.findByCommunityAndUser(community, user).orElseThrow(() -> new EntityNotFoundException("User is not a member"));
     }
 
-    public Iterable<Membership> getMembershipsByUser(UserEntity user) {
-        return membershipRepository.findAllByUser(user);
+    public Iterable<Membership> getMembershipsByUser(UserEntity user, boolean isBanned) {
+        return membershipRepository.findAllByUserAndIsBanned(user, isBanned);
     }
 
-    public Iterable<Membership> getMembershipsByCommunity(Community community) {
-        return membershipRepository.findAllByCommunity(community);
+    public Iterable<Membership> getMembershipsByCommunity(Community community, boolean isBanned) {
+        return membershipRepository.findAllByCommunityAndIsBanned(community, isBanned);
     }
 
     public void joinCommunity(String groupname) {
         var current = userService.getCurrentUser();
         var community = communityService.getCommunityByName(groupname);
+        var optional = membershipRepository.findByCommunityAndUser(community, current);
+        if (optional.isPresent() && optional.get().isBanned()) {
+            throw new UnauthorizedException("You are banned");
+        }
         var membership = Membership.builder()
-                .user( current )
-                .community( community )
+                .user(current)
+                .community(community)
                 .build();
         if (community.getOwner().equals(current))
             membership.setRole(communityRoleRepository.findTopByCommunityAndIsCreator(community, true).orElse(null));
@@ -119,7 +124,7 @@ public class RelationsService {
 
     public ArrayList<PublicCommunityCardDto> getJoinedCommunitiesByNickname(String nickname) {
         var user = userService.getUserByNickname(nickname);
-        var memberships = getMembershipsByUser(user);
+        var memberships = getMembershipsByUser(user, false);
         var array = new ArrayList<PublicCommunityCardDto>();
         memberships.forEach(
                 m -> array.add(PublicCommunityCardDto.builder()
@@ -141,7 +146,7 @@ public class RelationsService {
                     .isContextUserAccess(false)
                     .build();
         }
-        var memberships = getMembershipsByCommunity(community);
+        var memberships = getMembershipsByCommunity(community, false);
         var users = new ArrayList<UserPublicDto>();
         for (Membership m : memberships) {
             var user = m.getUser();
@@ -163,6 +168,26 @@ public class RelationsService {
                 .roles(roles)
                 .isContextUserAccess(true)
                 .build();
+    }
+
+    public void banUser(String groupname, String user) {
+        var community = communityService.getCommunityByName(groupname);
+        var userEntity = userService.getUserByNickname(user);
+        var userMembership = getMembership(userEntity, community);
+        var admin = userService.getCurrentUser();
+        var adminMembership = getMembership(admin, community);
+
+        if ((userMembership.getRole() == null && adminMembership.getRole().isBanUser())
+                || (userMembership.getRole().isCitizen() && adminMembership.getRole().isBanCitizen())
+                || (community.getOwner().equals(admin))
+        ) {
+            userMembership.setBanned(true);
+            userMembership.setRole(null);
+            membershipRepository.save(userMembership);
+        }
+        else {
+            throw new UnauthorizedException("No permissions to ban user");
+        }
     }
 
 }

@@ -31,7 +31,6 @@ public class CommunityController {
     @GetMapping("/community/{name}")
     public PublicCommunityDto getCommunity(@PathVariable String name) {
 
-
         return communityService.getPublicCommunityDto(name);
     }
 
@@ -140,6 +139,16 @@ public class CommunityController {
     @GetMapping("/community/roles/{groupname}")
     public Iterable<CommunityRole> getRoles(@PathVariable String groupname) {
         return communityService.getRoles(groupname);
+    }
+
+    @PostMapping("/auth/community/{groupname}/ban/{username}")
+    public ResponseEntity<OwnSuccessResponse> banUser(
+            @PathVariable String groupname,
+            @PathVariable String username
+    ) {
+        relationsService.banUser(groupname, username);
+        var response = new OwnSuccessResponse("User is banned");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }

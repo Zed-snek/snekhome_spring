@@ -14,6 +14,7 @@ public class PublicCommunityDto {
 
     private Community community;
     private boolean isMember;
+    private boolean isBanned;
     private int members;
 
     private String ownerNickname;

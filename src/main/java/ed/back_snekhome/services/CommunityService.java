@@ -166,9 +166,14 @@ public class CommunityService {
                 .build();
         dto.setMember(false);
         if (isContextUserMember(community)) {
-            dto.setMember(true);
-            var membership = membershipRepository.findByCommunityAndUser(community, userService.getCurrentUser());
-            dto.setCurrentUserRole(membership.get().getRole());
+            var membership = membershipRepository.findByCommunityAndUser(community, userService.getCurrentUser()).get();
+            if (!membership.isBanned()) {
+                dto.setMember(true);
+                dto.setCurrentUserRole(membership.getRole());
+            }
+            else {
+                dto.setBanned(true);
+            }
         }
         return dto;
     }
@@ -178,7 +183,7 @@ public class CommunityService {
     }
 
     public ArrayList<PublicCommunityCardDto> getHomeCards() {
-        var list = membershipRepository.findTop4ByUser(userService.getCurrentUser());
+        var list = membershipRepository.findTop4ByUserAndIsBanned(userService.getCurrentUser(), false);
         var array = new ArrayList<PublicCommunityCardDto>();
         list.forEach(o ->
                 array.add(PublicCommunityCardDto.builder()

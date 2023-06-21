@@ -33,4 +33,6 @@ public class Membership {
     @JoinColumn(name = "id_role")
     private CommunityRole role;
 
+    private boolean isBanned;
+
 }
