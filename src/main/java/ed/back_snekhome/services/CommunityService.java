@@ -307,6 +307,28 @@ public class CommunityService {
         }
     }
 
+    public void updateCommunitySettings(String groupname, NewCommunityDto dto) {
+        var community = getCommunityByName(groupname);
+        if (isCurrentUserOwner(community)) {
+            community.setClosed(dto.isClosed());
+            community.setAnonAllowed(dto.isAnonAllowed());
+            community.setInviteUsers(dto.isInviteUsers());
+            communityRepository.save(community);
+        }
+    }
+
+    public void updateCommunityDemocracySettings(String groupname, NewCommunityDto dto) {
+        var community = getCommunityByName(groupname);
+        if (isCurrentUserOwner(community)) {
+            var parameters = citizenParametersRepository.findTopByCommunity(community)
+                    .orElseThrow(() -> new EntityNotFoundException("Entity not found"));
+            parameters.setDays(dto.getCitizenDays());
+            parameters.setElectionDays(dto.getElectionDays());
+            parameters.setRating(dto.getCitizenRating());
+            citizenParametersRepository.save(parameters);
+        }
+    }
+
 
 
 }

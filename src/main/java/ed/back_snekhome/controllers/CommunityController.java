@@ -172,4 +172,24 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PutMapping("/auth/community/{groupname}/settings")
+    public ResponseEntity<OwnSuccessResponse> updateCommunitySettings(
+            @PathVariable String groupname,
+            @RequestBody NewCommunityDto dto
+    ) {
+        communityService.updateCommunitySettings(groupname, dto);
+        var response = new OwnSuccessResponse("Community settings are updated");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/auth/community/{groupname}/democracy")
+    public ResponseEntity<OwnSuccessResponse> updateDemocracySettings(
+            @PathVariable String groupname,
+            @RequestBody NewCommunityDto dto
+    ) {
+        communityService.updateCommunityDemocracySettings(groupname, dto);
+        var response = new OwnSuccessResponse("Democracy settings are updated");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }
