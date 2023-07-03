@@ -151,4 +151,25 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping("/auth/community/{groupname}/role/{roleName}/set/{username}")
+    public ResponseEntity<OwnSuccessResponse> grantRole(
+            @PathVariable String groupname,
+            @PathVariable String username,
+            @PathVariable String roleName
+    ) {
+        relationsService.grantRole(username, groupname, roleName);
+        var response = new OwnSuccessResponse("Role is granted");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/auth/community/{groupname}/role/revoke/{username}")
+    public ResponseEntity<OwnSuccessResponse> revokeRole(
+            @PathVariable String groupname,
+            @PathVariable String username
+    ) {
+        relationsService.revokeRole(username, groupname);
+        var response = new OwnSuccessResponse("Role is revoked");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }

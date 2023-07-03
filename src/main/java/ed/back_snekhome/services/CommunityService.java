@@ -182,6 +182,16 @@ public class CommunityService {
         return communityRepository.findByGroupname(name).orElseThrow(() -> new EntityNotFoundException("Community is not found"));
     }
 
+    public CommunityRole findRoleOrThrowErr(Community community, String roleName) {
+        return communityRoleRepository
+                .findByCommunityAndTitle(community, roleName)
+                .orElseThrow(() -> new EntityNotFoundException("Role is not found"));
+    }
+
+    public boolean isCurrentUserOwner(Community community) {
+        return userService.isCurrentUserEqual(community.getOwner());
+    }
+
     public ArrayList<PublicCommunityCardDto> getHomeCards() {
         var list = membershipRepository.findTop4ByUserAndIsBanned(userService.getCurrentUser(), false);
         var array = new ArrayList<PublicCommunityCardDto>();
@@ -233,7 +243,7 @@ public class CommunityService {
 
     public void newRole(CommunityRoleDto dto, String groupname) {
         var community = getCommunityByName(groupname);
-        if (community.getOwner().equals(userService.getCurrentUser()) || community.getType() == CommunityType.ANARCHY) {
+        if (isCurrentUserOwner(community) || community.getType() == CommunityType.ANARCHY) {
             if (communityRoleRepository.existsByCommunityAndTitle(community, dto.getTitle())) {
                 throw new EntityAlreadyExistsException("Role with entered name is already exists");
             }
@@ -259,14 +269,12 @@ public class CommunityService {
 
     public void updateRole(CommunityRoleDto dto, String groupname, String oldRoleName) {
         var community = getCommunityByName(groupname);
-        if (community.getOwner().equals(userService.getCurrentUser())) {
+        if (isCurrentUserOwner(community)) {
             if (!dto.getTitle().equals(oldRoleName) && communityRoleRepository.existsByCommunityAndTitle(community, dto.getTitle())) {
                 throw new EntityAlreadyExistsException("Role with entered name is already exists");
             }
             else {
-                var role = communityRoleRepository
-                        .findByCommunityAndTitle(community, oldRoleName)
-                        .orElseThrow(() -> new EntityNotFoundException("Role is not found"));
+                var role = findRoleOrThrowErr(community, oldRoleName);
                 role.setTitle(dto.getTitle());
                 role.setTextColor(dto.getTextColor());
                 role.setBannerColor(dto.getBannerColor());
@@ -288,10 +296,8 @@ public class CommunityService {
     @Transactional
     public void deleteRole(String groupname, String roleName) {
         var community = getCommunityByName(groupname);
-        if (community.getOwner().equals(userService.getCurrentUser())) {
-            var role = communityRoleRepository
-                    .findByCommunityAndTitle(community, roleName)
-                    .orElseThrow(() -> new EntityNotFoundException("Role is not found"));
+        if (isCurrentUserOwner(community)) {
+            var role = findRoleOrThrowErr(community, roleName);
             var memberships = membershipRepository.findAllByCommunityAndRole(community, role);
             for (var m: memberships) {
                 m.setRole(null);
@@ -300,5 +306,7 @@ public class CommunityService {
             communityRoleRepository.delete(role);
         }
     }
+
+
 
 }

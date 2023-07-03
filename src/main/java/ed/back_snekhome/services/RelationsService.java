@@ -190,4 +190,23 @@ public class RelationsService {
         }
     }
 
+    public void grantRole(String nickname, String groupname, String roleName) {
+        var community = communityService.getCommunityByName(groupname);
+        if (communityService.isCurrentUserOwner(community)) {
+            var role = communityService.findRoleOrThrowErr(community, roleName);
+            var membership = getMembership(userService.getUserByNickname(nickname), community);
+            membership.setRole(role);
+            membershipRepository.save(membership);
+        }
+    }
+
+    public void revokeRole(String nickname, String groupname) {
+        var community = communityService.getCommunityByName(groupname);
+        if (communityService.isCurrentUserOwner(community)) {
+            var membership = getMembership(userService.getUserByNickname(nickname), community);
+            membership.setRole(null);
+            membershipRepository.save(membership);
+        }
+    }
+
 }
