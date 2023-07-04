@@ -3,6 +3,8 @@ package ed.back_snekhome.repositories;
 import ed.back_snekhome.entities.UserImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserImageRepository extends JpaRepository<UserImage, Long> {
+import java.util.Optional;
 
+public interface UserImageRepository extends JpaRepository<UserImage, Long> {
+    Optional<UserImage> findByName(String name);
 }

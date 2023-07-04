@@ -19,8 +19,6 @@ public class TestController {
     public ResponseEntity<OwnSuccessResponse> apiTest() {
 
         System.out.println("Worked");
-        var user = userService.getCurrentUser();
-        System.out.println(user.getName() + " " + user.getNicknameColor());
 
         var response = new OwnSuccessResponse("it worked!");
         return new ResponseEntity<>(response, HttpStatus.OK);

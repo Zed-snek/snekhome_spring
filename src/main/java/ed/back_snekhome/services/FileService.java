@@ -1,6 +1,11 @@
 package ed.back_snekhome.services;
 
+import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
+import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
+import ed.back_snekhome.repositories.CommunityImageRepository;
+import ed.back_snekhome.repositories.UserImageRepository;
 import ed.back_snekhome.utils.GenerationFunctions;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,10 +17,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Service
+@RequiredArgsConstructor
 public class FileService {
 
     @Value("${upload.path}")
     private String uploadPath;
+
+    final private CommunityImageRepository communityImageRepository;
+    final private UserImageRepository userImageRepository;
+    final private UserMethodsService userMethodsService;
+    final private RelationsService relationsService;
 
     public byte[] getImageByName(String imageName) throws IOException {
 
@@ -30,6 +41,29 @@ public class FileService {
         return IOUtils.toByteArray(destination.toUri());
     }
 
+    public String deleteImageByName(String name) {
+        var userImage = userImageRepository.findByName(name);
+        if (userImage.isPresent()) {
+            if (!userMethodsService.isCurrentUserEqual(userImage.get().getUser()))
+                throw new UnauthorizedException("No permissions to delete image");
+            userImageRepository.delete(userImage.get());
+            return "Image is deleted";
+        }
+
+        var communityImage = communityImageRepository.findByName(name);
+        if (communityImage.isPresent()) {
+            var membership = relationsService.getMembership(
+                    userMethodsService.getCurrentUser(),
+                    communityImage.get().getCommunity()
+            );
+            if (membership.getRole() == null || !membership.getRole().isEditDescription())
+                throw new UnauthorizedException("No permissions to delete image");
+            communityImageRepository.delete(communityImage.get());
+            return "Image is deleted";
+        }
+        throw new EntityNotFoundException("Image is not found");
+    }
+
     public String uploadImageNameReturned(MultipartFile file) throws IOException { //returns new file name
 
         String name = GenerationFunctions.generateCode(5) + System.currentTimeMillis();
@@ -40,7 +74,6 @@ public class FileService {
 
         return name;
     }
-
 
     private String getFileExtension( String fileName ) {
         int lastDot = fileName.lastIndexOf('.');

@@ -24,8 +24,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class RelationsService {
 
-    private final UserService userService;
-    private final CommunityService communityService;
+    private final UserMethodsService userMethodsService;
+    private final CommunityMethodsService communityMethodsService;
     private final FriendshipRepository friendshipRepository;
     private final MembershipRepository membershipRepository;
     private final CommunityRoleRepository communityRoleRepository;
@@ -39,8 +39,8 @@ public class RelationsService {
     }
     private void manageFriend(String nickname, boolean isAdd) {
 
-        var requestUser = userService.getCurrentUser();
-        var secondUser = userService.getUserByNickname(nickname);
+        var requestUser = userMethodsService.getCurrentUser();
+        var secondUser = userMethodsService.getUserByNickname(nickname);
         var friendship = getFriendshipOrCreate(requestUser.getIdAccount(), secondUser.getIdAccount());
 
         if (Objects.equals(friendship.getIdFirstUser(), requestUser.getIdAccount()))
@@ -68,19 +68,19 @@ public class RelationsService {
     }
 
     public ArrayList<UserPublicDto> getFriends(String nickname) {
-        var user = userService.getUserByNickname(nickname);
+        var user = userMethodsService.getUserByNickname(nickname);
         var friendships = getFriendshipsByUserId(user.getIdAccount());
         var array = new ArrayList<UserPublicDto>();
         for (Friendship f : friendships) {
             UserEntity friend;
             if (f.getIdFirstUser().equals(user.getIdAccount()))
-                friend = userService.getUserById(f.getIdSecondUser());
+                friend = userMethodsService.getUserById(f.getIdSecondUser());
             else
-                friend = userService.getUserById(f.getIdFirstUser());
+                friend = userMethodsService.getUserById(f.getIdFirstUser());
             array.add(UserPublicDto.builder()
                             .image(ListFunctions.getTopImageOfList(friend.getImages()))
                             .nickname(friend.getNickname())
-                            .friendshipType(userService.getFriendshipType(user.getIdAccount(), friend.getIdAccount()))
+                            .friendshipType(userMethodsService.getFriendshipType(user.getIdAccount(), friend.getIdAccount()))
                             .name(friend.getName())
                             .surname(friend.getSurname())
                     .build());
@@ -103,8 +103,8 @@ public class RelationsService {
     }
 
     public void joinCommunity(String groupname) {
-        var current = userService.getCurrentUser();
-        var community = communityService.getCommunityByName(groupname);
+        var current = userMethodsService.getCurrentUser();
+        var community = communityMethodsService.getCommunityByName(groupname);
         var optional = membershipRepository.findByCommunityAndUser(community, current);
         if (optional.isPresent() && optional.get().isBanned()) {
             throw new UnauthorizedException("You are banned");
@@ -118,12 +118,12 @@ public class RelationsService {
         membershipRepository.save(membership);
     }
     public void leaveCommunity(String groupname) {
-        var membership = getMembership(userService.getCurrentUser(), communityService.getCommunityByName(groupname));
+        var membership = getMembership(userMethodsService.getCurrentUser(), communityMethodsService.getCommunityByName(groupname));
         membershipRepository.delete(membership);
     }
 
     public ArrayList<PublicCommunityCardDto> getJoinedCommunitiesByNickname(String nickname) {
-        var user = userService.getUserByNickname(nickname);
+        var user = userMethodsService.getUserByNickname(nickname);
         var memberships = getMembershipsByUser(user, false);
         var array = new ArrayList<PublicCommunityCardDto>();
         memberships.forEach(
@@ -132,7 +132,7 @@ public class RelationsService {
                         .name( m.getCommunity().getName() )
                         .groupname( m.getCommunity().getGroupname() )
                         .description( m.getCommunity().getDescription() )
-                        .members( communityService.countMembers(m.getCommunity()) )
+                        .members( communityMethodsService.countMembers(m.getCommunity()) )
                         .build())
         );
         return array;
@@ -140,8 +140,8 @@ public class RelationsService {
 
 
     public MembersDto getMembersByCommunity(String groupname) {
-        var community = communityService.getCommunityByName(groupname);
-        if (community.isClosed() && !communityService.isContextUserMember(community)) {
+        var community = communityMethodsService.getCommunityByName(groupname);
+        if (community.isClosed() && !communityMethodsService.isContextUserMember(community)) {
             return MembersDto.builder()
                     .isContextUserAccess(false)
                     .build();
@@ -171,10 +171,10 @@ public class RelationsService {
     }
 
     public void banUser(String groupname, String user) {
-        var community = communityService.getCommunityByName(groupname);
-        var userEntity = userService.getUserByNickname(user);
+        var community = communityMethodsService.getCommunityByName(groupname);
+        var userEntity = userMethodsService.getUserByNickname(user);
         var userMembership = getMembership(userEntity, community);
-        var admin = userService.getCurrentUser();
+        var admin = userMethodsService.getCurrentUser();
         var adminMembership = getMembership(admin, community);
 
         if ((userMembership.getRole() == null && adminMembership.getRole().isBanUser())
@@ -191,19 +191,19 @@ public class RelationsService {
     }
 
     public void grantRole(String nickname, String groupname, String roleName) {
-        var community = communityService.getCommunityByName(groupname);
-        if (communityService.isCurrentUserOwner(community)) {
-            var role = communityService.findRoleOrThrowErr(community, roleName);
-            var membership = getMembership(userService.getUserByNickname(nickname), community);
+        var community = communityMethodsService.getCommunityByName(groupname);
+        if (communityMethodsService.isCurrentUserOwner(community)) {
+            var role = communityMethodsService.findRoleOrThrowErr(community, roleName);
+            var membership = getMembership(userMethodsService.getUserByNickname(nickname), community);
             membership.setRole(role);
             membershipRepository.save(membership);
         }
     }
 
     public void revokeRole(String nickname, String groupname) {
-        var community = communityService.getCommunityByName(groupname);
-        if (communityService.isCurrentUserOwner(community)) {
-            var membership = getMembership(userService.getUserByNickname(nickname), community);
+        var community = communityMethodsService.getCommunityByName(groupname);
+        if (communityMethodsService.isCurrentUserOwner(community)) {
+            var membership = getMembership(userMethodsService.getUserByNickname(nickname), community);
             membership.setRole(null);
             membershipRepository.save(membership);
         }

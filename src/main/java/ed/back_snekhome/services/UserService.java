@@ -8,7 +8,6 @@ import ed.back_snekhome.email.EmailSendService;
 import ed.back_snekhome.entities.InfoTag;
 import ed.back_snekhome.entities.UserEntity;
 import ed.back_snekhome.entities.UserImage;
-import ed.back_snekhome.enums.FriendshipType;
 import ed.back_snekhome.exceptionHandler.exceptions.*;
 import ed.back_snekhome.repositories.*;
 import ed.back_snekhome.response.AuthenticationResponse;
@@ -19,7 +18,6 @@ import ed.back_snekhome.utils.ListFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +30,7 @@ import java.io.IOException;
 public class UserService {
 
 
+    private final UserMethodsService userMethodsService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -41,7 +40,6 @@ public class UserService {
     private final InfoTagRepository infoTagRepository;
     private final FileService fileService;
     private final UserImageRepository userImageRepository;
-    private final CommunityRepository communityRepository;
     private final FriendshipRepository friendshipRepository;
     private final MembershipRepository membershipRepository;
 
@@ -66,7 +64,7 @@ public class UserService {
     public void saveNewAccount(RegisterDto registerDto) {
 
         throwErrIfExistsByEmail(registerDto.getEmail());
-        throwErrIfExistsByNickname(registerDto.getNickname());
+        userMethodsService.throwErrIfExistsByNickname(registerDto.getNickname());
 
         var userEntity = UserEntity.builder()
                 .password( passwordEncoder.encode(registerDto.getPassword()) )
@@ -115,10 +113,10 @@ public class UserService {
 
     private void activateAccountIfVerified(ConfirmationToken token) {
 
-        var account = getUserById( token.getIdUser() );
+        var account = userMethodsService.getUserById( token.getIdUser() );
 
         if ( !token.isNotExpired() ){
-            sendVerificationMail( getUserById( token.getIdUser() ) );
+            sendVerificationMail(account);
             throw new TokenExpiredException("Verification token is expired, new one is sent on your e-mail");
         }
 
@@ -127,7 +125,7 @@ public class UserService {
     }
 
     private void changeEmailActionConfirmation(ConfirmationToken token) { //confirms action "change email"
-        var account = getUserById(token.getIdUser());
+        var account = userMethodsService.getUserById(token.getIdUser());
         throwErrIfTokenExpired(token);
 
         var newToken = new ConfirmationToken(
@@ -146,7 +144,7 @@ public class UserService {
     }
 
     private void changeEmailLastConfirmation(ConfirmationToken token) { //new email confirmation
-        var account = getUserById(token.getIdUser());
+        var account = userMethodsService.getUserById(token.getIdUser());
         throwErrIfTokenExpired(token);
 
         account.setEmail(token.getMessage());
@@ -169,7 +167,7 @@ public class UserService {
     public void changeEmail(String email) { //sends email list on old email to confirm action
 
         throwErrIfExistsByEmail(email);
-        var user = getCurrentUser();
+        var user = userMethodsService.getCurrentUser();
         var confirmationToken = new ConfirmationToken(
                 user.getIdAccount(),
                 ConfirmationType.CHANGE_EMAIL,
@@ -185,7 +183,7 @@ public class UserService {
     }
 
     public void changePassword(ChangePasswordDto dto) {
-        var user = getCurrentUser();
+        var user = userMethodsService.getCurrentUser();
         if ( !passwordEncoder.matches(dto.getOldPass(), user.getPassword()) ) {
             throw new PasswordDoesntMatchException("Invalid old password, please try again");
         }
@@ -195,47 +193,9 @@ public class UserService {
     }
 
 
-    public UserEntity getUserById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User is not found"));
-    }
-    public UserEntity getUserByNickname(String nickname) {
-        return userRepository.findByNickname(nickname)
-                .orElseThrow(() -> new EntityNotFoundException("User is not found"));
-    }
-    public UserEntity getCurrentUser() {
-        return userRepository.findByEmail( SecurityContextHolder.getContext().getAuthentication().getName() )
-                .orElseThrow(() -> new EntityNotFoundException("User is not found"));
-    }
-    public boolean isContextUser() {
-        String s = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toArray()[0].toString();
-        return !s.equals("ROLE_ANONYMOUS");
-    }
-    public boolean isCurrentUserEqual(UserEntity user2) {
-        if (getCurrentUser().equals(user2))
-            return true;
-        else
-            throw new UnauthorizedException("Entity is not belonged to authorized user");
-    }
-    public void throwErrIfExistsByNickname(String nickname) {
-        if ( userRepository.existsByNickname(nickname) || communityRepository.existsByGroupname(nickname) ) {
-            throw new UserAlreadyExistsException("Name: " + nickname + " is already taken");
-        }
-    }
-    private void throwErrIfExistsByEmail(String email) {
-        if ( userRepository.existsByEmail(email) ) {
-            throw new UserAlreadyExistsException("User with email: " + email + " exists");
-        }
-    }
-    private void throwErrIfTokenExpired(ConfirmationToken token) {
-        if ( !token.isNotExpired() ) {
-            throw new TokenExpiredException("Confirmation token is expired");
-        }
-    }
-
 
     public void updateUser(UserUpdateDto userUpdateDto) {
-        var user = getCurrentUser();
+        var user = userMethodsService.getCurrentUser();
 
         if (userUpdateDto.getNicknameColor() != null) {
             user.setNicknameColor(userUpdateDto.getNicknameColor());
@@ -247,7 +207,7 @@ public class UserService {
             user.setSurname(userUpdateDto.getSurname());
         }
         else if (userUpdateDto.getNickname() != null) {
-            throwErrIfExistsByNickname(userUpdateDto.getNickname());
+            userMethodsService.throwErrIfExistsByNickname(userUpdateDto.getNickname());
             user.setNickname(userUpdateDto.getNickname());
         }
 
@@ -259,7 +219,7 @@ public class UserService {
         String newName = fileService.uploadImageNameReturned(file);
         var userImage = UserImage.builder()
                 .name(newName)
-                .user(getCurrentUser())
+                .user(userMethodsService.getCurrentUser())
                 .build();
         userImageRepository.save(userImage);
 
@@ -269,7 +229,7 @@ public class UserService {
 
     public UserPublicDto getNavbarInfo() {
 
-        var currentUser = getCurrentUser();
+        var currentUser = userMethodsService.getCurrentUser();
 
         return UserPublicDto.builder()
                 .image( ListFunctions.getTopImageOfList(currentUser.getImages()) )
@@ -289,10 +249,21 @@ public class UserService {
         communities += membershipRepository.countAllByUser(user);
         return communities;
     }
+    private void throwErrIfExistsByEmail(String email) {
+        if ( userRepository.existsByEmail(email) ) {
+            throw new UserAlreadyExistsException("User with email: " + email + " exists");
+        }
+    }
+    private void throwErrIfTokenExpired(ConfirmationToken token) {
+        if ( !token.isNotExpired() ) {
+            throw new TokenExpiredException("Confirmation token is expired");
+        }
+    }
+
 
     public UserPublicDto getUserInfo(String nickname) {
 
-        var user = getUserByNickname(nickname);
+        var user = userMethodsService.getUserByNickname(nickname);
 
         var dto = UserPublicDto.builder()
                 .image( ListFunctions.getTopImageOfList(user.getImages()) )
@@ -306,35 +277,15 @@ public class UserService {
                 .build();
 
         //Checks the relation between current user and related one: are friends/aren't friends/context user follows related/related follows context user
-        if (isContextUser() && !getCurrentUser().getNickname().equals(nickname)) {
-            dto.setFriendshipType(getFriendshipType(getCurrentUser().getIdAccount(), user.getIdAccount()));
+        if (userMethodsService.isContextUser() && !userMethodsService.getCurrentUser().getNickname().equals(nickname)) {
+            dto.setFriendshipType(userMethodsService.getFriendshipType(userMethodsService.getCurrentUser().getIdAccount(), user.getIdAccount()));
         }
 
         return dto;
     }
 
-    public FriendshipType getFriendshipType(Long idUser1, Long idUser2) {
-        var friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(idUser1, idUser2);
-        if (friendship.isEmpty()) {
-            friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(idUser2, idUser1);
-        }
-        if (friendship.isPresent()) {
-            if (friendship.get().isFirstUser() && friendship.get().isSecondUser())
-                return FriendshipType.FRIENDS;
-            else if (!friendship.get().isFirstUser() && !friendship.get().isSecondUser())
-                return FriendshipType.NOT_FRIENDS;
-            else if (friendship.get().getIdFirstUser().equals(idUser1) && friendship.get().isFirstUser()
-                    || friendship.get().getIdSecondUser().equals(idUser1) && friendship.get().isSecondUser())
-                return FriendshipType.CURRENT_FOLLOW;
-            else
-                return FriendshipType.SECOND_FOLLOW;
-        }
-        else
-            return FriendshipType.NOT_FRIENDS;
-    }
-
     public UserPrivateDto getCurrentUserInfo() {
-        var currentUser = getCurrentUser();
+        var currentUser = userMethodsService.getCurrentUser();
 
         return UserPrivateDto.builder()
                 .email( currentUser.getEmail() )
@@ -347,7 +298,7 @@ public class UserService {
 
     public void newTag(TagDto tagDto) {
         var infoTag = InfoTag.builder()
-                .user( getCurrentUser() )
+                .user( userMethodsService.getCurrentUser() )
                 .title( tagDto.getTitle() )
                 .text( tagDto.getText() )
                 .build();
@@ -365,7 +316,7 @@ public class UserService {
         var tag = infoTagRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
 
-        if (isCurrentUserEqual(tag.getUser())) {
+        if (userMethodsService.isCurrentUserEqual(tag.getUser())) {
             infoTagRepository.delete(tag);
         }
     }

@@ -30,14 +30,16 @@ public class CommunityService {
     private final CommunityRepository communityRepository;
     private final CommunityRoleRepository communityRoleRepository;
     private final CitizenParametersRepository citizenParametersRepository;
-    private final UserService userService;
     private final MembershipRepository membershipRepository;
-    private final FileService fileService;
     private final CommunityImageRepository communityImageRepository;
+    private final FileService fileService;
+    private final UserMethodsService userMethodsService;
+    private final CommunityMethodsService communityMethodsService;
+
 
     @Transactional
     public void newCommunity(NewCommunityDto dto) {
-        var owner = userService.getCurrentUser();
+        var owner = userMethodsService.getCurrentUser();
 
         var community = Community.builder()
                 .type( dto.getType() )
@@ -131,42 +133,30 @@ public class CommunityService {
     }
 
     public void deleteCommunity(String name) {
-        var community = getCommunityByName(name);
-        if (community.getOwner().equals(userService.getCurrentUser()) && community.getType() != CommunityType.DEMOCRACY)
+        var community = communityMethodsService.getCommunityByName(name);
+        if (community.getOwner().equals(userMethodsService.getCurrentUser()) && community.getType() != CommunityType.DEMOCRACY)
             communityRepository.delete(community);
         else
             throw new UnauthorizedException("User doesn't have permissions to delete the community");
     }
 
     public boolean isNameTaken(String name) {
-        userService.throwErrIfExistsByNickname(name);
+        userMethodsService.throwErrIfExistsByNickname(name);
         return true;
-    }
-
-    public int countMembers(Community community) {
-        return membershipRepository.countAllByCommunity(community);
-    }
-
-    public boolean isContextUserMember(Community community) {
-        if (userService.isContextUser()) {
-            var membership = membershipRepository.findByCommunityAndUser(community, userService.getCurrentUser());
-            return membership.isPresent();
-        }
-        return false;
     }
 
 
     public PublicCommunityDto getPublicCommunityDto(String name) {
-        var community = getCommunityByName(name);
+        var community = communityMethodsService.getCommunityByName(name);
         var dto = PublicCommunityDto.builder()
                 .community( community )
-                .members( countMembers(community) )
+                .members( communityMethodsService.countMembers(community) )
                 .ownerNickname( community.getOwner().getNickname() )
                 .ownerImage( ListFunctions.getTopImageOfList(community.getOwner().getImages()) )
                 .build();
         dto.setMember(false);
-        if (isContextUserMember(community)) {
-            var membership = membershipRepository.findByCommunityAndUser(community, userService.getCurrentUser()).get();
+        if (communityMethodsService.isContextUserMember(community)) {
+            var membership = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser()).get();
             if (!membership.isBanned()) {
                 dto.setMember(true);
                 dto.setCurrentUserRole(membership.getRole());
@@ -178,22 +168,8 @@ public class CommunityService {
         return dto;
     }
 
-    public Community getCommunityByName(String name) {
-        return communityRepository.findByGroupname(name).orElseThrow(() -> new EntityNotFoundException("Community is not found"));
-    }
-
-    public CommunityRole findRoleOrThrowErr(Community community, String roleName) {
-        return communityRoleRepository
-                .findByCommunityAndTitle(community, roleName)
-                .orElseThrow(() -> new EntityNotFoundException("Role is not found"));
-    }
-
-    public boolean isCurrentUserOwner(Community community) {
-        return userService.isCurrentUserEqual(community.getOwner());
-    }
-
     public ArrayList<PublicCommunityCardDto> getHomeCards() {
-        var list = membershipRepository.findTop4ByUserAndIsBanned(userService.getCurrentUser(), false);
+        var list = membershipRepository.findTop4ByUserAndIsBanned(userMethodsService.getCurrentUser(), false);
         var array = new ArrayList<PublicCommunityCardDto>();
         list.forEach(o ->
                 array.add(PublicCommunityCardDto.builder()
@@ -204,8 +180,8 @@ public class CommunityService {
     }
 
     public void updateCommunity(UpdateCommunityDto dto) {
-        var user = userService.getCurrentUser();
-        var community = getCommunityByName(dto.getOldGroupname());
+        var user = userMethodsService.getCurrentUser();
+        var community = communityMethodsService.getCommunityByName(dto.getOldGroupname());
         var membership = membershipRepository.findByCommunityAndUser(community, user);
         if (membership.isPresent() && membership.get().getRole() != null) {
             var role = membership.get().getRole();
@@ -235,15 +211,15 @@ public class CommunityService {
         String newName = fileService.uploadImageNameReturned(file);
         var image = CommunityImage.builder()
                 .name(newName)
-                .community(getCommunityByName(groupname))
+                .community(communityMethodsService.getCommunityByName(groupname))
                 .build();
         communityImageRepository.save(image);
         return new OwnSuccessResponse(newName); //returns new name of uploaded file
     }
 
     public void newRole(CommunityRoleDto dto, String groupname) {
-        var community = getCommunityByName(groupname);
-        if (isCurrentUserOwner(community) || community.getType() == CommunityType.ANARCHY) {
+        var community = communityMethodsService.getCommunityByName(groupname);
+        if (communityMethodsService.isCurrentUserOwner(community) || community.getType() == CommunityType.ANARCHY) {
             if (communityRoleRepository.existsByCommunityAndTitle(community, dto.getTitle())) {
                 throw new EntityAlreadyExistsException("Role with entered name is already exists");
             }
@@ -268,13 +244,13 @@ public class CommunityService {
     }
 
     public void updateRole(CommunityRoleDto dto, String groupname, String oldRoleName) {
-        var community = getCommunityByName(groupname);
-        if (isCurrentUserOwner(community)) {
+        var community = communityMethodsService.getCommunityByName(groupname);
+        if (communityMethodsService.isCurrentUserOwner(community)) {
             if (!dto.getTitle().equals(oldRoleName) && communityRoleRepository.existsByCommunityAndTitle(community, dto.getTitle())) {
                 throw new EntityAlreadyExistsException("Role with entered name is already exists");
             }
             else {
-                var role = findRoleOrThrowErr(community, oldRoleName);
+                var role = communityMethodsService.findRoleOrThrowErr(community, oldRoleName);
                 role.setTitle(dto.getTitle());
                 role.setTextColor(dto.getTextColor());
                 role.setBannerColor(dto.getBannerColor());
@@ -289,15 +265,15 @@ public class CommunityService {
     }
 
     public Iterable<CommunityRole> getRoles(String groupname) {
-        var community = getCommunityByName(groupname);
+        var community = communityMethodsService.getCommunityByName(groupname);
         return communityRoleRepository.findAllByCommunity(community);
     }
 
     @Transactional
     public void deleteRole(String groupname, String roleName) {
-        var community = getCommunityByName(groupname);
-        if (isCurrentUserOwner(community)) {
-            var role = findRoleOrThrowErr(community, roleName);
+        var community = communityMethodsService.getCommunityByName(groupname);
+        if (communityMethodsService.isCurrentUserOwner(community)) {
+            var role = communityMethodsService.findRoleOrThrowErr(community, roleName);
             var memberships = membershipRepository.findAllByCommunityAndRole(community, role);
             for (var m: memberships) {
                 m.setRole(null);
@@ -308,8 +284,8 @@ public class CommunityService {
     }
 
     public void updateCommunitySettings(String groupname, NewCommunityDto dto) {
-        var community = getCommunityByName(groupname);
-        if (isCurrentUserOwner(community)) {
+        var community = communityMethodsService.getCommunityByName(groupname);
+        if (communityMethodsService.isCurrentUserOwner(community)) {
             community.setClosed(dto.isClosed());
             community.setAnonAllowed(dto.isAnonAllowed());
             community.setInviteUsers(dto.isInviteUsers());
@@ -318,8 +294,8 @@ public class CommunityService {
     }
 
     public void updateCommunityDemocracySettings(String groupname, NewCommunityDto dto) {
-        var community = getCommunityByName(groupname);
-        if (isCurrentUserOwner(community)) {
+        var community = communityMethodsService.getCommunityByName(groupname);
+        if (communityMethodsService.isCurrentUserOwner(community)) {
             var parameters = citizenParametersRepository.findTopByCommunity(community)
                     .orElseThrow(() -> new EntityNotFoundException("Entity not found"));
             parameters.setDays(dto.getCitizenDays());
