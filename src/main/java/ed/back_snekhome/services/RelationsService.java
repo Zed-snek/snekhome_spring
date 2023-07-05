@@ -1,6 +1,6 @@
 package ed.back_snekhome.services;
 
-import ed.back_snekhome.dto.MembersDto;
+import ed.back_snekhome.dto.communityDTOs.MembersDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import ed.back_snekhome.entities.community.Community;

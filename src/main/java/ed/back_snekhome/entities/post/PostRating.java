@@ -30,8 +30,8 @@ public class PostRating {
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_community")
+    @JoinColumn(name = "id_post")
     @JsonIgnore
-    private Community community;
+    private Post post;
 
 }

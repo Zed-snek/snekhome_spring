@@ -1,7 +1,7 @@
 package ed.back_snekhome.controllers;
 
-import ed.back_snekhome.dto.CommunityRoleDto;
-import ed.back_snekhome.dto.MembersDto;
+import ed.back_snekhome.dto.communityDTOs.CommunityRoleDto;
+import ed.back_snekhome.dto.communityDTOs.MembersDto;
 import ed.back_snekhome.dto.communityDTOs.NewCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;

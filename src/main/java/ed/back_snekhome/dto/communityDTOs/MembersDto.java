@@ -1,4 +1,4 @@
-package ed.back_snekhome.dto;
+package ed.back_snekhome.dto.communityDTOs;
 
 import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import lombok.Builder;

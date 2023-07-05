@@ -1,4 +1,4 @@
-package ed.back_snekhome.dto;
+package ed.back_snekhome.dto.communityDTOs;
 
 import lombok.Builder;
 import lombok.Getter;
