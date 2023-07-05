@@ -1,6 +1,6 @@
 package ed.back_snekhome.repositories;
 
-import ed.back_snekhome.entities.UserImage;
+import ed.back_snekhome.entities.user.UserImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

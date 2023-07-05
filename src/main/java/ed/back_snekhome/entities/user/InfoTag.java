@@ -1,11 +1,11 @@
-package ed.back_snekhome.entities;
+package ed.back_snekhome.entities.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "info_tags" )
+@Table
 @Getter
 @Setter
 @NoArgsConstructor

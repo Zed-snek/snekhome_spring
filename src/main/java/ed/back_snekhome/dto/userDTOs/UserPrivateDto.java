@@ -1,7 +1,7 @@
 package ed.back_snekhome.dto.userDTOs;
 
 
-import ed.back_snekhome.entities.InfoTag;
+import ed.back_snekhome.entities.user.InfoTag;
 import ed.back_snekhome.security.Role;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

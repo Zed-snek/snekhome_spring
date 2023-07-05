@@ -1,4 +1,4 @@
-package ed.back_snekhome.entities.relations;
+package ed.back_snekhome.entities.post;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -8,22 +8,18 @@ import lombok.*;
 @Entity
 @Table
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Builder
-public class Friendship {
+@AllArgsConstructor
+public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
-    private Long id;
+    private Long idPost;
 
-    private Long idFirstUser;
-    private Long idSecondUser;
 
-    private boolean isFirstUser;
-    private boolean isSecondUser;
+
 
 }
-

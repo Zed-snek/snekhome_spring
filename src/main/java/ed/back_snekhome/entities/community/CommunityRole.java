@@ -1,4 +1,4 @@
-package ed.back_snekhome.entities;
+package ed.back_snekhome.entities.community;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

@@ -1,5 +1,4 @@
-package ed.back_snekhome.entities;
-
+package ed.back_snekhome.entities.post;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.helpful.Image;
@@ -13,7 +12,7 @@ import lombok.*;
 @Setter
 @Builder
 @AllArgsConstructor
-public class CommunityImage extends Image {
+public class PostImage extends Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,8 +22,8 @@ public class CommunityImage extends Image {
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_community")
+    @JoinColumn(name = "id_post")
     @JsonIgnore
-    private Community community;
+    private Post post;
 
 }

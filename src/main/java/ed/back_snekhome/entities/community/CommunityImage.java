@@ -1,4 +1,4 @@
-package ed.back_snekhome.entities;
+package ed.back_snekhome.entities.community;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -7,13 +7,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "userImages", uniqueConstraints = @UniqueConstraint(columnNames = {"name"} ) )
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"name"} ) )
 @NoArgsConstructor
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
-public class UserImage extends Image {
+public class CommunityImage extends Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,8 +22,9 @@ public class UserImage extends Image {
 
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY) //CascadeType.ALL = removes all images if user is removed
-    @JoinColumn(name = "id_account")
-    private UserEntity user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_community")
+    @JsonIgnore
+    private Community community;
 
 }

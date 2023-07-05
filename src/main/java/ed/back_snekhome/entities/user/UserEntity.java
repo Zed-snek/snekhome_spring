@@ -1,8 +1,6 @@
-package ed.back_snekhome.entities;
+package ed.back_snekhome.entities.user;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import ed.back_snekhome.entities.relations.Friendship;
 import ed.back_snekhome.security.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,7 +14,7 @@ import java.util.List;
 
 
 @Entity
-@Table(name = "accounts", uniqueConstraints = @UniqueConstraint(columnNames = {"email", "nickname"} ) )
+@Table(name = "account", uniqueConstraints = @UniqueConstraint(columnNames = {"email", "nickname"} ) )
 @Getter
 @Setter
 @Builder

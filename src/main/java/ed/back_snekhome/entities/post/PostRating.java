@@ -1,38 +1,37 @@
-package ed.back_snekhome.entities.relations;
+package ed.back_snekhome.entities.post;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.community.Community;
-import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.user.UserEntity;
+import ed.back_snekhome.enums.RatingType;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Table
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Builder
-public class Membership {
+@AllArgsConstructor
+public class PostRating {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    private RatingType type;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_account")
+    @JsonIgnore
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_community")
+    @JsonIgnore
     private Community community;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_role")
-    private CommunityRole role;
-
-    private boolean isBanned;
 
 }

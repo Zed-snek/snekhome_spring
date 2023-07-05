@@ -1,7 +1,8 @@
 package ed.back_snekhome.dto.userDTOs;
 
-import ed.back_snekhome.entities.CommunityRole;
-import ed.back_snekhome.entities.InfoTag;
+import ed.back_snekhome.entities.community.CommunityRole;
+import ed.back_snekhome.entities.user.InfoTag;
+import ed.back_snekhome.entities.user.UserImage;
 import ed.back_snekhome.enums.FriendshipType;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,6 +18,8 @@ public class UserPublicDto {
     private String name;
     private String surname;
     private String image;
+
+    private List<UserImage> images;
 
     private String nickname;
     private String nicknameColor;

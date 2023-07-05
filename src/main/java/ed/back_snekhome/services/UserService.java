@@ -5,9 +5,9 @@ import ed.back_snekhome.email.ConfirmationToken;
 import ed.back_snekhome.email.ConfirmationTokenService;
 import ed.back_snekhome.email.ConfirmationType;
 import ed.back_snekhome.email.EmailSendService;
-import ed.back_snekhome.entities.InfoTag;
-import ed.back_snekhome.entities.UserEntity;
-import ed.back_snekhome.entities.UserImage;
+import ed.back_snekhome.entities.user.InfoTag;
+import ed.back_snekhome.entities.user.UserEntity;
+import ed.back_snekhome.entities.user.UserImage;
 import ed.back_snekhome.exceptionHandler.exceptions.*;
 import ed.back_snekhome.repositories.*;
 import ed.back_snekhome.response.AuthenticationResponse;
@@ -266,21 +266,20 @@ public class UserService {
         var user = userMethodsService.getUserByNickname(nickname);
 
         var dto = UserPublicDto.builder()
-                .image( ListFunctions.getTopImageOfList(user.getImages()) )
-                .nickname( user.getNickname() )
-                .nicknameColor( user.getNicknameColor() )
-                .name( user.getName() )
-                .surname( user.getSurname() )
-                .friends( countFriends(user.getIdAccount()) )
-                .communities( countCommunities(user) )
-                .tags( user.getTags() )
+                .images(user.getImages())
+                .nickname(user.getNickname())
+                .nicknameColor(user.getNicknameColor())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .friends(countFriends(user.getIdAccount()))
+                .communities(countCommunities(user))
+                .tags(user.getTags())
                 .build();
 
         //Checks the relation between current user and related one: are friends/aren't friends/context user follows related/related follows context user
         if (userMethodsService.isContextUser() && !userMethodsService.getCurrentUser().getNickname().equals(nickname)) {
             dto.setFriendshipType(userMethodsService.getFriendshipType(userMethodsService.getCurrentUser().getIdAccount(), user.getIdAccount()));
         }
-
         return dto;
     }
 

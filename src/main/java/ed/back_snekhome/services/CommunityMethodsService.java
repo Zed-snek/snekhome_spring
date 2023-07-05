@@ -1,7 +1,7 @@
 package ed.back_snekhome.services;
 
-import ed.back_snekhome.entities.Community;
-import ed.back_snekhome.entities.CommunityRole;
+import ed.back_snekhome.entities.community.Community;
+import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.repositories.*;
 import lombok.RequiredArgsConstructor;

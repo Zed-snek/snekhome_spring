@@ -1,7 +1,7 @@
 package ed.back_snekhome.repositories;
 
-import ed.back_snekhome.entities.Community;
-import ed.back_snekhome.entities.CommunityRole;
+import ed.back_snekhome.entities.community.Community;
+import ed.back_snekhome.entities.community.CommunityRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

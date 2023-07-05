@@ -1,7 +1,8 @@
-package ed.back_snekhome.entities;
+package ed.back_snekhome.entities.community;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.enums.CommunityType;
 import jakarta.persistence.*;
@@ -11,7 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table(name = "communities", uniqueConstraints = @UniqueConstraint(columnNames = {"groupname"} ) )
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"groupname"} ) )
 @NoArgsConstructor
 @Getter
 @Setter
