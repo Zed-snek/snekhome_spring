@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @RestController
@@ -24,8 +25,8 @@ public class FileController {
     }
 
     @DeleteMapping("/auth/image/{name}/delete")
-    public ResponseEntity<OwnSuccessResponse> deleteImage(@PathVariable String name) {
-        var response = new OwnSuccessResponse(fileService.deleteImageByName(name));
+    public ResponseEntity<OwnSuccessResponse> deleteCommunityOrUserImage(@PathVariable String name) throws FileNotFoundException {
+        var response = new OwnSuccessResponse(fileService.deleteCommunityOrUserImageByName(name));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

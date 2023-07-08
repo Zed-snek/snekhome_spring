@@ -26,16 +26,7 @@ public class MyExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED); //401
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<OwnErrorResponse> badCredentialsHandler() {
 
-        var errorResponse = new OwnErrorResponse(
-                HttpStatus.UNAUTHORIZED.value(),
-                "Password is wrong"
-        );
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED); //401
-    }
 
     @ExceptionHandler(PasswordDoesntMatchException.class)
     public ResponseEntity<OwnErrorResponse> userErrorHandler(PasswordDoesntMatchException e) {
@@ -48,16 +39,7 @@ public class MyExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED); //401
     }
 
-    @ExceptionHandler(DisabledException.class)
-    public ResponseEntity<OwnErrorResponse> userDisabledHandle() {
 
-        var errorResponse = new OwnErrorResponse(
-                HttpStatus.UNAUTHORIZED.value(),
-                "You have to verify your account on email"
-        );
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED); //401
-    }
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<OwnErrorResponse> userErrorHandler(UnauthorizedException e) {
@@ -131,7 +113,16 @@ public class MyExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 e.getMessage()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST); //400
+    }
+
+    @ExceptionHandler(FileCantDeleteException.class)
+    public ResponseEntity<OwnErrorResponse> badRequestError() {
+        var errorResponse = new OwnErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Error while deleting the file"
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST); //400
     }
 
 
