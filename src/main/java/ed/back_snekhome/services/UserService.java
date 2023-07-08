@@ -315,9 +315,10 @@ public class UserService {
         var tag = infoTagRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
 
-        if (userMethodsService.isCurrentUserEqual(tag.getUser())) {
+        if (userMethodsService.isCurrentUserEqual(tag.getUser()))
             infoTagRepository.delete(tag);
-        }
+        else
+            throw new UnauthorizedException("Entity is not belonged to authorized user");
     }
 
 

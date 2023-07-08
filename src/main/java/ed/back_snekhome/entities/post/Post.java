@@ -29,12 +29,11 @@ public class Post {
     private List<Commentary> commentaries;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_post")
+    @JoinColumn(name = "id_community")
     @JsonIgnore
     private Community community;
 
     private boolean isAnonymous;
-    private String title;
 
     @Column(columnDefinition = "TEXT")
     private String text;

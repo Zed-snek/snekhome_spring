@@ -151,24 +151,36 @@ public class CommunityService {
 
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = communityMethodsService.getCommunityByName(name);
-        var dto = PublicCommunityDto.builder()
-                .community( community )
-                .members( communityMethodsService.countMembers(community) )
-                .ownerNickname( community.getOwner().getNickname() )
-                .ownerImage( ListFunctions.getTopImageOfList(community.getOwner().getImages()) )
-                .build();
-        dto.setMember(false);
-        if (communityMethodsService.isContextUserMember(community)) {
-            var membership = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser()).get();
-            if (!membership.isBanned()) {
+        var membership = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
+
+        if ((membership.isPresent() && !membership.get().isBanned()) || !community.isClosed() || communityMethodsService.isCurrentUserOwner(community)) {
+            var dto = PublicCommunityDto.builder()
+                    .community(community)
+                    .members(communityMethodsService.countMembers(community))
+                    .ownerNickname(community.getOwner().getNickname())
+                    .ownerImage(ListFunctions.getTopImageOfList(community.getOwner().getImages()))
+                    .isAccess(true)
+                    .build();
+            dto.setMember(false);
+            if (membership.isPresent() && !membership.get().isBanned()) {
                 dto.setMember(true);
-                dto.setCurrentUserRole(membership.getRole());
+                dto.setCurrentUserRole(membership.get().getRole());
             }
             else {
                 dto.setBanned(true);
             }
+            return dto;
         }
-        return dto;
+        else { //Limited information, if user has no permissions:
+            return PublicCommunityDto.builder()
+                    .name(community.getName())
+                    .groupname(community.getGroupname())
+                    .description(community.getDescription())
+                    .image(ListFunctions.getTopImageOfList(community.getImages()))
+                    .type(community.getType())
+                    .isAccess(false)
+                    .build();
+        }
     }
 
     public ArrayList<PublicCommunityCardDto> getHomeCards() {

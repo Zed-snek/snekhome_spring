@@ -2,6 +2,7 @@ package ed.back_snekhome.dto.communityDTOs;
 
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.CommunityRole;
+import ed.back_snekhome.enums.CommunityType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,5 +22,14 @@ public class PublicCommunityDto {
     private String ownerImage;
 
     private CommunityRole currentUserRole;
+
+    private boolean isAccess;
+
+    //Limited information
+    private String name;
+    private String groupname;
+    private String description;
+    private String image;
+    private CommunityType type;
 
 }

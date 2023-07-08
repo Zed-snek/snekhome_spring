@@ -37,10 +37,7 @@ public class UserMethodsService {
         return !s.equals("ROLE_ANONYMOUS");
     }
     public boolean isCurrentUserEqual(UserEntity user2) {
-        if (getCurrentUser().equals(user2))
-            return true;
-        else
-            throw new UnauthorizedException("Entity is not belonged to authorized user");
+        return getCurrentUser().equals(user2);
     }
     public void throwErrIfExistsByNickname(String nickname) {
         if ( userRepository.existsByNickname(nickname) || communityRepository.existsByGroupname(nickname) ) {

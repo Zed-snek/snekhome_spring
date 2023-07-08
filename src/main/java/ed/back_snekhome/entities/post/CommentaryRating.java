@@ -3,8 +3,10 @@ package ed.back_snekhome.entities.post;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.user.UserEntity;
+import ed.back_snekhome.enums.RatingType;
 import jakarta.persistence.*;
 import lombok.*;
+
 
 @Entity
 @Table
@@ -13,14 +15,15 @@ import lombok.*;
 @Setter
 @Builder
 @AllArgsConstructor
-public class Commentary {
+public class CommentaryRating {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idCommentary;
+    @JsonIgnore
+    private Long id;
 
-    @Column(columnDefinition = "TEXT")
-    private String text;
+    @Enumerated(EnumType.STRING)
+    private RatingType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_account")
@@ -28,10 +31,8 @@ public class Commentary {
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_post")
+    @JoinColumn(name = "id_commentary")
     @JsonIgnore
-    private Post post;
-
-    private Long referenceId;
+    private Commentary commentary;
 
 }
