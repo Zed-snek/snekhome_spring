@@ -3,7 +3,6 @@ package ed.back_snekhome.services;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.FriendshipType;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
-import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.exceptionHandler.exceptions.UserAlreadyExistsException;
 import ed.back_snekhome.repositories.CommunityRepository;
 import ed.back_snekhome.repositories.FriendshipRepository;

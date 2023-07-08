@@ -1,0 +1,19 @@
+package ed.back_snekhome.dto.postDTOs;
+
+
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+@Getter
+@Setter
+public class NewPostDto {
+
+    private String groupname;
+    private boolean isAnonymous;
+    private String text;
+    private List<MultipartFile> images;
+
+}

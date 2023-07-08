@@ -125,5 +125,14 @@ public class MyExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST); //400
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<OwnErrorResponse> badRequestError(BadRequestException e) {
+        var errorResponse = new OwnErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                e.getMessage()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
 
 }

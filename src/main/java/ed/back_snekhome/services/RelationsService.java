@@ -91,7 +91,8 @@ public class RelationsService {
 
 
     public Membership getMembership(UserEntity user, Community community) {
-        return membershipRepository.findByCommunityAndUser(community, user).orElseThrow(() -> new EntityNotFoundException("User is not a member"));
+        return membershipRepository.findByCommunityAndUser(community, user)
+                .orElseThrow(() -> new EntityNotFoundException("User is not a member"));
     }
 
     public Iterable<Membership> getMembershipsByUser(UserEntity user, boolean isBanned) {
