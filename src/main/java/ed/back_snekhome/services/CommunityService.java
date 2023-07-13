@@ -132,7 +132,6 @@ public class CommunityService {
                     .build();
             citizenParametersRepository.save(citizenParameters);
         }
-
     }
 
     public void deleteCommunity(String name) {
@@ -152,8 +151,7 @@ public class CommunityService {
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = communityMethodsService.getCommunityByName(name);
         var membership = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
-
-        if ((membership.isPresent() && !membership.get().isBanned()) || !community.isClosed() || communityMethodsService.isCurrentUserOwner(community)) {
+        if (communityMethodsService.isAccessToCommunity(community, membership)) {
             var dto = PublicCommunityDto.builder()
                     .community(community)
                     .members(communityMethodsService.countMembers(community))
@@ -162,13 +160,17 @@ public class CommunityService {
                     .isAccess(true)
                     .build();
             dto.setMember(false);
-            if (membership.isPresent() && !membership.get().isBanned()) {
-                dto.setMember(true);
-                dto.setCurrentUserRole(membership.get().getRole());
+
+            if (membership.isPresent()) {
+                if (membership.get().isBanned()) {
+                    dto.setBanned(true);
+                }
+                else {
+                    dto.setMember(true);
+                    dto.setCurrentUserRole(membership.get().getRole());
+                }
             }
-            else {
-                dto.setBanned(true);
-            }
+
             return dto;
         }
         else { //Limited information, if user has no permissions:

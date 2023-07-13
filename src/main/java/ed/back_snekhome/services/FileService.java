@@ -124,7 +124,7 @@ public class FileService {
     private String getFileExtension(String fileName) {
         int lastDot = fileName.lastIndexOf('.');
 
-        if ( lastDot == -1 ) //if dot was not found, method lastIndexOf returns value "-1"
+        if (lastDot == -1) //if dot was not found, method lastIndexOf returns value "-1"
             return "";
         else
             return fileName.substring( lastDot );

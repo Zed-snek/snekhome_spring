@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -14,6 +15,6 @@ public class NewPostDto {
     private String groupname;
     private boolean isAnonymous;
     private String text;
-    private List<MultipartFile> images;
+    private List<MultipartFile> images = new ArrayList<>();
 
 }

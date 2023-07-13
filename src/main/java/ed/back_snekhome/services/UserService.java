@@ -246,7 +246,7 @@ public class UserService {
     }
     private int countCommunities(UserEntity user) {
         int communities = 0;
-        communities += membershipRepository.countAllByUser(user);
+        communities += membershipRepository.countAllByUserAndIsBanned(user, false);
         return communities;
     }
     private void throwErrIfExistsByEmail(String email) {

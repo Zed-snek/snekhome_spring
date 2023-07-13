@@ -12,7 +12,7 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
 
     Optional<Membership> findByCommunityAndUser(Community community, UserEntity user);
     int countAllByCommunity(Community community);
-    int countAllByUser(UserEntity user);
+    int countAllByUserAndIsBanned(UserEntity user, boolean isBanned);
     Iterable<Membership> findTop4ByUserAndIsBanned(UserEntity user, boolean isBanned);
     Iterable<Membership> findAllByUserAndIsBanned(UserEntity user, boolean isBanned);
     Iterable<Membership> findAllByCommunityAndIsBanned(Community community, boolean isBanned);

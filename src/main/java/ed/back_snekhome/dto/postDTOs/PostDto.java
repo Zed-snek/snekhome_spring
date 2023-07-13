@@ -17,10 +17,16 @@ public class PostDto {
     private Post post;
     private int comments;
     private int rating;
+    private boolean isRated;
+    private boolean isAnonymous;
     private List<Commentary> commentaries;
 
     private String username;
     private String userImage;
     private CommunityRole role;
+
+    private String groupImage;
+    private String groupname;
+    private String groupTitle;
 
 }
