@@ -13,7 +13,7 @@ import java.util.List;
 public class NewPostDto {
 
     private String groupname;
-    private boolean isAnonymous;
+    private String isAnonymous;
     private String text;
     private List<MultipartFile> images = new ArrayList<>();
 

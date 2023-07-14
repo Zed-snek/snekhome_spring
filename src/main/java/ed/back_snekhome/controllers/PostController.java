@@ -2,6 +2,7 @@ package ed.back_snekhome.controllers;
 
 import ed.back_snekhome.dto.postDTOs.NewPostDto;
 import ed.back_snekhome.dto.postDTOs.PostDto;
+import ed.back_snekhome.enums.RatingType;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.CommunityService;
 import ed.back_snekhome.services.PostService;
@@ -29,6 +30,14 @@ public class PostController {
     @GetMapping("/post/{id}")
     public PostDto getPostPage(@PathVariable Long id) {
         return postService.getPostPage(id);
+    }
+
+    @PostMapping("/auth/post/{id}/rate/{newStatus}")
+    public ResponseEntity<OwnSuccessResponse> ratePost(@PathVariable Long id, @PathVariable RatingType newStatus) {
+        postService.ratePost(id, newStatus);
+
+        var response = new OwnSuccessResponse("Success");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }
