@@ -10,6 +10,7 @@ import ed.back_snekhome.entities.community.CommunityCitizenParameters;
 import ed.back_snekhome.entities.community.CommunityImage;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.relations.Membership;
+import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityAlreadyExistsException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
@@ -25,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -150,7 +152,13 @@ public class CommunityService {
 
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = communityMethodsService.getCommunityByName(name);
-        var membership = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
+
+        Optional<Membership> membership;
+        if (userMethodsService.isContextUser())
+            membership = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
+        else
+            membership = Optional.empty();
+
         if (communityMethodsService.isAccessToCommunity(community, membership)) {
             var dto = PublicCommunityDto.builder()
                     .community(community)

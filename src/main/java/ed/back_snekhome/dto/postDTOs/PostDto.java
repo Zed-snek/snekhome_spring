@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -21,12 +22,15 @@ public class PostDto {
     private RatingType ratedType;
     private List<Commentary> commentaries;
 
-    private String username;
+    private String userName;
+    private String userSurname;
+    private String userNickname;
     private String userImage;
     private CommunityRole role;
 
     private String groupImage;
     private String groupname;
     private String groupTitle;
+    private LocalDate communityDate;
 
 }

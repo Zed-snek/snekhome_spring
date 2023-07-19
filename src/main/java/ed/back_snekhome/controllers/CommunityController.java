@@ -29,7 +29,6 @@ public class CommunityController {
 
     @GetMapping("/community/{name}")
     public PublicCommunityDto getCommunity(@PathVariable String name) {
-
         return communityService.getPublicCommunityDto(name);
     }
 

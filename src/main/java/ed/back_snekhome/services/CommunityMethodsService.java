@@ -32,7 +32,8 @@ public class CommunityMethodsService {
     }
 
     public Community getCommunityByName(String name) {
-        return communityRepository.findByGroupname(name).orElseThrow(() -> new EntityNotFoundException("Community is not found"));
+        return communityRepository.findByGroupname(name)
+                .orElseThrow(() -> new EntityNotFoundException("Community is not found"));
     }
 
     public CommunityRole findRoleOrThrowErr(Community community, String roleName) {
@@ -46,7 +47,9 @@ public class CommunityMethodsService {
     }
 
     public boolean isAccessToCommunity(Community community, Optional<Membership> membership) {
-        return (membership.isPresent() && !membership.get().isBanned()) || !community.isClosed() || isCurrentUserOwner(community);
+        return (membership.isPresent() && !membership.get().isBanned())
+                || !community.isClosed()
+                || isCurrentUserOwner(community);
     }
 
 }

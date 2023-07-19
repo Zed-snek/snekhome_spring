@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -62,7 +61,7 @@ public class PostService {
         return post.getIdPost();
     }
 
-    private Post getPostById(Long id) {
+    public Post getPostById(Long id) {
         return postRepository.getByIdPost(id)
                 .orElseThrow(() -> new EntityNotFoundException("There is no post"));
     }
@@ -83,10 +82,12 @@ public class PostService {
 
     public PostDto getPostPage(Long id) {
         var post = getPostById(id);
-        Optional<Membership> membership = Optional.empty();
-        if (userMethodsService.isContextUser()) {
+        Optional<Membership> membership;
+        if (userMethodsService.isContextUser())
             membership = membershipRepository.findByCommunityAndUser(post.getCommunity(), userMethodsService.getCurrentUser());
-        }
+        else
+            membership = Optional.empty();
+
         if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership)) {
             var postDto = PostDto.builder()
                     .post(post)
@@ -95,10 +96,13 @@ public class PostService {
                     .groupImage(ListFunctions.getTopImageOfList(post.getCommunity().getImages()))
                     .groupname(post.getCommunity().getGroupname())
                     .groupTitle(post.getCommunity().getName())
+                    .communityDate(post.getCommunity().getCreation())
                     .build();
             if (!post.isAnonymous()) {
                 postDto.setUserImage(ListFunctions.getTopImageOfList(post.getUser().getImages()));
-                postDto.setUsername(post.getUser().getUsername());
+                postDto.setUserNickname(post.getUser().getNickname());
+                postDto.setUserName(post.getUser().getName());
+                postDto.setUserSurname(post.getUser().getSurname());
                 membership.ifPresent(value -> postDto.setRole(value.getRole()));
             }
             return postDto;
@@ -126,6 +130,7 @@ public class PostService {
         rating.setType(newStatus);
         postRatingRepository.save(rating);
     }
+
 
 
 
