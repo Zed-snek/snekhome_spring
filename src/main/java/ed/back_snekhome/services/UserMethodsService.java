@@ -67,7 +67,7 @@ public class UserMethodsService {
     }
 
     public String getTopUserImage(UserEntity user) {
-        var img = userImageRepository.findTopByUser(user);
+        var img = userImageRepository.findTopByUserOrderByIdImageDesc(user);
         if (img.isPresent())
             return img.get().getName();
         return "";

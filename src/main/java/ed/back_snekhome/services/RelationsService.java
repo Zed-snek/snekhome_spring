@@ -13,7 +13,6 @@ import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.CommunityRoleRepository;
 import ed.back_snekhome.repositories.FriendshipRepository;
 import ed.back_snekhome.repositories.MembershipRepository;
-import ed.back_snekhome.utils.ListFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -78,7 +77,7 @@ public class RelationsService {
             else
                 friend = userMethodsService.getUserById(f.getIdFirstUser());
             array.add(UserPublicDto.builder()
-                            .image(ListFunctions.getTopImageOfList(friend.getImages()))
+                            .image(userMethodsService.getTopUserImage(friend))
                             .nickname(friend.getNickname())
                             .friendshipType(userMethodsService.getFriendshipType(user.getIdAccount(), friend.getIdAccount()))
                             .name(friend.getName())
@@ -129,7 +128,7 @@ public class RelationsService {
         var array = new ArrayList<PublicCommunityCardDto>();
         memberships.forEach(
                 m -> array.add(PublicCommunityCardDto.builder()
-                        .image( ListFunctions.getTopImageOfList(m.getCommunity().getImages()) )
+                        .image(communityMethodsService.getTopCommunityImage(m.getCommunity()))
                         .name( m.getCommunity().getName() )
                         .groupname( m.getCommunity().getGroupname() )
                         .description( m.getCommunity().getDescription() )
@@ -155,7 +154,7 @@ public class RelationsService {
                             .name(user.getName())
                             .surname(user.getSurname())
                             .nickname(user.getNickname())
-                            .image(ListFunctions.getTopImageOfList(user.getImages()))
+                            .image(userMethodsService.getTopUserImage(user))
                             .communityRole(m.getRole())
                             .build());
         }

@@ -8,5 +8,5 @@ import java.util.Optional;
 
 public interface UserImageRepository extends JpaRepository<UserImage, Long> {
     Optional<UserImage> findByName(String name);
-    Optional<UserImage> findTopByUser(UserEntity user);
+    Optional<UserImage> findTopByUserOrderByIdImageDesc(UserEntity user);
 }

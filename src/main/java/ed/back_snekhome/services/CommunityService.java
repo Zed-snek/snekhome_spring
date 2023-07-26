@@ -10,14 +10,12 @@ import ed.back_snekhome.entities.community.CommunityCitizenParameters;
 import ed.back_snekhome.entities.community.CommunityImage;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.relations.Membership;
-import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityAlreadyExistsException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.*;
 import ed.back_snekhome.response.OwnSuccessResponse;
-import ed.back_snekhome.utils.ListFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -161,7 +158,7 @@ public class CommunityService {
                     .community(community)
                     .members(communityMethodsService.countMembers(community))
                     .ownerNickname(community.getOwner().getNickname())
-                    .ownerImage(ListFunctions.getTopImageOfList(community.getOwner().getImages()))
+                    .ownerImage(userMethodsService.getTopUserImage(community.getOwner()))
                     .isAccess(true)
                     .build();
             dto.setMember(false);
@@ -183,7 +180,7 @@ public class CommunityService {
                     .name(community.getName())
                     .groupname(community.getGroupname())
                     .description(community.getDescription())
-                    .image(ListFunctions.getTopImageOfList(community.getImages()))
+                    .image(communityMethodsService.getTopCommunityImage(community))
                     .type(community.getType())
                     .isAccess(false)
                     .build();
@@ -195,7 +192,7 @@ public class CommunityService {
         var array = new ArrayList<PublicCommunityCardDto>();
         list.forEach(o ->
                 array.add(PublicCommunityCardDto.builder()
-                        .image( ListFunctions.getTopImageOfList(o.getCommunity().getImages()) )
+                        .image(communityMethodsService.getTopCommunityImage(o.getCommunity()))
                         .groupname( o.getCommunity().getGroupname() )
                         .build()));
         return array;

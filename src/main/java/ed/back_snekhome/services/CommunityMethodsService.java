@@ -3,6 +3,7 @@ package ed.back_snekhome.services;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.relations.Membership;
+import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.repositories.*;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.Optional;
 public class CommunityMethodsService {
 
     private final CommunityRepository communityRepository;
+    private final CommunityImageRepository communityImageRepository;
     private final CommunityRoleRepository communityRoleRepository;
     private final MembershipRepository membershipRepository;
     private final UserMethodsService userMethodsService;
@@ -56,6 +58,13 @@ public class CommunityMethodsService {
         if (userMethodsService.isContextUser())
             return membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
         return Optional.empty();
+    }
+
+    public String getTopCommunityImage(Community community) {
+        var img = communityImageRepository.findTopByCommunityOrderByIdImageDesc(community);
+        if (img.isPresent())
+            return img.get().getName();
+        return "";
     }
 
 }

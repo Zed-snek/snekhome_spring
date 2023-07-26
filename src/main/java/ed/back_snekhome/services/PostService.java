@@ -4,7 +4,6 @@ import ed.back_snekhome.dto.postDTOs.NewPostDto;
 import ed.back_snekhome.dto.postDTOs.PostDto;
 import ed.back_snekhome.entities.post.Post;
 import ed.back_snekhome.entities.post.PostRating;
-import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.enums.RatingType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
@@ -13,7 +12,6 @@ import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.MembershipRepository;
 import ed.back_snekhome.repositories.PostRatingRepository;
 import ed.back_snekhome.repositories.PostRepository;
-import ed.back_snekhome.utils.ListFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,13 +87,13 @@ public class PostService {
                     .post(post)
                     .ratedType(getRatedType(post))
                     .rating(countRating(post))
-                    .groupImage(ListFunctions.getTopImageOfList(post.getCommunity().getImages()))
+                    .groupImage(communityMethodsService.getTopCommunityImage(post.getCommunity()))
                     .groupname(post.getCommunity().getGroupname())
                     .groupTitle(post.getCommunity().getName())
                     .communityDate(post.getCommunity().getCreation())
                     .build();
             if (!post.isAnonymous()) {
-                postDto.setUserImage(ListFunctions.getTopImageOfList(post.getUser().getImages()));
+                postDto.setUserImage(userMethodsService.getTopUserImage(post.getUser()));
                 postDto.setUserNickname(post.getUser().getNickname());
                 postDto.setUserName(post.getUser().getName());
                 postDto.setUserSurname(post.getUser().getSurname());

@@ -14,7 +14,6 @@ import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.security.JwtService;
 import ed.back_snekhome.security.Role;
-import ed.back_snekhome.utils.ListFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -228,13 +227,12 @@ public class UserService {
 
 
     public UserPublicDto getNavbarInfo() {
-
         var currentUser = userMethodsService.getCurrentUser();
 
         return UserPublicDto.builder()
-                .image( ListFunctions.getTopImageOfList(currentUser.getImages()) )
-                .nickname( currentUser.getNickname() )
-                .nicknameColor( currentUser.getNicknameColor() )
+                .image(userMethodsService.getTopUserImage(currentUser))
+                .nickname(currentUser.getNickname())
+                .nicknameColor(currentUser.getNicknameColor())
                 .build();
     }
 
