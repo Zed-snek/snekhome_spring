@@ -4,10 +4,13 @@ import ed.back_snekhome.dto.postDTOs.NewCommentaryDto;
 import ed.back_snekhome.entities.post.Commentary;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.RatingType;
+import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.CommentaryRatingRepository;
 import ed.back_snekhome.repositories.CommentaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +20,7 @@ public class CommentaryService {
     private final CommentaryRatingRepository commentaryRatingRepository;
     private final PostService postService;
     private final UserMethodsService userMethodsService;
+    private final CommunityMethodsService communityMethodsService;
 
 
     public void newComment(Long id, NewCommentaryDto dto) {
@@ -31,6 +35,17 @@ public class CommentaryService {
 
     public void rateComment(Long id, RatingType newStatus) {
 
+    }
+
+    public List<Commentary> getCommentariesByPostId(Long id) {
+        var post = postService.getPostById(id);
+        var membership
+                = communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+
+        if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership))
+            return commentaryRepository.findAllByPost(post);
+
+        throw new UnauthorizedException("No access to commentaries");
     }
 
 }

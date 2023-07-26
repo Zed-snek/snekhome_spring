@@ -52,4 +52,10 @@ public class CommunityMethodsService {
                 || isCurrentUserOwner(community);
     }
 
+    public Optional<Membership> getOptionalMembershipOfCurrentUser(Community community) {
+        if (userMethodsService.isContextUser())
+            return membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
+        return Optional.empty();
+    }
+
 }

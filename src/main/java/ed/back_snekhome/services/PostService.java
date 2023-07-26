@@ -82,11 +82,8 @@ public class PostService {
 
     public PostDto getPostPage(Long id) {
         var post = getPostById(id);
-        Optional<Membership> membership;
-        if (userMethodsService.isContextUser())
-            membership = membershipRepository.findByCommunityAndUser(post.getCommunity(), userMethodsService.getCurrentUser());
-        else
-            membership = Optional.empty();
+        var membership =
+                communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
         if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership)) {
             var postDto = PostDto.builder()
