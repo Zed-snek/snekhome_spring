@@ -150,14 +150,11 @@ public class CommunityService {
     }
 
 
+
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = communityMethodsService.getCommunityByName(name);
 
-        Optional<Membership> membership;
-        if (userMethodsService.isContextUser())
-            membership = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
-        else
-            membership = Optional.empty();
+        var membership = communityMethodsService.getOptionalMembershipOfCurrentUser(community);
 
         if (communityMethodsService.isAccessToCommunity(community, membership)) {
             var dto = PublicCommunityDto.builder()

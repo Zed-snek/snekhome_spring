@@ -13,7 +13,11 @@ public class CommentaryDto {
     private Long reference;
 
     private String nickname;
-    private String text;
+    private String image;
 
     private int rating;
+
+    private String text;
+
+
 }

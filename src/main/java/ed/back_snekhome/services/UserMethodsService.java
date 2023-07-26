@@ -6,6 +6,7 @@ import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UserAlreadyExistsException;
 import ed.back_snekhome.repositories.CommunityRepository;
 import ed.back_snekhome.repositories.FriendshipRepository;
+import ed.back_snekhome.repositories.UserImageRepository;
 import ed.back_snekhome.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +18,7 @@ public class UserMethodsService {
 
     private final CommunityRepository communityRepository;
     private final UserRepository userRepository;
+    private final UserImageRepository userImageRepository;
     private final FriendshipRepository friendshipRepository;
 
     public UserEntity getUserById(Long id) {
@@ -62,6 +64,13 @@ public class UserMethodsService {
         }
         else
             return FriendshipType.NOT_FRIENDS;
+    }
+
+    public String getTopUserImage(UserEntity user) {
+        var img = userImageRepository.findTopByUser(user);
+        if (img.isPresent())
+            return img.get().getName();
+        return "";
     }
 
 

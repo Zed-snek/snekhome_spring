@@ -1,5 +1,6 @@
 package ed.back_snekhome.controllers;
 
+import ed.back_snekhome.dto.postDTOs.CommentaryDto;
 import ed.back_snekhome.dto.postDTOs.NewCommentaryDto;
 import ed.back_snekhome.dto.postDTOs.NewPostDto;
 import ed.back_snekhome.dto.postDTOs.PostDto;
@@ -11,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.io.IOException;
+import java.util.ArrayList;
 
 @RestController
 @RequiredArgsConstructor
@@ -53,6 +54,11 @@ public class PostController {
         commentaryService.newComment(id, dto);
         var response = new OwnSuccessResponse("Success");
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/post/{id}/commentaries")
+    public ArrayList<CommentaryDto> getComments(@PathVariable Long id) {
+        return commentaryService.getCommentariesByPostId(id);
     }
 
 
