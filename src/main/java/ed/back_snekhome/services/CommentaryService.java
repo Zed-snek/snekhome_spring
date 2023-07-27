@@ -3,7 +3,10 @@ package ed.back_snekhome.services;
 import ed.back_snekhome.dto.postDTOs.CommentaryDto;
 import ed.back_snekhome.dto.postDTOs.NewCommentaryDto;
 import ed.back_snekhome.entities.post.Commentary;
+import ed.back_snekhome.entities.post.CommentaryRating;
+import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.RatingType;
+import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.CommentaryRatingRepository;
 import ed.back_snekhome.repositories.CommentaryRepository;
@@ -34,13 +37,38 @@ public class CommentaryService {
     }
 
     public void rateComment(Long id, RatingType newStatus) {
-
+        var comment = getCommentaryById(id);
+        var rating = findCommentaryRatingOrCreate(comment);
+        rating.setType(newStatus);
+        commentaryRatingRepository.save(rating);
     }
 
-    private int countRating(Commentary commentary) {
-        return commentaryRatingRepository.countByCommentaryAndType(commentary, RatingType.UPVOTE)
-                - commentaryRatingRepository.countByCommentaryAndType(commentary, RatingType.DOWNVOTE);
+    private CommentaryRating findCommentaryRatingOrCreate(Commentary commentary) {
+        var currentUser = userMethodsService.getCurrentUser();
+        var rating = commentaryRatingRepository.getTopByCommentaryAndUser(commentary, currentUser);
+        if (rating.isEmpty())
+            return CommentaryRating.builder()
+                    .commentary(commentary)
+                    .user(currentUser)
+                    .build();
+        else
+            return rating.get();
+    }
+    private int countRating(Commentary comment) {
+        return commentaryRatingRepository.countByCommentaryAndType(comment, RatingType.UPVOTE)
+                - commentaryRatingRepository.countByCommentaryAndType(comment, RatingType.DOWNVOTE);
+    }
+    private RatingType getRatedType(Commentary comment, UserEntity user) {
+        var rating =
+                commentaryRatingRepository.getTopByCommentaryAndUser(comment, user);
+        if (rating.isPresent())
+            return rating.get().getType();
+        return RatingType.NONE;
+    }
 
+    private Commentary getCommentaryById(Long id) {
+        return commentaryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("There is no commentary"));
     }
 
     public ArrayList<CommentaryDto> getCommentariesByPostId(Long id) {
@@ -48,17 +76,25 @@ public class CommentaryService {
         var membership
                 = communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
+        boolean isContext = userMethodsService.isContextUser();
+        UserEntity user;
+        if (isContext)
+            user = userMethodsService.getCurrentUser();
+        else
+            user = null;
+
         if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership)) {
             var list = commentaryRepository.findAllByPost(post);
             ArrayList<CommentaryDto> array = new ArrayList<>();
-            list.forEach(element -> array.add(
+            list.forEach(comment -> array.add(
                     CommentaryDto.builder()
-                            .text(element.getText())
-                            .id(element.getIdCommentary())
-                            .reference(element.getReferenceId())
-                            .nickname(element.getUser().getNickname())
-                            .image(userMethodsService.getTopUserImage(element.getUser()))
-                            .rating(countRating(element))
+                            .text(comment.getText())
+                            .id(comment.getIdCommentary())
+                            .reference(comment.getReferenceId())
+                            .nickname(comment.getUser().getNickname())
+                            .image(userMethodsService.getTopUserImage(comment.getUser()))
+                            .rating(countRating(comment))
+                            .ratedType(user == null ? RatingType.NONE : getRatedType(comment, user))
                     .build())
             );
             return array;
