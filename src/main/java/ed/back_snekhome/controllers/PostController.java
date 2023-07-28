@@ -31,7 +31,7 @@ public class PostController {
     }
 
     @DeleteMapping("/auth/post/{id}")
-    public ResponseEntity<OwnSuccessResponse> delPost(@PathVariable Long id) {
+    public ResponseEntity<OwnSuccessResponse> deletePost(@PathVariable Long id) {
         postService.deletePost(id);
 
         var response = new OwnSuccessResponse("Post has deleted successfully");
@@ -69,7 +69,13 @@ public class PostController {
     }
 
 
+    @DeleteMapping("/auth/commentary/{id}")
+    public ResponseEntity<OwnSuccessResponse> deleteComment(@PathVariable Long id) {
+        commentaryService.deleteComment(id);
 
+        var response = new OwnSuccessResponse("Post has deleted successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 
 }

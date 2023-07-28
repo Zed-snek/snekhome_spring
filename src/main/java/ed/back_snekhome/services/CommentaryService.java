@@ -47,6 +47,21 @@ public class CommentaryService {
         return comment.getIdCommentary();
     }
 
+    public void deleteComment(Long id) {
+        var comment = getCommentaryById(id);
+        var user = userMethodsService.getCurrentUser();
+        var membership =
+                communityMethodsService.getOptionalMembershipOfCurrentUser(comment.getPost().getCommunity());
+        if (comment.getUser().equals(user)
+                || user.equals(comment.getPost().getCommunity().getOwner())
+                || (membership.isPresent() && membership.get().getRole().isDeletePosts())
+        ) {
+            commentaryRepository.delete(comment);
+        }
+        else
+            throw new UnauthorizedException("No access to delete commentary");
+    }
+
     public void rateComment(Long id, RatingType newStatus) {
         var comment = getCommentaryById(id);
         var rating = findCommentaryRatingOrCreate(comment);
