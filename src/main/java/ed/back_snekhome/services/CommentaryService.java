@@ -12,6 +12,7 @@ import ed.back_snekhome.repositories.CommentaryRatingRepository;
 import ed.back_snekhome.repositories.CommentaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 
@@ -26,14 +27,24 @@ public class CommentaryService {
     private final CommunityMethodsService communityMethodsService;
 
 
-    public void newComment(Long id, NewCommentaryDto dto) {
+    @Transactional
+    public Long newComment(Long id, NewCommentaryDto dto) {
+        var user = userMethodsService.getCurrentUser();
         var comment = Commentary.builder()
                 .post(postService.getPostById(id))
-                .user(userMethodsService.getCurrentUser())
+                .user(user)
                 .text(dto.getText())
                 .referenceId(dto.getReferenceId())
                 .build();
         commentaryRepository.save(comment);
+
+        var rating = CommentaryRating.builder()
+                .commentary(comment)
+                .user(user)
+                .type(RatingType.UPVOTE)
+                .build();
+        commentaryRatingRepository.save(rating);
+        return comment.getIdCommentary();
     }
 
     public void rateComment(Long id, RatingType newStatus) {

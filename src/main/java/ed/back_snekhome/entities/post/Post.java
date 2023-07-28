@@ -30,6 +30,10 @@ public class Post {
     @JsonIgnore
     private List<Commentary> commentaries;
 
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<PostRating> ratings;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_community")
     @JsonIgnore

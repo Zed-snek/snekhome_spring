@@ -30,6 +30,14 @@ public class PostController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @DeleteMapping("/auth/post/{id}")
+    public ResponseEntity<OwnSuccessResponse> delPost(@PathVariable Long id) {
+        postService.deletePost(id);
+
+        var response = new OwnSuccessResponse("Post has deleted successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @GetMapping("/post/{id}")
     public PostDto getPostPage(@PathVariable Long id) {
         return postService.getPostPage(id);
@@ -51,8 +59,7 @@ public class PostController {
 
     @PostMapping("/auth/post/{id}/commentary")
     public ResponseEntity<OwnSuccessResponse> newComment(@PathVariable Long id, @RequestBody NewCommentaryDto dto) {
-        commentaryService.newComment(id, dto);
-        var response = new OwnSuccessResponse("Success");
+        var response = new OwnSuccessResponse(commentaryService.newComment(id, dto).toString());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -60,6 +67,8 @@ public class PostController {
     public ArrayList<CommentaryDto> getComments(@PathVariable Long id) {
         return commentaryService.getCommentariesByPostId(id);
     }
+
+
 
 
 

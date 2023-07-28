@@ -125,7 +125,19 @@ public class PostService {
         postRatingRepository.save(rating);
     }
 
-
+    public void deletePost(Long id) {
+        var post = getPostById(id);
+        var user = userMethodsService.getCurrentUser();
+        var membership = communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+        if (post.getUser().equals(user)
+                || user.equals(post.getCommunity().getOwner())
+                || (membership.isPresent() && membership.get().getRole().isDeletePosts())
+        ) {
+            postRepository.delete(post);
+        }
+        else
+            throw new UnauthorizedException("No access to delete post");
+    }
 
 
 }
