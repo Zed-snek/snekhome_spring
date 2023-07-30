@@ -73,7 +73,7 @@ public class PostController {
     public ResponseEntity<OwnSuccessResponse> deleteComment(@PathVariable Long id) {
         commentaryService.deleteComment(id);
 
-        var response = new OwnSuccessResponse("Post has deleted successfully");
+        var response = new OwnSuccessResponse("Commentary has deleted successfully");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

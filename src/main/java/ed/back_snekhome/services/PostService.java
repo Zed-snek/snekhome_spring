@@ -128,11 +128,9 @@ public class PostService {
     public void deletePost(Long id) {
         var post = getPostById(id);
         var user = userMethodsService.getCurrentUser();
-        var membership = communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
-        if (post.getUser().equals(user)
-                || user.equals(post.getCommunity().getOwner())
-                || (membership.isPresent() && membership.get().getRole().isDeletePosts())
-        ) {
+        var membership =
+                communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+        if (post.getUser().equals(user) || (membership.isPresent() && membership.get().getRole().isDeletePosts())) {
             postRepository.delete(post);
         }
         else

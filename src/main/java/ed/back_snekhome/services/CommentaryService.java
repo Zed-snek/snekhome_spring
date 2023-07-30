@@ -47,19 +47,22 @@ public class CommentaryService {
         return comment.getIdCommentary();
     }
 
+    @Transactional
     public void deleteComment(Long id) {
         var comment = getCommentaryById(id);
         var user = userMethodsService.getCurrentUser();
         var membership =
                 communityMethodsService.getOptionalMembershipOfCurrentUser(comment.getPost().getCommunity());
-        if (comment.getUser().equals(user)
-                || user.equals(comment.getPost().getCommunity().getOwner())
-                || (membership.isPresent() && membership.get().getRole().isDeletePosts())
-        ) {
-            commentaryRepository.delete(comment);
-        }
+        if (comment.getUser().equals(user) || (membership.isPresent() && membership.get().getRole().isDeletePosts()))
+            deleteAllReferencedComments(id);
         else
             throw new UnauthorizedException("No access to delete commentary");
+    }
+
+    private void deleteAllReferencedComments(Long id) {
+        var comments = commentaryRepository.findAllByReferenceId(id);
+        comments.forEach(comment -> deleteAllReferencedComments(comment.getIdCommentary()));
+        commentaryRepository.deleteByIdCommentary(id);
     }
 
     public void rateComment(Long id, RatingType newStatus) {
