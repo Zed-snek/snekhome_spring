@@ -72,6 +72,11 @@ public class CommentaryService {
         commentaryRatingRepository.save(rating);
     }
 
+    private Commentary findCommentaryOrException(Long id) {
+        return commentaryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("There is no commentary"));
+    }
+
     private CommentaryRating findCommentaryRatingOrCreate(Commentary commentary) {
         var currentUser = userMethodsService.getCurrentUser();
         var rating = commentaryRatingRepository.getTopByCommentaryAndUser(commentary, currentUser);
@@ -129,6 +134,15 @@ public class CommentaryService {
             return array;
         }
         throw new UnauthorizedException("No access to commentaries");
+    }
+
+    public void updateCommentary(String text, Long id) {
+        var comment = findCommentaryOrException(id);
+        var currentUser = userMethodsService.getCurrentUser();
+        if (comment.getUser().equals(currentUser)) {
+            comment.setText(text);
+            commentaryRepository.save(comment);
+        }
     }
 
 }

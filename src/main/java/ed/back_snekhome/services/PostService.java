@@ -97,8 +97,8 @@ public class PostService {
                 postDto.setUserNickname(post.getUser().getNickname());
                 postDto.setUserName(post.getUser().getName());
                 postDto.setUserSurname(post.getUser().getSurname());
-                membership.ifPresent(value -> postDto.setRole(value.getRole()));
             }
+            membership.ifPresent(value -> postDto.setRole(value.getRole()));
             return postDto;
         }
         else {

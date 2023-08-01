@@ -34,7 +34,7 @@ public class PostController {
     public ResponseEntity<OwnSuccessResponse> deletePost(@PathVariable Long id) {
         postService.deletePost(id);
 
-        var response = new OwnSuccessResponse("Post has deleted successfully");
+        var response = new OwnSuccessResponse("Post has been deleted successfully");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -68,12 +68,19 @@ public class PostController {
         return commentaryService.getCommentariesByPostId(id);
     }
 
+    @PutMapping("/auth/commentary/{id}")
+    public ResponseEntity<OwnSuccessResponse> updateComment(@PathVariable Long id, @RequestBody NewCommentaryDto dto) {
+        commentaryService.updateCommentary(dto.getText(), id);
+
+        var response = new OwnSuccessResponse("Commentary has been updated successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
     @DeleteMapping("/auth/commentary/{id}")
     public ResponseEntity<OwnSuccessResponse> deleteComment(@PathVariable Long id) {
         commentaryService.deleteComment(id);
 
-        var response = new OwnSuccessResponse("Commentary has deleted successfully");
+        var response = new OwnSuccessResponse("Commentary has been deleted successfully");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
