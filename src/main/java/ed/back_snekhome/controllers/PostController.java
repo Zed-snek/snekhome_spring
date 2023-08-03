@@ -1,9 +1,6 @@
 package ed.back_snekhome.controllers;
 
-import ed.back_snekhome.dto.postDTOs.CommentaryDto;
-import ed.back_snekhome.dto.postDTOs.NewCommentaryDto;
-import ed.back_snekhome.dto.postDTOs.NewPostDto;
-import ed.back_snekhome.dto.postDTOs.PostDto;
+import ed.back_snekhome.dto.postDTOs.*;
 import ed.back_snekhome.enums.RatingType;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.CommentaryService;
@@ -12,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -30,8 +29,20 @@ public class PostController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PutMapping(value = "/auth/post/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<OwnSuccessResponse> updatePost(
+            @ModelAttribute EditPostDto dto,
+            @PathVariable Long id
+    ) throws IOException {
+
+        postService.updatePost(dto, id);
+
+        var response = new OwnSuccessResponse("Post has been updated successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @DeleteMapping("/auth/post/{id}")
-    public ResponseEntity<OwnSuccessResponse> deletePost(@PathVariable Long id) {
+    public ResponseEntity<OwnSuccessResponse> deletePost(@PathVariable Long id) throws FileNotFoundException {
         postService.deletePost(id);
 
         var response = new OwnSuccessResponse("Post has been deleted successfully");

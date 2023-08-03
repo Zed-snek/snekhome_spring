@@ -118,7 +118,7 @@ public class CommentaryService {
             user = null;
 
         if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership)) {
-            var list = commentaryRepository.findAllByPost(post);
+            var list = commentaryRepository.findAllByPostOrderByIdCommentaryAsc(post);
             ArrayList<CommentaryDto> array = new ArrayList<>();
             list.forEach(comment -> array.add(
                     CommentaryDto.builder()

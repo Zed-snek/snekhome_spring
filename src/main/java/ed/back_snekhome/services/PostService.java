@@ -1,8 +1,10 @@
 package ed.back_snekhome.services;
 
+import ed.back_snekhome.dto.postDTOs.EditPostDto;
 import ed.back_snekhome.dto.postDTOs.NewPostDto;
 import ed.back_snekhome.dto.postDTOs.PostDto;
 import ed.back_snekhome.entities.post.Post;
+import ed.back_snekhome.entities.post.PostImage;
 import ed.back_snekhome.entities.post.PostRating;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.enums.RatingType;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
@@ -46,6 +49,9 @@ public class PostService {
         if (isAnon && !community.isAnonAllowed())
             throw new BadRequestException("Action is not possible due to community rules");
 
+        if (dto.getImages().size() > 10)
+            throw new BadRequestException("Images limit");
+
         var post = Post.builder()
                 .date(LocalDateTime.now())
                 .community(community)
@@ -55,7 +61,40 @@ public class PostService {
                 .build();
         postRepository.save(post);
         fileService.uploadPostImages(dto.getImages(), post);
+
+        var rating = PostRating.builder()
+                .post(post)
+                .user(user)
+                .type(RatingType.UPVOTE)
+                .build();
+        postRatingRepository.save(rating);
         return post.getIdPost();
+    }
+
+    @Transactional
+    public void updatePost(EditPostDto dto, Long id) throws IOException {
+        var post = getPostById(id);
+        var user = userMethodsService.getCurrentUser();
+
+        if (dto.getOldImages().size() + dto.getNewImages().size() > 10)
+            throw new BadRequestException("Images limit");
+
+        if (post.getUser().equals(user)) {
+            post.setText(dto.getText());
+            postRepository.save(post);
+
+            var postImages = post.getImages();
+            String currentImg;
+            for (PostImage postImage : postImages) {
+                currentImg = postImage.getName();
+                if (!dto.getOldImages().contains(currentImg)) {
+                    fileService.deletePostImageByName(currentImg);
+                }
+            }
+            fileService.uploadPostImages(dto.getNewImages(), post);
+        }
+        else
+            throw new UnauthorizedException("No access to edit the post");
     }
 
     public Post getPostById(Long id) {
@@ -125,12 +164,17 @@ public class PostService {
         postRatingRepository.save(rating);
     }
 
-    public void deletePost(Long id) {
+    @Transactional
+    public void deletePost(Long id) throws FileNotFoundException {
         var post = getPostById(id);
         var user = userMethodsService.getCurrentUser();
         var membership =
                 communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
         if (post.getUser().equals(user) || (membership.isPresent() && membership.get().getRole().isDeletePosts())) {
+
+            for (PostImage img : post.getImages())
+                fileService.deletePostImageByName(img.getName());
+
             postRepository.delete(post);
         }
         else

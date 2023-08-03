@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface CommentaryRepository extends JpaRepository<Commentary, Long> {
-    List<Commentary> findAllByPost(Post post);
+    List<Commentary> findAllByPostOrderByIdCommentaryAsc(Post post);
     void deleteByIdCommentary(Long id);
     Iterable<Commentary> findAllByReferenceId(Long referenceId);
 }
