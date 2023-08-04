@@ -6,6 +6,7 @@ import ed.back_snekhome.dto.communityDTOs.NewCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
+import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.CommunityService;
@@ -194,6 +195,12 @@ public class CommunityController {
     public ResponseEntity<OwnSuccessResponse> sendJoinRequest(@PathVariable String groupname) {
         var response = new OwnSuccessResponse(communityService.manageJoinRequest(groupname));
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/auth/community/{groupname}/request")
+    public ArrayList<UserPublicDto> getJoinRequests(@PathVariable String groupname) {
+
+        return communityService.getAllJoinRequests(groupname);
     }
 
 }

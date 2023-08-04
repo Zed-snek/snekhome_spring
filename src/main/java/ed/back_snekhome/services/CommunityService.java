@@ -5,6 +5,7 @@ import ed.back_snekhome.dto.communityDTOs.NewCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
+import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import ed.back_snekhome.entities.community.*;
 import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.entities.user.UserEntity;
@@ -31,6 +32,7 @@ public class CommunityService {
     private final FileService fileService;
     private final UserMethodsService userMethodsService;
     private final CommunityMethodsService communityMethodsService;
+    private final RelationsService relationsService;
 
     private final CommunityRepository communityRepository;
     private final CommunityRoleRepository communityRoleRepository;
@@ -38,6 +40,7 @@ public class CommunityService {
     private final MembershipRepository membershipRepository;
     private final CommunityImageRepository communityImageRepository;
     private final JoinRequestRepository joinRequestRepository;
+
 
 
     @Transactional
@@ -55,12 +58,11 @@ public class CommunityService {
                 .creation( LocalDate.now() )
                 .build();
 
-        if (dto.getType() == CommunityType.NEWSPAPER) {
+        if (dto.getType() == CommunityType.NEWSPAPER)
             community.setAnonAllowed(false);
-        }
-        else {
+        else
             community.setAnonAllowed(dto.isAnonAllowed());
-        }
+
         communityRepository.save(community);
 
         var membership = Membership.builder()
@@ -93,6 +95,7 @@ public class CommunityService {
                     .editId(true)
                     .isCitizen(isCitizen)
                     .isCreator(true)
+                    .inviteUsers(true)
                     .build();
         }
         else {
@@ -108,6 +111,7 @@ public class CommunityService {
                     .editId(false)
                     .isCitizen(false)
                     .isCreator(true)
+                    .inviteUsers(false)
                     .build();
         }
         communityRoleRepository.save(ownerRole);
@@ -354,6 +358,27 @@ public class CommunityService {
                 .build();
         joinRequestRepository.save(newRequest);
         return "Request is sent successfully";
+    }
+
+    public ArrayList<UserPublicDto> getAllJoinRequests(String groupname) {
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var user = userMethodsService.getCurrentUser();
+
+        var membership = relationsService.getMembershipOrThrowErr(user, community);
+        var array = new ArrayList<UserPublicDto>();
+        if (membership.getRole().isInviteUsers()) {
+            Iterable<JoinRequest> list = joinRequestRepository.findAllByCommunity(community);
+            for (JoinRequest r : list) {
+                array.add(UserPublicDto.builder()
+                                .nickname(r.getUser().getNickname())
+                                .image(userMethodsService.getTopUserImage(r.getUser()))
+                        .build()
+                );
+            }
+            return array;
+        }
+
+        throw new UnauthorizedException("No access to data");
     }
 
 

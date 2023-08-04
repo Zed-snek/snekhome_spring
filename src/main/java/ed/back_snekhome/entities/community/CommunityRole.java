@@ -37,6 +37,7 @@ public class CommunityRole {
     private boolean deletePosts;
     private boolean banUser;
     private boolean banCitizen; //if democracy
+    private boolean inviteUsers; //if community is closed
 
     private boolean isCitizen; //for democracy communities: vote and becoming president
     private boolean isCreator;
