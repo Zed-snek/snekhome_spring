@@ -190,4 +190,10 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping("/auth/community/{groupname}/request")
+    public ResponseEntity<OwnSuccessResponse> sendJoinRequest(@PathVariable String groupname) {
+        var response = new OwnSuccessResponse(communityService.manageJoinRequest(groupname));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }

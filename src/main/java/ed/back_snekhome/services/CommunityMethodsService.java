@@ -3,7 +3,6 @@ package ed.back_snekhome.services;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.relations.Membership;
-import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.repositories.*;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +32,7 @@ public class CommunityMethodsService {
         return false;
     }
 
-    public Community getCommunityByName(String name) {
+    public Community getCommunityByNameOrThrowErr(String name) {
         return communityRepository.findByGroupname(name)
                 .orElseThrow(() -> new EntityNotFoundException("Community is not found"));
     }

@@ -24,6 +24,7 @@ public class PublicCommunityDto {
     private CommunityRole currentUserRole;
 
     private boolean isAccess;
+    private boolean isRequestSent;
 
     //Limited information
     private String name;

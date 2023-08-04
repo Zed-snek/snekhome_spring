@@ -50,7 +50,7 @@ public class FileService {
 
         var communityImage = communityImageRepository.findByName(name);
         if (communityImage.isPresent()) {
-            var membership = relationsService.getMembership(
+            var membership = relationsService.getMembershipOrThrowErr(
                     userMethodsService.getCurrentUser(),
                     communityImage.get().getCommunity()
             );

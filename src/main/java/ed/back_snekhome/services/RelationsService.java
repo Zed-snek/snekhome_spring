@@ -89,7 +89,7 @@ public class RelationsService {
 
 
 
-    public Membership getMembership(UserEntity user, Community community) {
+    public Membership getMembershipOrThrowErr(UserEntity user, Community community) {
         return membershipRepository.findByCommunityAndUser(community, user)
                 .orElseThrow(() -> new EntityNotFoundException("User is not a member"));
     }
@@ -104,7 +104,7 @@ public class RelationsService {
 
     public void joinCommunity(String groupname) {
         var current = userMethodsService.getCurrentUser();
-        var community = communityMethodsService.getCommunityByName(groupname);
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         var optional = membershipRepository.findByCommunityAndUser(community, current);
         if (optional.isPresent() && optional.get().isBanned()) {
             throw new UnauthorizedException("You are banned");
@@ -118,7 +118,7 @@ public class RelationsService {
         membershipRepository.save(membership);
     }
     public void leaveCommunity(String groupname) {
-        var membership = getMembership(userMethodsService.getCurrentUser(), communityMethodsService.getCommunityByName(groupname));
+        var membership = getMembershipOrThrowErr(userMethodsService.getCurrentUser(), communityMethodsService.getCommunityByNameOrThrowErr(groupname));
         membershipRepository.delete(membership);
     }
 
@@ -140,7 +140,7 @@ public class RelationsService {
 
 
     public MembersDto getMembersByCommunity(String groupname) {
-        var community = communityMethodsService.getCommunityByName(groupname);
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         if (community.isClosed() && !communityMethodsService.isContextUserMember(community)) {
             return MembersDto.builder()
                     .isContextUserAccess(false)
@@ -171,11 +171,11 @@ public class RelationsService {
     }
 
     public void banUser(String groupname, String user) {
-        var community = communityMethodsService.getCommunityByName(groupname);
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         var userEntity = userMethodsService.getUserByNickname(user);
-        var userMembership = getMembership(userEntity, community);
+        var userMembership = getMembershipOrThrowErr(userEntity, community);
         var admin = userMethodsService.getCurrentUser();
-        var adminMembership = getMembership(admin, community);
+        var adminMembership = getMembershipOrThrowErr(admin, community);
 
         if ((userMembership.getRole() == null && adminMembership.getRole().isBanUser())
                 || (userMembership.getRole().isCitizen() && adminMembership.getRole().isBanCitizen())
@@ -191,19 +191,19 @@ public class RelationsService {
     }
 
     public void grantRole(String nickname, String groupname, String roleName) {
-        var community = communityMethodsService.getCommunityByName(groupname);
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         if (communityMethodsService.isCurrentUserOwner(community)) {
             var role = communityMethodsService.findRoleOrThrowErr(community, roleName);
-            var membership = getMembership(userMethodsService.getUserByNickname(nickname), community);
+            var membership = getMembershipOrThrowErr(userMethodsService.getUserByNickname(nickname), community);
             membership.setRole(role);
             membershipRepository.save(membership);
         }
     }
 
     public void revokeRole(String nickname, String groupname) {
-        var community = communityMethodsService.getCommunityByName(groupname);
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         if (communityMethodsService.isCurrentUserOwner(community)) {
-            var membership = getMembership(userMethodsService.getUserByNickname(nickname), community);
+            var membership = getMembershipOrThrowErr(userMethodsService.getUserByNickname(nickname), community);
             membership.setRole(null);
             membershipRepository.save(membership);
         }

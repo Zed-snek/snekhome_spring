@@ -37,7 +37,7 @@ public class PostService {
     @Transactional
     public Long newPost(NewPostDto dto) throws IOException {
         boolean isAnon = dto.getIsAnonymous().equals("true");
-        var community = communityMethodsService.getCommunityByName(dto.getGroupname());
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(dto.getGroupname());
         var user = userMethodsService.getCurrentUser();
         var membership = membershipRepository.findByCommunityAndUser(community, user);
         if (membership.isEmpty() && community.isClosed()
