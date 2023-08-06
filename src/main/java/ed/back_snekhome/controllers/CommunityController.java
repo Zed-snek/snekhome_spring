@@ -203,4 +203,25 @@ public class CommunityController {
         return communityService.getAllJoinRequests(groupname);
     }
 
+    @PostMapping("/auth/community/{groupname}/request/{nickname}")
+    public ResponseEntity<OwnSuccessResponse> acceptJoinRequest(
+            @PathVariable String groupname, @PathVariable String nickname
+    ) {
+        communityService.acceptJoinRequest(groupname, nickname);
+        var response = new OwnSuccessResponse("Request is accepted, user is a member now");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/auth/community/{groupname}/request/{nickname}")
+    public ResponseEntity<OwnSuccessResponse> cancelJoinRequest(
+            @PathVariable String groupname, @PathVariable String nickname
+    ) {
+        communityService.cancelJoinRequest(groupname, nickname);
+        var response = new OwnSuccessResponse("Join request is cancelled");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+
 }

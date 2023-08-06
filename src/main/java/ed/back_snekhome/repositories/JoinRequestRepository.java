@@ -13,4 +13,5 @@ public interface JoinRequestRepository extends JpaRepository<JoinRequest, Long> 
     Optional<JoinRequest> findTopByCommunityAndUser(Community community, UserEntity user);
     boolean existsByCommunityAndUser(Community community, UserEntity user);
     List<JoinRequest> findAllByCommunity(Community community);
+    int countAllByCommunity(Community community);
 }

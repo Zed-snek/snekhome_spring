@@ -154,7 +154,6 @@ public class CommunityService {
     }
 
 
-
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(name);
 
@@ -179,6 +178,8 @@ public class CommunityService {
                     dto.setCurrentUserRole(membership.get().getRole());
                 }
             }
+            if (community.isClosed())
+                dto.setJoinRequests(joinRequestRepository.countAllByCommunity(community));
 
             return dto;
         }
@@ -366,7 +367,7 @@ public class CommunityService {
 
         var membership = relationsService.getMembershipOrThrowErr(user, community);
         var array = new ArrayList<UserPublicDto>();
-        if (membership.getRole().isInviteUsers()) {
+        if (membership.getRole().isInviteUsers() || community.getType() == CommunityType.ANARCHY) {
             Iterable<JoinRequest> list = joinRequestRepository.findAllByCommunity(community);
             for (JoinRequest r : list) {
                 array.add(UserPublicDto.builder()
@@ -379,6 +380,33 @@ public class CommunityService {
         }
 
         throw new UnauthorizedException("No access to data");
+    }
+
+    private void deleteJoinRequest(Community community, UserEntity user) {
+        var request = joinRequestRepository.findTopByCommunityAndUser(community, user);
+        if (request.isPresent())
+            joinRequestRepository.delete(request.get());
+        else
+            throw new EntityNotFoundException("There is no request by user @" + user.getNickname());
+    }
+
+    @Transactional
+    public void acceptJoinRequest(String groupname, String nickname) {
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var user = userMethodsService.getUserByNickname(nickname);
+        deleteJoinRequest(community, user);
+
+        var membership = Membership.builder()
+                .user(user)
+                .community(community)
+                .build();
+        membershipRepository.save(membership);
+    }
+
+    public void cancelJoinRequest(String groupname, String nickname) {
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var user = userMethodsService.getUserByNickname(nickname);
+        deleteJoinRequest(community, user);
     }
 
 

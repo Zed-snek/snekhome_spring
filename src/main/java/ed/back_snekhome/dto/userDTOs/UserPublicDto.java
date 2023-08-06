@@ -1,6 +1,5 @@
 package ed.back_snekhome.dto.userDTOs;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.user.InfoTag;
 import ed.back_snekhome.entities.user.UserImage;
@@ -14,7 +13,6 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-@JsonInclude(JsonInclude.Include.NON_DEFAULT) /*to ignore uninitialised integers*/
 public class UserPublicDto {
 
     private String name;
