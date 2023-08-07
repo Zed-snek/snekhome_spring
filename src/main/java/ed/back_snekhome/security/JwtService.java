@@ -18,12 +18,14 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-
-    private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    @Value("${jwt.key}")
+    private String secretKey;
 
     @Value("${jwt.expiration}")
-    private int expirationInHours;
+    private int jwtExpirationInHours;
 
+    @Value("${jwt.refresh-token.expiration}")
+    private int refreshTokenExpirationInHours;
 
     private Claims extractAllClaims(String token) {
         return Jwts
@@ -34,7 +36,7 @@ public class JwtService {
                 .getBody();
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    private  <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
@@ -57,11 +59,15 @@ public class JwtService {
     }
 
 
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+    public String generateAccessToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails, jwtExpirationInHours);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    public String generateRefreshToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails, refreshTokenExpirationInHours);
+    }
+
+    private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, int expirationInHours) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
@@ -72,8 +78,8 @@ public class JwtService {
                 .compact();
     }
 
-    public static Key getSecretKey() {
-        byte[] keyInBytes = Decoders.BASE64.decode(SECRET_KEY);
+    private Key getSecretKey() {
+        byte[] keyInBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyInBytes);
     }
 

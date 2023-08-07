@@ -5,6 +5,8 @@ import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.security.AuthenticationService;
 import ed.back_snekhome.services.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,12 +33,20 @@ public class UserManagementController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping("/user/refresh-token")
+    public void refreshToken(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+
+        authenticationService.refreshToken(request, response);
+    }
+
 
     @PostMapping("/user/register")
     public ResponseEntity<OwnSuccessResponse> registerUser(@RequestBody RegisterDto registerDto){
 
         authenticationService.saveNewAccount(registerDto);
-
         var response = new OwnSuccessResponse("Confirm registration on email");
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -64,9 +74,7 @@ public class UserManagementController {
     @PutMapping("/auth/user/email")
     public ResponseEntity<OwnSuccessResponse> updateEmail(@RequestBody ChangeEmailDto dto) {
 
-
         authenticationService.changeEmail(dto.getEmail());
-
         var response = new OwnSuccessResponse("Check your email address to change to confirm action");
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -86,7 +94,6 @@ public class UserManagementController {
 
     @PostMapping(path = "/auth/user/current/image", consumes = "multipart/form-data")
     public ResponseEntity<OwnSuccessResponse> newImage(@RequestParam("image") MultipartFile image) throws IOException {
-
 
         var response = userService.uploadUserImage(image);
 

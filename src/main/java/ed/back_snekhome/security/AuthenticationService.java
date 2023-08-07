@@ -1,5 +1,6 @@
 package ed.back_snekhome.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ed.back_snekhome.dto.userDTOs.ChangePasswordDto;
 import ed.back_snekhome.dto.userDTOs.LoginDto;
 import ed.back_snekhome.dto.userDTOs.RegisterDto;
@@ -15,11 +16,19 @@ import ed.back_snekhome.exceptionHandler.exceptions.UserAlreadyExistsException;
 import ed.back_snekhome.repositories.UserRepository;
 import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.services.UserMethodsService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -35,41 +44,64 @@ public class AuthenticationService {
 
     public AuthenticationResponse loginUser(LoginDto loginDto) {
 
-        var user = userRepository.findByEmailIgnoreCase(loginDto.getLogin())
-                .orElseThrow( () -> new LoginNotFoundException("Account with given email is not found"));
-
-        var usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(loginDto.getLogin(), loginDto.getPassword());
+        var user = getUserByEmailOrThrowErr(loginDto.getLogin());
+        var usernamePasswordAuthenticationToken =
+                new UsernamePasswordAuthenticationToken(loginDto.getLogin(), loginDto.getPassword());
 
         authenticationManager.authenticate(usernamePasswordAuthenticationToken);
         //if user is authenticated:
 
-        var jwtToken = jwtService.generateToken(user);
+        var jwtToken = jwtService.generateAccessToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
         return AuthenticationResponse
                 .builder()
                 .token(jwtToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 
-    public void saveNewAccount(RegisterDto registerDto) {
+    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null || !authHeader.startsWith("Bearer "))
+            return;
+        final String refreshToken = authHeader.replace("Bearer ", "");
+        final String userEmail = jwtService.extractEmail(refreshToken);
 
+        if (userEmail != null) {
+            var userDetails = getUserByEmailOrThrowErr(userEmail);
+            if (jwtService.isTokenValid(refreshToken, userDetails)) {
+                var authResponse = AuthenticationResponse
+                        .builder()
+                        .token(jwtService.generateAccessToken(userDetails))
+                        .refreshToken(refreshToken)
+                        .build();
+                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+            }
+        }
+    }
+
+    private UserEntity getUserByEmailOrThrowErr(String email) {
+        return userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new LoginNotFoundException("Account with given email is not found"));
+    }
+
+    public void saveNewAccount(RegisterDto registerDto) {
         throwErrIfExistsByEmail(registerDto.getEmail());
         userMethodsService.throwErrIfExistsByNickname(registerDto.getNickname());
 
         var userEntity = UserEntity.builder()
-                .password( passwordEncoder.encode(registerDto.getPassword()) )
-                .name( registerDto.getName() )
-                .surname( registerDto.getSurname() )
-                .email( registerDto.getEmail() )
-                .nickname( registerDto.getNickname() )
-                .registration( java.time.LocalDate.now() )
-                .role( Role.USER )
-                .enabled( false )
+                .password(passwordEncoder.encode(registerDto.getPassword()))
+                .name(registerDto.getName())
+                .surname(registerDto.getSurname())
+                .email(registerDto.getEmail())
+                .nickname(registerDto.getNickname())
+                .registration(java.time.LocalDate.now())
+                .role(Role.USER)
+                .enabled(false)
                 .build();
 
         userRepository.save(userEntity);
-
         sendVerificationMail(userEntity);
-
     }
 
     public String confirmToken(String tokenValue) {
@@ -94,21 +126,17 @@ public class AuthenticationService {
                 changeEmailLastConfirmation(token);
                 message = "Email changed successfully";
             }
-
         }
         return message;
     }
 
 
     private void activateAccountIfVerified(ConfirmationToken token) {
-
         var account = userMethodsService.getUserById( token.getIdUser() );
-
-        if ( !token.isNotExpired() ){
+        if (!token.isNotExpired()){
             sendVerificationMail(account);
             throw new TokenExpiredException("Verification token is expired, new one is sent on your e-mail");
         }
-
         account.setEnabled(true);
         userRepository.save(account);
     }
@@ -158,7 +186,7 @@ public class AuthenticationService {
 
     public void sendVerificationMail( UserEntity user ) {
 
-        var confirmationToken = new ConfirmationToken( user.getIdAccount(), ConfirmationType.REGISTRATION, 15, 45 );
+        var confirmationToken = new ConfirmationToken(user.getIdAccount(), ConfirmationType.REGISTRATION, 15, 45);
         confirmationTokenService.save(confirmationToken);
 
         emailSendService.sendVerificationMail( user.getEmail(), user.getName(), confirmationToken.getToken() );
