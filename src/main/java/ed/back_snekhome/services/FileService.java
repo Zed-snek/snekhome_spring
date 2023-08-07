@@ -108,7 +108,6 @@ public class FileService {
     }
 
 
-    @Transactional
     public void deleteImageFromStorage(String fileName) throws FileNotFoundException {
         File file = new File(uploadPath + fileName);
         if (file.exists()) {

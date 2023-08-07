@@ -41,7 +41,7 @@ public class ApplicationConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return email -> userRepository.findByEmail(email).get();
+        return email -> userRepository.findByEmailIgnoreCase(email).get();
     }
 
 

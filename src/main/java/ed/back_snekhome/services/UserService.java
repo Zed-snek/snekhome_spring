@@ -31,166 +31,11 @@ public class UserService {
 
     private final UserMethodsService userMethodsService;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
-    private final ConfirmationTokenService confirmationTokenService;
-    private final EmailSendService emailSendService;
     private final InfoTagRepository infoTagRepository;
     private final FileService fileService;
     private final UserImageRepository userImageRepository;
     private final FriendshipRepository friendshipRepository;
     private final MembershipRepository membershipRepository;
-
-
-    public AuthenticationResponse loginUser(LoginDto loginDto) {
-
-        var user = userRepository.findByEmail(loginDto.getLogin())
-                .orElseThrow( () -> new LoginNotFoundException("Account with given email is not found"));
-
-        var usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(loginDto.getLogin(), loginDto.getPassword());
-
-        authenticationManager.authenticate(usernamePasswordAuthenticationToken);
-        //if user is authenticated:
-
-        var jwtToken = jwtService.generateToken(user);
-        return AuthenticationResponse
-                .builder()
-                .token(jwtToken)
-                .build();
-    }
-
-    public void saveNewAccount(RegisterDto registerDto) {
-
-        throwErrIfExistsByEmail(registerDto.getEmail());
-        userMethodsService.throwErrIfExistsByNickname(registerDto.getNickname());
-
-        var userEntity = UserEntity.builder()
-                .password( passwordEncoder.encode(registerDto.getPassword()) )
-                .name( registerDto.getName() )
-                .surname( registerDto.getSurname() )
-                .email( registerDto.getEmail() )
-                .nickname( registerDto.getNickname() )
-                .registration( java.time.LocalDate.now() )
-                .role( Role.USER )
-                .enabled( false )
-                .build();
-
-        userRepository.save(userEntity);
-
-        sendVerificationMail(userEntity);
-
-    }
-
-    public String confirmToken(String tokenValue) {
-        var token = confirmationTokenService.findByToken(tokenValue);
-
-        var type = token.getConfirmationType();
-        String message = "";
-        switch (type) {
-            case REGISTRATION -> {
-                activateAccountIfVerified(token);
-                message = "Account is activated";
-            }
-            case PASSWORD_RESET -> {
-                passwordReset(token);
-                message = "Reset password email is sent";
-            }
-            case CHANGE_EMAIL -> {
-                changeEmailActionConfirmation(token);
-                message = "Verification is sent on new email address";
-            }
-            case CHANGE_EMAIL_LAST -> {
-                changeEmailLastConfirmation(token);
-                message = "Email changed successfully";
-            }
-
-        }
-        return message;
-    }
-
-
-    private void activateAccountIfVerified(ConfirmationToken token) {
-
-        var account = userMethodsService.getUserById( token.getIdUser() );
-
-        if ( !token.isNotExpired() ){
-            sendVerificationMail(account);
-            throw new TokenExpiredException("Verification token is expired, new one is sent on your e-mail");
-        }
-
-        account.setEnabled(true);
-        userRepository.save(account);
-    }
-
-    private void changeEmailActionConfirmation(ConfirmationToken token) { //confirms action "change email"
-        var account = userMethodsService.getUserById(token.getIdUser());
-        throwErrIfTokenExpired(token);
-
-        var newToken = new ConfirmationToken(
-                account.getIdAccount(),
-                ConfirmationType.CHANGE_EMAIL_LAST,
-                15,
-                45,
-                token.getMessage()); //message stores new email address
-        confirmationTokenService.save(newToken);
-
-        emailSendService.sendNewEmailConfirmationMail(
-                newToken.getMessage(),
-                account.getName(),
-                newToken.getToken()
-        );
-    }
-
-    private void changeEmailLastConfirmation(ConfirmationToken token) { //new email confirmation
-        var account = userMethodsService.getUserById(token.getIdUser());
-        throwErrIfTokenExpired(token);
-
-        account.setEmail(token.getMessage());
-        userRepository.save(account);
-    }
-
-    private void passwordReset(ConfirmationToken token) {
-
-    }
-
-
-    public void sendVerificationMail( UserEntity user ) {
-
-        var confirmationToken = new ConfirmationToken( user.getIdAccount(), ConfirmationType.REGISTRATION, 15, 45 );
-        confirmationTokenService.save(confirmationToken);
-
-        emailSendService.sendVerificationMail( user.getEmail(), user.getName(), confirmationToken.getToken() );
-    }
-
-    public void changeEmail(String email) { //sends email list on old email to confirm action
-
-        throwErrIfExistsByEmail(email);
-        var user = userMethodsService.getCurrentUser();
-        var confirmationToken = new ConfirmationToken(
-                user.getIdAccount(),
-                ConfirmationType.CHANGE_EMAIL,
-                15, 45,
-                email);
-        confirmationTokenService.save(confirmationToken);
-        emailSendService.sendChangeEmailMail(
-                user.getEmail(),
-                email,
-                user.getName(),
-                confirmationToken.getToken()
-        );
-    }
-
-    public void changePassword(ChangePasswordDto dto) {
-        var user = userMethodsService.getCurrentUser();
-        if ( !passwordEncoder.matches(dto.getOldPass(), user.getPassword()) ) {
-            throw new PasswordDoesntMatchException("Invalid old password, please try again");
-        }
-        //if old password matches:
-        user.setPassword(passwordEncoder.encode(dto.getNewPass()));
-        userRepository.save(user);
-    }
-
 
 
     public void updateUser(UserUpdateDto userUpdateDto) {
@@ -246,16 +91,6 @@ public class UserService {
         int communities = 0;
         communities += membershipRepository.countAllByUserAndIsBanned(user, false);
         return communities;
-    }
-    private void throwErrIfExistsByEmail(String email) {
-        if ( userRepository.existsByEmail(email) ) {
-            throw new UserAlreadyExistsException("User with email: " + email + " exists");
-        }
-    }
-    private void throwErrIfTokenExpired(ConfirmationToken token) {
-        if ( !token.isNotExpired() ) {
-            throw new TokenExpiredException("Confirmation token is expired");
-        }
     }
 
 

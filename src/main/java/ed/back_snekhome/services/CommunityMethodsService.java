@@ -26,14 +26,15 @@ public class CommunityMethodsService {
 
     public boolean isContextUserMember(Community community) {
         if (userMethodsService.isContextUser()) {
-            var membership = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
+            var membership
+                    = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
             return membership.isPresent();
         }
         return false;
     }
 
     public Community getCommunityByNameOrThrowErr(String name) {
-        return communityRepository.findByGroupname(name)
+        return communityRepository.findByGroupnameIgnoreCase(name)
                 .orElseThrow(() -> new EntityNotFoundException("Community is not found"));
     }
 

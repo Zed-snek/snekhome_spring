@@ -26,11 +26,11 @@ public class UserMethodsService {
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
     public UserEntity getUserByNickname(String nickname) {
-        return userRepository.findByNickname(nickname)
+        return userRepository.findByNicknameIgnoreCase(nickname)
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
     public UserEntity getCurrentUser() {
-        return userRepository.findByEmail( SecurityContextHolder.getContext().getAuthentication().getName() )
+        return userRepository.findByEmailIgnoreCase(SecurityContextHolder.getContext().getAuthentication().getName())
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
     public boolean isContextUser() {
@@ -41,13 +41,15 @@ public class UserMethodsService {
         return getCurrentUser().equals(user2);
     }
     public void throwErrIfExistsByNickname(String nickname) {
-        if ( userRepository.existsByNickname(nickname) || communityRepository.existsByGroupname(nickname) ) {
+        if (userRepository.existsByNicknameIgnoreCase(nickname)
+                || communityRepository.existsByGroupnameIgnoreCase(nickname)) {
             throw new UserAlreadyExistsException("Name: " + nickname + " is already taken");
         }
     }
 
     public FriendshipType getFriendshipType(Long idUser1, Long idUser2) {
-        var friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(idUser1, idUser2);
+        var friendship
+                = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(idUser1, idUser2);
         if (friendship.isEmpty()) {
             friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(idUser2, idUser1);
         }

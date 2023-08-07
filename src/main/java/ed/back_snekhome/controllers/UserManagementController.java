@@ -3,6 +3,7 @@ package ed.back_snekhome.controllers;
 import ed.back_snekhome.dto.userDTOs.*;
 import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.response.OwnSuccessResponse;
+import ed.back_snekhome.security.AuthenticationService;
 import ed.back_snekhome.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,12 +21,12 @@ public class UserManagementController {
 
 
     private final UserService userService;
-
+    private final AuthenticationService authenticationService;
 
     @PostMapping("/user/login")
     public ResponseEntity<AuthenticationResponse> authenticateUser(@RequestBody LoginDto loginDto) {
 
-        AuthenticationResponse response = userService.loginUser(loginDto);
+        AuthenticationResponse response = authenticationService.loginUser(loginDto);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -34,7 +35,7 @@ public class UserManagementController {
     @PostMapping("/user/register")
     public ResponseEntity<OwnSuccessResponse> registerUser(@RequestBody RegisterDto registerDto){
 
-        userService.saveNewAccount(registerDto);
+        authenticationService.saveNewAccount(registerDto);
 
         var response = new OwnSuccessResponse("Confirm registration on email");
 
@@ -45,7 +46,7 @@ public class UserManagementController {
     @PostMapping("/user/confirmation")
     public ResponseEntity<OwnSuccessResponse> confirmationManager(@RequestParam String token) {
 
-        var response = new OwnSuccessResponse( userService.confirmToken(token) ); //method confirmToken() returns a message
+        var response = new OwnSuccessResponse(authenticationService.confirmToken(token)); //method confirmToken() returns a message
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -54,7 +55,7 @@ public class UserManagementController {
     @PutMapping("/auth/user/password")
     public ResponseEntity<OwnSuccessResponse> updatePassword(@RequestBody ChangePasswordDto dto) {
 
-        userService.changePassword(dto);
+        authenticationService.changePassword(dto);
         var response = new OwnSuccessResponse("Password has been changed");
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -64,7 +65,7 @@ public class UserManagementController {
     public ResponseEntity<OwnSuccessResponse> updateEmail(@RequestBody ChangeEmailDto dto) {
 
 
-        userService.changeEmail(dto.getEmail());
+        authenticationService.changeEmail(dto.getEmail());
 
         var response = new OwnSuccessResponse("Check your email address to change to confirm action");
 
