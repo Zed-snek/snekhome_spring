@@ -1,5 +1,6 @@
 package ed.back_snekhome.services;
 
+import ed.back_snekhome.dto.postDTOs.CommentaryDto;
 import ed.back_snekhome.dto.postDTOs.EditPostDto;
 import ed.back_snekhome.dto.postDTOs.NewPostDto;
 import ed.back_snekhome.dto.postDTOs.PostDto;
@@ -11,6 +12,7 @@ import ed.back_snekhome.enums.RatingType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
+import ed.back_snekhome.repositories.CommentaryRepository;
 import ed.back_snekhome.repositories.MembershipRepository;
 import ed.back_snekhome.repositories.PostRatingRepository;
 import ed.back_snekhome.repositories.PostRepository;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -28,11 +31,12 @@ public class PostService {
 
     private final CommunityMethodsService communityMethodsService;
     private final UserMethodsService userMethodsService;
+    private final FileService fileService;
+
     private final MembershipRepository membershipRepository;
     private final PostRepository postRepository;
     private final PostRatingRepository postRatingRepository;
-    private final FileService fileService;
-
+    private final CommentaryRepository commentaryRepository;
 
     @Transactional
     public Long newPost(NewPostDto dto) throws IOException {
@@ -116,29 +120,33 @@ public class PostService {
         return RatingType.NONE;
     }
 
+    private PostDto.PostDtoBuilder setMainInfo(Post post) {
+        return PostDto.builder()
+                .post(post)
+                .rating(countRating(post))
+                .ratedType(getRatedType(post));
+    }
+
     public PostDto getPostPage(Long id) {
         var post = getPostById(id);
         var membership =
                 communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
         if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership)) {
-            var postDto = PostDto.builder()
-                    .post(post)
-                    .ratedType(getRatedType(post))
-                    .rating(countRating(post))
+            var postDto = setMainInfo(post)
                     .groupImage(communityMethodsService.getTopCommunityImage(post.getCommunity()))
                     .groupname(post.getCommunity().getGroupname())
                     .groupTitle(post.getCommunity().getName())
-                    .communityDate(post.getCommunity().getCreation())
-                    .build();
+                    .communityDate(post.getCommunity().getCreation());
             if (!post.isAnonymous()) {
-                postDto.setUserImage(userMethodsService.getTopUserImage(post.getUser()));
-                postDto.setUserNickname(post.getUser().getNickname());
-                postDto.setUserName(post.getUser().getName());
-                postDto.setUserSurname(post.getUser().getSurname());
+                postDto
+                        .userImage(userMethodsService.getTopUserImage(post.getUser()))
+                        .userNickname(post.getUser().getNickname())
+                        .userName(post.getUser().getName())
+                        .userSurname(post.getUser().getSurname());
             }
-            membership.ifPresent(value -> postDto.setRole(value.getRole()));
-            return postDto;
+            membership.ifPresent(value -> postDto.role(value.getRole()));
+            return postDto.build();
         }
         else {
             throw new UnauthorizedException("No access to post");
@@ -179,6 +187,51 @@ public class PostService {
         }
         else
             throw new UnauthorizedException("No access to delete post");
+    }
+
+    private int countComments(Post post) {
+        return commentaryRepository.countAllByPost(post);
+    }
+    private ArrayList<CommentaryDto> get2CommentsByPost(Post post) {
+        var list = commentaryRepository.findTop2ByPostOrderByIdCommentaryAsc(post);
+        var array = new ArrayList<CommentaryDto>();
+        list.forEach(c -> array.add(
+                CommentaryDto.builder()
+                        .text(c.getText())
+                        .nickname(c.getUser().getNickname())
+                        .build())
+        );
+        return array;
+    }
+
+    public ArrayList<PostDto> getPostDtoListByUser(String nickname) {
+        var array = new ArrayList<PostDto>();
+        var user = userMethodsService.getUserByNickname(nickname);
+        var posts = postRepository.getPostsByUser(user);
+        boolean isCurrentUser;
+        if (userMethodsService.isContextUser())
+             isCurrentUser = userMethodsService.isCurrentUserEqual(user);
+        else
+            isCurrentUser = false;
+
+        for (Post post : posts) {
+            if (!(post.isAnonymous() && !isCurrentUser)) {
+                array.add(setMainInfo(post)
+                        .groupname(post.getCommunity().getGroupname())
+                        .groupTitle(post.getCommunity().getName())
+                        .groupImage(communityMethodsService.getTopCommunityImage(post.getCommunity()))
+                        .comments(countComments(post))
+                        .commentaries(get2CommentsByPost(post))
+                        .build());
+            }
+        }
+        return array;
+    }
+    public ArrayList<PostDto> getPostDtoListByCommunity(String groupname) {
+        return null;
+    }
+    public ArrayList<PostDto> getPostDtoListHome() {
+        return null;
     }
 
 

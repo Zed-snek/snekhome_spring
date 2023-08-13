@@ -50,7 +50,8 @@ public class RelationsService {
     }
 
     public Friendship getFriendshipOrCreate(Long firstUser, Long secondUser) {
-        var friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(firstUser, secondUser);
+        var friendship
+                = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(firstUser, secondUser);
         if (friendship.isEmpty())
             friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(secondUser, firstUser);
 
@@ -79,7 +80,9 @@ public class RelationsService {
             array.add(UserPublicDto.builder()
                             .image(userMethodsService.getTopUserImage(friend))
                             .nickname(friend.getNickname())
-                            .friendshipType(userMethodsService.getFriendshipType(user.getIdAccount(), friend.getIdAccount()))
+                            .friendshipType(
+                                    userMethodsService.getFriendshipType(user.getIdAccount(), friend.getIdAccount())
+                            )
                             .name(friend.getName())
                             .surname(friend.getSurname())
                     .build());
@@ -114,11 +117,15 @@ public class RelationsService {
                 .community(community)
                 .build();
         if (community.getOwner().equals(current))
-            membership.setRole(communityRoleRepository.findTopByCommunityAndIsCreator(community, true).orElse(null));
+            membership.setRole(communityRoleRepository.findTopByCommunityAndIsCreator(community, true)
+                    .orElse(null));
         membershipRepository.save(membership);
     }
     public void leaveCommunity(String groupname) {
-        var membership = getMembershipOrThrowErr(userMethodsService.getCurrentUser(), communityMethodsService.getCommunityByNameOrThrowErr(groupname));
+        var membership = getMembershipOrThrowErr(
+                userMethodsService.getCurrentUser(),
+                communityMethodsService.getCommunityByNameOrThrowErr(groupname)
+        );
         membershipRepository.delete(membership);
     }
 
@@ -194,7 +201,8 @@ public class RelationsService {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         if (communityMethodsService.isCurrentUserOwner(community)) {
             var role = communityMethodsService.findRoleOrThrowErr(community, roleName);
-            var membership = getMembershipOrThrowErr(userMethodsService.getUserByNickname(nickname), community);
+            var membership
+                    = getMembershipOrThrowErr(userMethodsService.getUserByNickname(nickname), community);
             membership.setRole(role);
             membershipRepository.save(membership);
         }
@@ -203,7 +211,8 @@ public class RelationsService {
     public void revokeRole(String nickname, String groupname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         if (communityMethodsService.isCurrentUserOwner(community)) {
-            var membership = getMembershipOrThrowErr(userMethodsService.getUserByNickname(nickname), community);
+            var membership
+                    = getMembershipOrThrowErr(userMethodsService.getUserByNickname(nickname), community);
             membership.setRole(null);
             membershipRepository.save(membership);
         }

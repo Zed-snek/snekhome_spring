@@ -95,5 +95,18 @@ public class PostController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/user/posts/{nickname}")
+    public ArrayList<PostDto> getPostsUser(@PathVariable String nickname) {
+        return postService.getPostDtoListByUser(nickname);
+    }
+    @GetMapping("/community/posts/{groupname}")
+    public ArrayList<PostDto> getPostsCommunity(@PathVariable String groupname) {
+        return postService.getPostDtoListByCommunity(groupname);
+    }
+    @GetMapping("/auth/user/posts/home")
+    public ArrayList<PostDto> getPostsHome() {
+        return postService.getPostDtoListHome();
+    }
+
 
 }

@@ -9,5 +9,8 @@ import java.util.List;
 public interface CommentaryRepository extends JpaRepository<Commentary, Long> {
     List<Commentary> findAllByPostOrderByIdCommentaryAsc(Post post);
     void deleteByIdCommentary(Long id);
-    Iterable<Commentary> findAllByReferenceId(Long referenceId);
+    List<Commentary> findAllByReferenceId(Long referenceId);
+    int countAllByPost(Post post);
+    List<Commentary> findTop2ByPostOrderByIdCommentaryAsc(Post post);
+
 }
