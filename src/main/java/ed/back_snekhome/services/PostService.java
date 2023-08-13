@@ -210,7 +210,7 @@ public class PostService {
         var posts = postRepository.getPostsByUser(user);
         boolean isCurrentUser;
         if (userMethodsService.isContextUser())
-             isCurrentUser = userMethodsService.isCurrentUserEqual(user);
+            isCurrentUser = userMethodsService.isCurrentUserEqual(user);
         else
             isCurrentUser = false;
 
@@ -228,7 +228,22 @@ public class PostService {
         return array;
     }
     public ArrayList<PostDto> getPostDtoListByCommunity(String groupname) {
-        return null;
+        var array = new ArrayList<PostDto>();
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var posts = postRepository.getPostsByCommunity(community);
+
+        for (Post post : posts) {
+            var dto = setMainInfo(post)
+                    .comments(countComments(post))
+                    .commentaries(get2CommentsByPost(post));
+            if (!post.isAnonymous()) {
+                dto
+                    .userNickname(post.getUser().getNickname())
+                    .userImage(userMethodsService.getTopUserImage(post.getUser()));
+            }
+            array.add(dto.build());
+        }
+        return array;
     }
     public ArrayList<PostDto> getPostDtoListHome() {
         return null;
