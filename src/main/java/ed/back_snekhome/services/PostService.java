@@ -4,9 +4,11 @@ import ed.back_snekhome.dto.postDTOs.CommentaryDto;
 import ed.back_snekhome.dto.postDTOs.EditPostDto;
 import ed.back_snekhome.dto.postDTOs.NewPostDto;
 import ed.back_snekhome.dto.postDTOs.PostDto;
+import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.post.Post;
 import ed.back_snekhome.entities.post.PostImage;
 import ed.back_snekhome.entities.post.PostRating;
+import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.enums.RatingType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
@@ -17,6 +19,8 @@ import ed.back_snekhome.repositories.MembershipRepository;
 import ed.back_snekhome.repositories.PostRatingRepository;
 import ed.back_snekhome.repositories.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +36,7 @@ public class PostService {
     private final CommunityMethodsService communityMethodsService;
     private final UserMethodsService userMethodsService;
     private final FileService fileService;
+    private final RelationsService relationsService;
 
     private final MembershipRepository membershipRepository;
     private final PostRepository postRepository;
@@ -203,9 +208,25 @@ public class PostService {
         );
         return array;
     }
+    private PostDto.PostDtoBuilder setPostItemInfo(Post post, boolean isCommunity, boolean isUser) {
+        var builder = setMainInfo(post)
+                    .comments(countComments(post))
+                    .commentaries(get2CommentsByPost(post));
+        if (isCommunity) {
+            builder
+                    .groupname(post.getCommunity().getGroupname())
+                    .groupTitle(post.getCommunity().getName())
+                    .groupImage(communityMethodsService.getTopCommunityImage(post.getCommunity()));
+        }
+        if (isUser) {
+            builder
+                    .userNickname(post.getUser().getNickname())
+                    .userImage(userMethodsService.getTopUserImage(post.getUser()));
+        }
+        return builder;
+    }
 
     public ArrayList<PostDto> getPostDtoListByUser(String nickname) {
-        var array = new ArrayList<PostDto>();
         var user = userMethodsService.getUserByNickname(nickname);
         var posts = postRepository.getPostsByUser(user);
         boolean isCurrentUser;
@@ -214,39 +235,41 @@ public class PostService {
         else
             isCurrentUser = false;
 
+        var array = new ArrayList<PostDto>();
         for (Post post : posts) {
             if (!(post.isAnonymous() && !isCurrentUser)) {
-                array.add(setMainInfo(post)
-                        .groupname(post.getCommunity().getGroupname())
-                        .groupTitle(post.getCommunity().getName())
-                        .groupImage(communityMethodsService.getTopCommunityImage(post.getCommunity()))
-                        .comments(countComments(post))
-                        .commentaries(get2CommentsByPost(post))
-                        .build());
+                array.add(setPostItemInfo(post, true, false).build());
             }
         }
         return array;
     }
+
     public ArrayList<PostDto> getPostDtoListByCommunity(String groupname) {
-        var array = new ArrayList<PostDto>();
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         var posts = postRepository.getPostsByCommunity(community);
 
+        var array = new ArrayList<PostDto>();
         for (Post post : posts) {
-            var dto = setMainInfo(post)
-                    .comments(countComments(post))
-                    .commentaries(get2CommentsByPost(post));
-            if (!post.isAnonymous()) {
-                dto
-                    .userNickname(post.getUser().getNickname())
-                    .userImage(userMethodsService.getTopUserImage(post.getUser()));
-            }
-            array.add(dto.build());
+            array.add(setPostItemInfo(post, false, !post.isAnonymous()).build());
         }
         return array;
     }
-    public ArrayList<PostDto> getPostDtoListHome() {
-        return null;
+
+    public ArrayList<PostDto> getPostDtoListHome(int pageNumber, int pageSize) {
+        var user = userMethodsService.getCurrentUser();
+        var memberships = relationsService.getMembershipsByUser(user, false);
+        var communities = new ArrayList<Community>();
+        for (Membership m : memberships) {
+            communities.add(m.getCommunity());
+        }
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        var posts = postRepository.getPostsByCommunities(communities, pageable);
+
+        var array = new ArrayList<PostDto>();
+        for (Post post : posts) {
+            array.add(setPostItemInfo(post, true, !post.isAnonymous()).build());
+        }
+        return array;
     }
 
 

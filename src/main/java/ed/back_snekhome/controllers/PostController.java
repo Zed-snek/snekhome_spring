@@ -104,8 +104,11 @@ public class PostController {
         return postService.getPostDtoListByCommunity(groupname);
     }
     @GetMapping("/auth/user/posts/home")
-    public ArrayList<PostDto> getPostsHome() {
-        return postService.getPostDtoListHome();
+    public ArrayList<PostDto> getPostsHome(
+            @RequestParam(defaultValue = "0", required = false) int page,
+            @RequestParam(defaultValue = "10", required = false) int pageSize
+    ) {
+        return postService.getPostDtoListHome(page, pageSize);
     }
 
 
