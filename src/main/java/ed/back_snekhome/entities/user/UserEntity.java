@@ -1,6 +1,8 @@
 package ed.back_snekhome.entities.user;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.security.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -45,6 +47,10 @@ public class UserEntity implements UserDetails {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<InfoTag> tags;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Membership> memberships;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

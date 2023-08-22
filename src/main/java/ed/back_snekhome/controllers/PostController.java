@@ -19,6 +19,8 @@ import java.util.ArrayList;
 @RequestMapping("/api")
 public class PostController {
 
+    private static final String DEFAULT_PAGE_SIZE = "10";
+
     private final PostService postService;
     private final CommentaryService commentaryService;
 
@@ -96,17 +98,27 @@ public class PostController {
     }
 
     @GetMapping("/user/posts/{nickname}")
-    public ArrayList<PostDto> getPostsUser(@PathVariable String nickname) {
-        return postService.getPostDtoListByUser(nickname);
+    public ArrayList<PostDto> getPostsUser(
+            @PathVariable String nickname,
+            @RequestParam(defaultValue = "0", required = false) int page,
+            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE, required = false) int pageSize
+    ) {
+        return postService.getPostDtoListByUser(nickname, page, pageSize);
     }
+
     @GetMapping("/community/posts/{groupname}")
-    public ArrayList<PostDto> getPostsCommunity(@PathVariable String groupname) {
-        return postService.getPostDtoListByCommunity(groupname);
+    public ArrayList<PostDto> getPostsCommunity(
+            @PathVariable String groupname,
+            @RequestParam(defaultValue = "0", required = false) int page,
+            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE, required = false) int pageSize
+    ) {
+        return postService.getPostDtoListByCommunity(groupname, page, pageSize);
     }
+
     @GetMapping("/auth/user/posts/home")
     public ArrayList<PostDto> getPostsHome(
             @RequestParam(defaultValue = "0", required = false) int page,
-            @RequestParam(defaultValue = "10", required = false) int pageSize
+            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE, required = false) int pageSize
     ) {
         return postService.getPostDtoListHome(page, pageSize);
     }

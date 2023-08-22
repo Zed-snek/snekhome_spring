@@ -25,6 +25,7 @@ public class CommentaryService {
     private final PostService postService;
     private final UserMethodsService userMethodsService;
     private final CommunityMethodsService communityMethodsService;
+    private final RelationsService relationsService;
 
 
     @Transactional
@@ -52,7 +53,7 @@ public class CommentaryService {
         var comment = getCommentaryById(id);
         var user = userMethodsService.getCurrentUser();
         var membership =
-                communityMethodsService.getOptionalMembershipOfCurrentUser(comment.getPost().getCommunity());
+                relationsService.getOptionalMembershipOfCurrentUser(comment.getPost().getCommunity());
         if (comment.getUser().equals(user) || (membership.isPresent() && membership.get().getRole().isDeletePosts()))
             deleteAllReferencedComments(id);
         else
@@ -108,7 +109,7 @@ public class CommentaryService {
     public ArrayList<CommentaryDto> getCommentariesByPostId(Long id) {
         var post = postService.getPostById(id);
         var membership
-                = communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+                = relationsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
         boolean isContext = userMethodsService.isContextUser();
         UserEntity user;

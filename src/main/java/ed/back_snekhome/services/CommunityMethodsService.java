@@ -54,12 +54,6 @@ public class CommunityMethodsService {
                 || isCurrentUserOwner(community);
     }
 
-    public Optional<Membership> getOptionalMembershipOfCurrentUser(Community community) {
-        if (userMethodsService.isContextUser())
-            return membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
-        return Optional.empty();
-    }
-
     public String getTopCommunityImage(Community community) {
         var img = communityImageRepository.findTopByCommunityOrderByIdImageDesc(community);
         if (img.isPresent())

@@ -5,19 +5,18 @@ import ed.back_snekhome.dto.postDTOs.EditPostDto;
 import ed.back_snekhome.dto.postDTOs.NewPostDto;
 import ed.back_snekhome.dto.postDTOs.PostDto;
 import ed.back_snekhome.entities.community.Community;
+import ed.back_snekhome.entities.post.Commentary;
 import ed.back_snekhome.entities.post.Post;
 import ed.back_snekhome.entities.post.PostImage;
 import ed.back_snekhome.entities.post.PostRating;
 import ed.back_snekhome.entities.relations.Membership;
+import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.enums.RatingType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
-import ed.back_snekhome.repositories.CommentaryRepository;
-import ed.back_snekhome.repositories.MembershipRepository;
-import ed.back_snekhome.repositories.PostRatingRepository;
-import ed.back_snekhome.repositories.PostRepository;
+import ed.back_snekhome.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +27,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +42,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostRatingRepository postRatingRepository;
     private final CommentaryRepository commentaryRepository;
+    private final CommunityRepository communityRepository;
 
     @Transactional
     public Long newPost(NewPostDto dto) throws IOException {
@@ -90,16 +91,19 @@ public class PostService {
 
         if (post.getUser().equals(user)) {
             post.setText(dto.getText());
-            postRepository.save(post);
 
             var postImages = post.getImages();
-            String currentImg;
+            List<PostImage> toDelete = new ArrayList<>();
+
             for (PostImage postImage : postImages) {
-                currentImg = postImage.getName();
-                if (!dto.getOldImages().contains(currentImg)) {
-                    fileService.deletePostImageByName(currentImg);
+                if (!dto.getOldImages().contains(postImage.getName())) {
+                    toDelete.add(postImage);
+                    fileService.deleteImageFromStorage(postImage.getName());
                 }
             }
+            postImages.removeAll(toDelete);
+
+            postRepository.save(post);
             fileService.uploadPostImages(dto.getNewImages(), post);
         }
         else
@@ -135,7 +139,7 @@ public class PostService {
     public PostDto getPostPage(Long id) {
         var post = getPostById(id);
         var membership =
-                communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+                relationsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
         if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership)) {
             var postDto = setMainInfo(post)
@@ -182,11 +186,11 @@ public class PostService {
         var post = getPostById(id);
         var user = userMethodsService.getCurrentUser();
         var membership =
-                communityMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+                relationsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
         if (post.getUser().equals(user) || (membership.isPresent() && membership.get().getRole().isDeletePosts())) {
 
             for (PostImage img : post.getImages())
-                fileService.deletePostImageByName(img.getName());
+                fileService.deleteImageFromStorage(img.getName());
 
             postRepository.delete(post);
         }
@@ -198,7 +202,15 @@ public class PostService {
         return commentaryRepository.countAllByPost(post);
     }
     private ArrayList<CommentaryDto> get2CommentsByPost(Post post) {
-        var list = commentaryRepository.findTop2ByPostOrderByIdCommentaryAsc(post);
+        Long ref = (long) -1;
+        List<Commentary> list;
+        if (post.getImages().size() > 0 || post.getText().length() > 700)
+            list = commentaryRepository.findTop2ByPostAndReferenceIdOrderByIdCommentaryAsc(post, ref);
+        else if (post.getText().length() > 350)
+            list = commentaryRepository.findTopByPostAndReferenceIdOrderByIdCommentaryAsc(post, ref);
+        else
+            return null;
+
         var array = new ArrayList<CommentaryDto>();
         list.forEach(c -> array.add(
                 CommentaryDto.builder()
@@ -226,14 +238,24 @@ public class PostService {
         return builder;
     }
 
-    public ArrayList<PostDto> getPostDtoListByUser(String nickname) {
-        var user = userMethodsService.getUserByNickname(nickname);
-        var posts = postRepository.getPostsByUser(user);
-        boolean isCurrentUser;
-        if (userMethodsService.isContextUser())
-            isCurrentUser = userMethodsService.isCurrentUserEqual(user);
-        else
-            isCurrentUser = false;
+    public ArrayList<PostDto> getPostDtoListByUser(String nickname, int pageNumber, int pageSize) {
+        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        boolean isContext = userMethodsService.isContextUser();
+        boolean isCurrentUser = isContext && userMethodsService.isCurrentUserEqual(user);
+
+        List<Post> posts;
+        if (isCurrentUser)
+            posts = postRepository.getPostsByUserOrderByIdPostDesc(user, pageable);
+        else if (isContext) {
+            var currentUser = userMethodsService.getCurrentUser();
+            List<Community> communities = communityRepository.getCommunitiesByUser(currentUser);
+            posts = postRepository.getPostsByNotCurrentUserOrderByIdPostDesc(user, communities, pageable);
+        }
+        else {
+            posts = postRepository.getPostsByUserAndIsAnonymousOrderByIdPostDesc(user, false, pageable);
+        }
 
         var array = new ArrayList<PostDto>();
         for (Post post : posts) {
@@ -244,13 +266,26 @@ public class PostService {
         return array;
     }
 
-    public ArrayList<PostDto> getPostDtoListByCommunity(String groupname) {
+    public ArrayList<PostDto> getPostDtoListByCommunity(String groupname, int pageNumber, int pageSize) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var posts = postRepository.getPostsByCommunity(community);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        var posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
 
         var array = new ArrayList<PostDto>();
         for (Post post : posts) {
-            array.add(setPostItemInfo(post, false, !post.isAnonymous()).build());
+            var dto = setPostItemInfo(post, false, !post.isAnonymous());
+            if (!post.isAnonymous()) {
+                var membership
+                        = relationsService.getOptionalMembershipOfUser(post.getCommunity(), post.getUser());
+                if (membership.isPresent() && membership.get().getRole() != null) {
+                    var role = membership.get().getRole();
+                    dto
+                            .roleBannerColor(role.getBannerColor())
+                            .roleTextColor(role.getTextColor())
+                            .roleTitle(role.getTitle());
+                }
+            }
+            array.add(dto.build());
         }
         return array;
     }
@@ -263,7 +298,7 @@ public class PostService {
             communities.add(m.getCommunity());
         }
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        var posts = postRepository.getPostsByCommunities(communities, pageable);
+        var posts = postRepository.getPostsByCommunitiesOrderByIdPostDesc(communities, pageable);
 
         var array = new ArrayList<PostDto>();
         for (Post post : posts) {

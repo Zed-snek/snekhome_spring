@@ -1,6 +1,7 @@
 package ed.back_snekhome.exceptionHandler;
 
 import ed.back_snekhome.response.OwnErrorResponse;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -44,6 +45,17 @@ public class HandlerOfExistingExceptions {
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST); //400
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<OwnErrorResponse> tokenExpiredHandler() {
+
+        var errorResponse = new OwnErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Token is expired"
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN); //403
     }
 
 }

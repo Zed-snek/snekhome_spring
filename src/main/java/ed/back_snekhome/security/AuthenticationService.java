@@ -129,7 +129,7 @@ public class AuthenticationService {
 
 
     private void activateAccountIfVerified(ConfirmationToken token) {
-        var account = userMethodsService.getUserById( token.getIdUser() );
+        var account = userMethodsService.getUserByIdOrThrowErr( token.getIdUser() );
         if (!token.isNotExpired()){
             sendVerificationMail(account);
             throw new TokenExpiredException("Verification token is expired, new one is sent on your e-mail");
@@ -139,7 +139,7 @@ public class AuthenticationService {
     }
 
     private void changeEmailActionConfirmation(ConfirmationToken token) { //confirms action "change email"
-        var account = userMethodsService.getUserById(token.getIdUser());
+        var account = userMethodsService.getUserByIdOrThrowErr(token.getIdUser());
         throwErrIfTokenExpired(token);
 
         var newToken = new ConfirmationToken(
@@ -158,7 +158,7 @@ public class AuthenticationService {
     }
 
     private void changeEmailLastConfirmation(ConfirmationToken token) { //new email confirmation
-        var account = userMethodsService.getUserById(token.getIdUser());
+        var account = userMethodsService.getUserByIdOrThrowErr(token.getIdUser());
         throwErrIfTokenExpired(token);
 
         account.setEmail(token.getMessage());

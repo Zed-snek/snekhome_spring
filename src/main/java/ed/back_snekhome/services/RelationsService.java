@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +30,6 @@ public class RelationsService {
     private final MembershipRepository membershipRepository;
     private final CommunityRoleRepository communityRoleRepository;
 
-
     public void addFriend(String nickname) {
         manageFriend(nickname, true);
     }
@@ -39,7 +39,7 @@ public class RelationsService {
     private void manageFriend(String nickname, boolean isAdd) {
 
         var requestUser = userMethodsService.getCurrentUser();
-        var secondUser = userMethodsService.getUserByNickname(nickname);
+        var secondUser = userMethodsService.getUserByNicknameOrThrowErr(nickname);
         var friendship = getFriendshipOrCreate(requestUser.getIdAccount(), secondUser.getIdAccount());
 
         if (Objects.equals(friendship.getIdFirstUser(), requestUser.getIdAccount()))
@@ -68,15 +68,15 @@ public class RelationsService {
     }
 
     public ArrayList<UserPublicDto> getFriends(String nickname) {
-        var user = userMethodsService.getUserByNickname(nickname);
+        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
         var friendships = getFriendshipsByUserId(user.getIdAccount());
         var array = new ArrayList<UserPublicDto>();
         for (Friendship f : friendships) {
             UserEntity friend;
             if (f.getIdFirstUser().equals(user.getIdAccount()))
-                friend = userMethodsService.getUserById(f.getIdSecondUser());
+                friend = userMethodsService.getUserByIdOrThrowErr(f.getIdSecondUser());
             else
-                friend = userMethodsService.getUserById(f.getIdFirstUser());
+                friend = userMethodsService.getUserByIdOrThrowErr(f.getIdFirstUser());
             array.add(UserPublicDto.builder()
                             .image(userMethodsService.getTopUserImage(friend))
                             .nickname(friend.getNickname())
@@ -130,7 +130,7 @@ public class RelationsService {
     }
 
     public ArrayList<PublicCommunityCardDto> getJoinedCommunitiesByNickname(String nickname) {
-        var user = userMethodsService.getUserByNickname(nickname);
+        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
         var memberships = getMembershipsByUser(user, false);
         var array = new ArrayList<PublicCommunityCardDto>();
         memberships.forEach(
@@ -179,7 +179,7 @@ public class RelationsService {
 
     public void banUser(String groupname, String user) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var userEntity = userMethodsService.getUserByNickname(user);
+        var userEntity = userMethodsService.getUserByNicknameOrThrowErr(user);
         var userMembership = getMembershipOrThrowErr(userEntity, community);
         var admin = userMethodsService.getCurrentUser();
         var adminMembership = getMembershipOrThrowErr(admin, community);
@@ -202,7 +202,7 @@ public class RelationsService {
         if (communityMethodsService.isCurrentUserOwner(community)) {
             var role = communityMethodsService.findRoleOrThrowErr(community, roleName);
             var membership
-                    = getMembershipOrThrowErr(userMethodsService.getUserByNickname(nickname), community);
+                    = getMembershipOrThrowErr(userMethodsService.getUserByNicknameOrThrowErr(nickname), community);
             membership.setRole(role);
             membershipRepository.save(membership);
         }
@@ -212,10 +212,20 @@ public class RelationsService {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         if (communityMethodsService.isCurrentUserOwner(community)) {
             var membership
-                    = getMembershipOrThrowErr(userMethodsService.getUserByNickname(nickname), community);
+                    = getMembershipOrThrowErr(userMethodsService.getUserByNicknameOrThrowErr(nickname), community);
             membership.setRole(null);
             membershipRepository.save(membership);
         }
+    }
+
+    public Optional<Membership> getOptionalMembershipOfCurrentUser(Community community) {
+        if (userMethodsService.isContextUser())
+            return getOptionalMembershipOfUser(community, userMethodsService.getCurrentUser());
+        return Optional.empty();
+    }
+
+    public Optional<Membership> getOptionalMembershipOfUser(Community community, UserEntity user) {
+        return membershipRepository.findByCommunityAndUser(community, user);
     }
 
 }

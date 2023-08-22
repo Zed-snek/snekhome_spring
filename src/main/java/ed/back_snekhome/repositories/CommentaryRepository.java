@@ -11,6 +11,6 @@ public interface CommentaryRepository extends JpaRepository<Commentary, Long> {
     void deleteByIdCommentary(Long id);
     List<Commentary> findAllByReferenceId(Long referenceId);
     int countAllByPost(Post post);
-    List<Commentary> findTop2ByPostOrderByIdCommentaryAsc(Post post);
-
+    List<Commentary> findTop2ByPostAndReferenceIdOrderByIdCommentaryAsc(Post post, Long referenceId);
+    List<Commentary> findTopByPostAndReferenceIdOrderByIdCommentaryAsc(Post post, Long referenceId);
 }

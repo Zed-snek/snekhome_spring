@@ -1,23 +1,13 @@
 package ed.back_snekhome.services;
 
 import ed.back_snekhome.dto.userDTOs.*;
-import ed.back_snekhome.email.ConfirmationToken;
-import ed.back_snekhome.email.ConfirmationTokenService;
-import ed.back_snekhome.email.ConfirmationType;
-import ed.back_snekhome.email.EmailSendService;
 import ed.back_snekhome.entities.user.InfoTag;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.entities.user.UserImage;
 import ed.back_snekhome.exceptionHandler.exceptions.*;
 import ed.back_snekhome.repositories.*;
-import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.response.OwnSuccessResponse;
-import ed.back_snekhome.security.JwtService;
-import ed.back_snekhome.security.Role;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -96,7 +86,7 @@ public class UserService {
 
     public UserPublicDto getUserInfo(String nickname) {
 
-        var user = userMethodsService.getUserByNickname(nickname);
+        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
 
         var dto = UserPublicDto.builder()
                 .images(user.getImages())

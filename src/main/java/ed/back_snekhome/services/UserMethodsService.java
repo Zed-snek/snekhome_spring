@@ -21,11 +21,11 @@ public class UserMethodsService {
     private final UserImageRepository userImageRepository;
     private final FriendshipRepository friendshipRepository;
 
-    public UserEntity getUserById(Long id) {
+    public UserEntity getUserByIdOrThrowErr(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
-    public UserEntity getUserByNickname(String nickname) {
+    public UserEntity getUserByNicknameOrThrowErr(String nickname) {
         return userRepository.findByNicknameIgnoreCase(nickname)
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
@@ -43,7 +43,7 @@ public class UserMethodsService {
     public void throwErrIfExistsByNickname(String nickname) {
         if (userRepository.existsByNicknameIgnoreCase(nickname)
                 || communityRepository.existsByGroupnameIgnoreCase(nickname)) {
-            throw new UserAlreadyExistsException("Name: " + nickname + " is already taken");
+            throw new UserAlreadyExistsException("Nickname: " + nickname + " is already taken");
         }
     }
 

@@ -157,7 +157,7 @@ public class CommunityService {
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(name);
 
-        var membership = communityMethodsService.getOptionalMembershipOfCurrentUser(community);
+        var membership = relationsService.getOptionalMembershipOfCurrentUser(community);
 
         if (communityMethodsService.isAccessToCommunity(community, membership)) {
             var dto = PublicCommunityDto.builder()
@@ -393,7 +393,7 @@ public class CommunityService {
     @Transactional
     public void acceptJoinRequest(String groupname, String nickname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getUserByNickname(nickname);
+        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
         deleteJoinRequest(community, user);
 
         var membership = Membership.builder()
@@ -405,7 +405,7 @@ public class CommunityService {
 
     public void cancelJoinRequest(String groupname, String nickname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getUserByNickname(nickname);
+        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
         deleteJoinRequest(community, user);
     }
 

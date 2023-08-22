@@ -13,11 +13,23 @@ import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
     Optional<Post> getByIdPost(Long idPost);
-    List<Post> getPostsByUser(UserEntity user);
-    List<Post> getPostsByCommunity(Community community);
+
+    List<Post> getPostsByUserOrderByIdPostDesc(UserEntity user, Pageable pageable);
+    List<Post> getPostsByUserAndIsAnonymousOrderByIdPostDesc(UserEntity user, boolean isAnonymous, Pageable pageable);
+
+    List<Post> getPostsByCommunityOrderByIdPostDesc(Community community, Pageable pageable);
 
     @Query("SELECT p FROM Post p WHERE p.community IN :communities")
-    List<Post> getPostsByCommunities(
+    List<Post> getPostsByCommunitiesOrderByIdPostDesc(
             @Param("communities") List<Community> communities,
-            Pageable pageable);
+            Pageable pageable
+    );
+
+    @Query("SELECT p FROM Post p WHERE p.isAnonymous = false AND p.user = :user AND " +
+            "(p.community.isClosed = false OR p.community IN :communities)")
+    List<Post> getPostsByNotCurrentUserOrderByIdPostDesc(
+            @Param("user") UserEntity user,
+            @Param("communities") List<Community> communities,
+            Pageable pageable
+    );
 }

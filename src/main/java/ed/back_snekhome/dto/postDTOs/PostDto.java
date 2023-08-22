@@ -21,11 +21,16 @@ public class PostDto {
     private RatingType ratedType;
     private ArrayList<CommentaryDto> commentaries;
 
+    private CommunityRole role;
+
     private String userName;
     private String userSurname;
     private String userNickname;
     private String userImage;
-    private CommunityRole role;
+    //flair:
+    private String roleTitle;
+    private String roleBannerColor;
+    private String roleTextColor;
 
     private String groupImage;
     private String groupname;
