@@ -19,14 +19,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> getPostsByCommunityOrderByIdPostDesc(Community community, Pageable pageable);
 
-    @Query("SELECT p FROM Post p WHERE p.community IN :communities")
+    @Query("SELECT p FROM Post p WHERE p.community IN :communities ORDER BY p.idPost DESC")
     List<Post> getPostsByCommunitiesOrderByIdPostDesc(
             @Param("communities") List<Community> communities,
             Pageable pageable
     );
 
     @Query("SELECT p FROM Post p WHERE p.isAnonymous = false AND p.user = :user AND " +
-            "(p.community.isClosed = false OR p.community IN :communities)")
+            "(p.community.isClosed = false OR p.community IN :communities) " +
+            "ORDER BY p.idPost DESC")
     List<Post> getPostsByNotCurrentUserOrderByIdPostDesc(
             @Param("user") UserEntity user,
             @Param("communities") List<Community> communities,

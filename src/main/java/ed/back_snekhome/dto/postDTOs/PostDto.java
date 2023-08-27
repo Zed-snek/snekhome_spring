@@ -23,6 +23,8 @@ public class PostDto {
 
     private CommunityRole role;
 
+    private boolean isCurrentUserAuthor;
+
     private String userName;
     private String userSurname;
     private String userNickname;

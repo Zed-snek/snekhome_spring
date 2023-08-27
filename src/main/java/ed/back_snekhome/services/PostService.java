@@ -260,7 +260,10 @@ public class PostService {
         var array = new ArrayList<PostDto>();
         for (Post post : posts) {
             if (!(post.isAnonymous() && !isCurrentUser)) {
-                array.add(setPostItemInfo(post, true, false).build());
+                array.add(setPostItemInfo(post, true, false)
+                            .isCurrentUserAuthor(isCurrentUser)
+                            .build()
+                );
             }
         }
         return array;
@@ -271,9 +274,12 @@ public class PostService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         var posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
 
+        var user = userMethodsService.isContextUser() ? userMethodsService.getCurrentUser() : null;
+
         var array = new ArrayList<PostDto>();
         for (Post post : posts) {
             var dto = setPostItemInfo(post, false, !post.isAnonymous());
+            dto.isCurrentUserAuthor(post.getUser().equals(user));
             if (!post.isAnonymous()) {
                 var membership
                         = relationsService.getOptionalMembershipOfUser(post.getCommunity(), post.getUser());
