@@ -7,6 +7,8 @@ import ed.back_snekhome.enums.LogType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @NoArgsConstructor
 @Getter
@@ -33,7 +35,13 @@ public class CommunityLog {
     @JsonIgnore
     private UserEntity secondUser;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_community")
+    @JsonIgnore
+    private Community community;
+
     private String message;
 
+    private LocalDateTime date;
 
 }
