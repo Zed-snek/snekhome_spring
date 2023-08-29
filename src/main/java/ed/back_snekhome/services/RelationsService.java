@@ -15,6 +15,7 @@ import ed.back_snekhome.repositories.FriendshipRepository;
 import ed.back_snekhome.repositories.MembershipRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -26,6 +27,8 @@ public class RelationsService {
 
     private final UserMethodsService userMethodsService;
     private final CommunityMethodsService communityMethodsService;
+    private final CommunityLogService communityLogService;
+
     private final FriendshipRepository friendshipRepository;
     private final MembershipRepository membershipRepository;
     private final CommunityRoleRepository communityRoleRepository;
@@ -177,6 +180,7 @@ public class RelationsService {
                 .build();
     }
 
+    @Transactional
     public void banUser(String groupname, String user) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         var userEntity = userMethodsService.getUserByNicknameOrThrowErr(user);
@@ -191,6 +195,7 @@ public class RelationsService {
             userMembership.setBanned(true);
             userMembership.setRole(null);
             membershipRepository.save(userMembership);
+            communityLogService.createLogBanUser(community, userEntity);
         }
         else {
             throw new UnauthorizedException("No permissions to ban user");

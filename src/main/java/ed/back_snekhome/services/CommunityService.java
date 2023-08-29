@@ -141,8 +141,7 @@ public class CommunityService {
     public void deleteCommunity(String name) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(name);
         if (community.getOwner().equals(userMethodsService.getCurrentUser())
-                && community.getType() != CommunityType.DEMOCRACY
-        )
+                && community.getType() != CommunityType.DEMOCRACY)
             communityRepository.delete(community);
         else
             throw new UnauthorizedException("User doesn't have permissions to delete the community");
@@ -156,7 +155,6 @@ public class CommunityService {
 
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(name);
-
         var membership = relationsService.getOptionalMembershipOfCurrentUser(community);
 
         if (communityMethodsService.isAccessToCommunity(community, membership)) {
@@ -192,8 +190,7 @@ public class CommunityService {
                     .type(community.getType())
                     .isAccess(false)
                     .isRequestSent(joinRequestRepository.existsByCommunityAndUser(
-                            community,
-                            userMethodsService.getCurrentUser())
+                            community, userMethodsService.getCurrentUser())
                     )
                     .build();
         }

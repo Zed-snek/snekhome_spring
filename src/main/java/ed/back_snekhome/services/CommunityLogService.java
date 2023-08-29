@@ -50,6 +50,13 @@ public class CommunityLogService {
                 .message(roleTitle));
     }
 
+    public void createLogRevokeRole(Community community, UserEntity revokedRoleUser, String roleTitle) {
+        saveLog(builderWithCurrentUser(community)
+                .logType(LogType.REVOKE_ROLE)
+                .secondUser(revokedRoleUser)
+                .message(roleTitle));
+    }
+
     public void createLogNewCommunityTitle(Community community, String newTitle) {
         saveLog(builderWithCurrentUser(community)
                 .logType(LogType.NEW_COMMUNITY_TITLE)

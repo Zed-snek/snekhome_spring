@@ -56,6 +56,10 @@ public class Community {
     @JsonIgnore
     private List<Membership> memberships;
 
+    @OneToMany(mappedBy = "community", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<CommunityLog> logs;
+
     //for democracy, citizen requirements:
     @OneToOne(mappedBy = "community", cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn

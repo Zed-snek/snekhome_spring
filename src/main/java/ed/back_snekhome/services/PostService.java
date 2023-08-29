@@ -37,6 +37,7 @@ public class PostService {
     private final UserMethodsService userMethodsService;
     private final FileService fileService;
     private final RelationsService relationsService;
+    private final CommunityLogService communityLogService;
 
     private final MembershipRepository membershipRepository;
     private final PostRepository postRepository;
@@ -187,11 +188,21 @@ public class PostService {
         var user = userMethodsService.getCurrentUser();
         var membership =
                 relationsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
-        if (post.getUser().equals(user) || (membership.isPresent() && membership.get().getRole().isDeletePosts())) {
+        boolean isCurrentUserAuthor = post.getUser().equals(user);
+        boolean isDeletePermit = membership.isPresent() && membership.get().getRole().isDeletePosts();
 
-            for (PostImage img : post.getImages())
+        if (isCurrentUserAuthor || isDeletePermit) {
+            for (PostImage img : post.getImages()) {
                 fileService.deleteImageFromStorage(img.getName());
-
+            }
+            if (isDeletePermit && !isCurrentUserAuthor) {
+                String text = post.getText();
+                communityLogService.createLogDeletePost(
+                        post.getCommunity(),
+                        post.getUser(),
+                        text.length() > 100 ? text.substring(0, 100) : text
+                );
+            }
             postRepository.delete(post);
         }
         else
