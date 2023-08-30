@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,7 @@ public class CommentaryService {
     private final PostService postService;
     private final UserMethodsService userMethodsService;
     private final CommunityMethodsService communityMethodsService;
-    private final RelationsService relationsService;
+    private final MembershipService membershipService;
 
 
     @Transactional
@@ -53,7 +54,7 @@ public class CommentaryService {
         var comment = getCommentaryById(id);
         var user = userMethodsService.getCurrentUser();
         var membership =
-                relationsService.getOptionalMembershipOfCurrentUser(comment.getPost().getCommunity());
+                membershipService.getOptionalMembershipOfCurrentUser(comment.getPost().getCommunity());
         if (comment.getUser().equals(user) || (membership.isPresent() && membership.get().getRole().isDeletePosts()))
             deleteAllReferencedComments(id);
         else
@@ -106,10 +107,10 @@ public class CommentaryService {
                 .orElseThrow(() -> new EntityNotFoundException("There is no commentary"));
     }
 
-    public ArrayList<CommentaryDto> getCommentariesByPostId(Long id) {
+    public List<CommentaryDto> getCommentariesByPostId(Long id) {
         var post = postService.getPostById(id);
         var membership
-                = relationsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+                = membershipService.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
         boolean isContext = userMethodsService.isContextUser();
         UserEntity user;

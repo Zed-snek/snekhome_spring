@@ -10,7 +10,6 @@ import ed.back_snekhome.entities.post.Post;
 import ed.back_snekhome.entities.post.PostImage;
 import ed.back_snekhome.entities.post.PostRating;
 import ed.back_snekhome.entities.relations.Membership;
-import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.enums.RatingType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
@@ -36,7 +35,7 @@ public class PostService {
     private final CommunityMethodsService communityMethodsService;
     private final UserMethodsService userMethodsService;
     private final FileService fileService;
-    private final RelationsService relationsService;
+    private final MembershipService membershipService;
     private final CommunityLogService communityLogService;
 
     private final MembershipRepository membershipRepository;
@@ -140,7 +139,7 @@ public class PostService {
     public PostDto getPostPage(Long id) {
         var post = getPostById(id);
         var membership =
-                relationsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+                membershipService.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
         if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership)) {
             var postDto = setMainInfo(post)
@@ -187,7 +186,7 @@ public class PostService {
         var post = getPostById(id);
         var user = userMethodsService.getCurrentUser();
         var membership =
-                relationsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+                membershipService.getOptionalMembershipOfCurrentUser(post.getCommunity());
         boolean isCurrentUserAuthor = post.getUser().equals(user);
         boolean isDeletePermit = membership.isPresent() && membership.get().getRole().isDeletePosts();
 
@@ -212,7 +211,7 @@ public class PostService {
     private int countComments(Post post) {
         return commentaryRepository.countAllByPost(post);
     }
-    private ArrayList<CommentaryDto> get2CommentsByPost(Post post) {
+    private List<CommentaryDto> get2CommentsByPost(Post post) {
         Long ref = (long) -1;
         List<Commentary> list;
         if (post.getImages().size() > 0 || post.getText().length() > 700)
@@ -249,7 +248,7 @@ public class PostService {
         return builder;
     }
 
-    public ArrayList<PostDto> getPostDtoListByUser(String nickname, int pageNumber, int pageSize) {
+    public List<PostDto> getPostDtoListByUser(String nickname, int pageNumber, int pageSize) {
         var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
@@ -280,7 +279,7 @@ public class PostService {
         return array;
     }
 
-    public ArrayList<PostDto> getPostDtoListByCommunity(String groupname, int pageNumber, int pageSize) {
+    public List<PostDto> getPostDtoListByCommunity(String groupname, int pageNumber, int pageSize) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         var posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
@@ -293,7 +292,7 @@ public class PostService {
             dto.isCurrentUserAuthor(post.getUser().equals(user));
             if (!post.isAnonymous()) {
                 var membership
-                        = relationsService.getOptionalMembershipOfUser(post.getCommunity(), post.getUser());
+                        = membershipService.getOptionalMembershipOfUser(post.getCommunity(), post.getUser());
                 if (membership.isPresent() && membership.get().getRole() != null) {
                     var role = membership.get().getRole();
                     dto
@@ -307,9 +306,9 @@ public class PostService {
         return array;
     }
 
-    public ArrayList<PostDto> getPostDtoListHome(int pageNumber, int pageSize) {
+    public List<PostDto> getPostDtoListHome(int pageNumber, int pageSize) {
         var user = userMethodsService.getCurrentUser();
-        var memberships = relationsService.getMembershipsByUser(user, false);
+        var memberships = membershipService.getMembershipsByUser(user, false);
         var communities = new ArrayList<Community>();
         for (Membership m : memberships) {
             communities.add(m.getCommunity());

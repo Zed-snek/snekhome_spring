@@ -10,7 +10,7 @@ import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.CommunityService;
-import ed.back_snekhome.services.RelationsService;
+import ed.back_snekhome.services.MembershipService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 public class CommunityController {
 
     private final CommunityService communityService;
-    private final RelationsService relationsService;
+    private final MembershipService membershipService;
 
     @GetMapping("/community/{name}")
     public PublicCommunityDto getCommunity(@PathVariable String name) {
@@ -67,20 +68,20 @@ public class CommunityController {
 
     @PostMapping("/auth/community/member/{name}")
     public ResponseEntity<OwnSuccessResponse> joinCommunity(@PathVariable String name) {
-        relationsService.joinCommunity(name);
+        membershipService.joinCommunity(name);
         var response = new OwnSuccessResponse("User has joined community");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/auth/community/member/{name}")
     public ResponseEntity<OwnSuccessResponse> leaveCommunity(@PathVariable String name) {
-        relationsService.leaveCommunity(name);
+        membershipService.leaveCommunity(name);
         var response = new OwnSuccessResponse("User has left community");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/auth/communities/home_cards")
-    public ArrayList<PublicCommunityCardDto> getHomeCards() {
+    public List<PublicCommunityCardDto> getHomeCards() {
 
         return communityService.getHomeCards();
     }
@@ -98,13 +99,13 @@ public class CommunityController {
 
 
     @GetMapping("/community_list/{nickname}")
-    public ArrayList<PublicCommunityCardDto> getCommunityList(@PathVariable String nickname) {
-        return relationsService.getJoinedCommunitiesByNickname(nickname);
+    public List<PublicCommunityCardDto> getCommunityList(@PathVariable String nickname) {
+        return membershipService.getJoinedCommunitiesByNickname(nickname);
     }
 
     @GetMapping("/members/{groupname}")
     public MembersDto getMembers(@PathVariable String groupname) {
-        return relationsService.getMembersByCommunity(groupname);
+        return membershipService.getMembersByCommunity(groupname);
     }
 
     @PostMapping("/auth/community/role/{groupname}")
@@ -136,7 +137,7 @@ public class CommunityController {
     }
 
     @GetMapping("/community/roles/{groupname}")
-    public Iterable<CommunityRole> getRoles(@PathVariable String groupname) {
+    public List<CommunityRole> getRoles(@PathVariable String groupname) {
         return communityService.getRoles(groupname);
     }
 
@@ -145,7 +146,7 @@ public class CommunityController {
             @PathVariable String groupname,
             @PathVariable String username
     ) {
-        relationsService.banUser(groupname, username);
+        membershipService.banUser(groupname, username);
         var response = new OwnSuccessResponse("User is banned");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -156,7 +157,7 @@ public class CommunityController {
             @PathVariable String username,
             @PathVariable String roleName
     ) {
-        relationsService.grantRole(username, groupname, roleName);
+        membershipService.grantRole(username, groupname, roleName);
         var response = new OwnSuccessResponse("Role is granted");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -166,7 +167,7 @@ public class CommunityController {
             @PathVariable String groupname,
             @PathVariable String username
     ) {
-        relationsService.revokeRole(username, groupname);
+        membershipService.revokeRole(username, groupname);
         var response = new OwnSuccessResponse("Role is revoked");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -193,21 +194,21 @@ public class CommunityController {
 
     @PostMapping("/auth/community/{groupname}/request")
     public ResponseEntity<OwnSuccessResponse> sendJoinRequest(@PathVariable String groupname) {
-        var response = new OwnSuccessResponse(communityService.manageJoinRequest(groupname));
+        var response = new OwnSuccessResponse(membershipService.manageJoinRequest(groupname));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/auth/community/{groupname}/request")
-    public ArrayList<UserPublicDto> getJoinRequests(@PathVariable String groupname) {
+    public List<UserPublicDto> getJoinRequests(@PathVariable String groupname) {
 
-        return communityService.getAllJoinRequests(groupname);
+        return membershipService.getAllJoinRequests(groupname);
     }
 
     @PostMapping("/auth/community/{groupname}/request/{nickname}")
     public ResponseEntity<OwnSuccessResponse> acceptJoinRequest(
             @PathVariable String groupname, @PathVariable String nickname
     ) {
-        communityService.acceptJoinRequest(groupname, nickname);
+        membershipService.acceptJoinRequest(groupname, nickname);
         var response = new OwnSuccessResponse("Request is accepted, user is a member now");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -216,7 +217,7 @@ public class CommunityController {
     public ResponseEntity<OwnSuccessResponse> cancelJoinRequest(
             @PathVariable String groupname, @PathVariable String nickname
     ) {
-        communityService.cancelJoinRequest(groupname, nickname);
+        membershipService.cancelJoinRequest(groupname, nickname);
         var response = new OwnSuccessResponse("Join request is cancelled");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

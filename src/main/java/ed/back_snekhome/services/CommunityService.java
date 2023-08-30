@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +33,8 @@ public class CommunityService {
     private final FileService fileService;
     private final UserMethodsService userMethodsService;
     private final CommunityMethodsService communityMethodsService;
-    private final RelationsService relationsService;
+    private final MembershipService membershipService;
+    private final CommunityLogService communityLogService;
 
     private final CommunityRepository communityRepository;
     private final CommunityRoleRepository communityRoleRepository;
@@ -155,7 +157,7 @@ public class CommunityService {
 
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(name);
-        var membership = relationsService.getOptionalMembershipOfCurrentUser(community);
+        var membership = membershipService.getOptionalMembershipOfCurrentUser(community);
 
         if (communityMethodsService.isAccessToCommunity(community, membership)) {
             var dto = PublicCommunityDto.builder()
@@ -196,7 +198,7 @@ public class CommunityService {
         }
     }
 
-    public ArrayList<PublicCommunityCardDto> getHomeCards() {
+    public List<PublicCommunityCardDto> getHomeCards() {
         var list =
                 membershipRepository.findTop4ByUserAndIsBanned(userMethodsService.getCurrentUser(), false);
         var array = new ArrayList<PublicCommunityCardDto>();
@@ -219,15 +221,21 @@ public class CommunityService {
                 if (role.isEditId()) {
                     isNameTaken(dto.getGroupname());
                     community.setGroupname(dto.getGroupname());
+                    communityLogService.createLogNewGroupname(community, dto.getGroupname());
                 }
                 else
                     throw new UnauthorizedException("User doesn't have permissions");
             }
             else if (role.isEditDescription()) {
-                if (dto.getDescription() != null)
+                if (dto.getDescription() != null) {
                     community.setDescription(dto.getDescription());
-                else if (dto.getName() != null)
+                    communityLogService.createLogNewDescription(community, dto.getDescription());
+                }
+                else if (dto.getName() != null) {
                     community.setName(dto.getName());
+                    communityLogService.createLogNewCommunityTitle(community, dto.getName());
+                }
+
             }
             else
                 throw new UnauthorizedException("User doesn't have permissions");
@@ -238,11 +246,13 @@ public class CommunityService {
     public OwnSuccessResponse uploadCommunityImage(MultipartFile file, String groupname) throws IOException {
 
         String newName = fileService.uploadImageNameReturned(file);
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         var image = CommunityImage.builder()
                 .name(newName)
-                .community(communityMethodsService.getCommunityByNameOrThrowErr(groupname))
+                .community(community)
                 .build();
         communityImageRepository.save(image);
+        communityLogService.createLogUpdateImage(community, false);
         return new OwnSuccessResponse(newName); //returns new name of uploaded file
     }
 
@@ -295,7 +305,7 @@ public class CommunityService {
         }
     }
 
-    public Iterable<CommunityRole> getRoles(String groupname) {
+    public List<CommunityRole> getRoles(String groupname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         return communityRoleRepository.findAllByCommunity(community);
     }
@@ -329,82 +339,21 @@ public class CommunityService {
         if (communityMethodsService.isCurrentUserOwner(community)) {
             var parameters = citizenParametersRepository.findTopByCommunity(community)
                     .orElseThrow(() -> new EntityNotFoundException("Entity not found"));
-            parameters.setDays(dto.getCitizenDays());
-            parameters.setElectionDays(dto.getElectionDays());
-            parameters.setRating(dto.getCitizenRating());
+            if (parameters.getDays() != dto.getCitizenDays()) {
+                parameters.setDays(dto.getCitizenDays());
+                communityLogService.createLogNewCitizenRequirementsDays(community, dto.getCitizenDays());
+            }
+            if (parameters.getElectionDays() != dto.getElectionDays()) {
+                parameters.setElectionDays(dto.getElectionDays());
+                communityLogService.createLogNewElectionsPeriod(community, dto.getElectionDays());
+            }
+            if (parameters.getRating() != dto.getCitizenRating()) {
+                parameters.setRating(dto.getCitizenRating());
+                communityLogService.createLogNewCitizenRequirementsRating(community, dto.getCitizenRating());
+            }
+
             citizenParametersRepository.save(parameters);
         }
     }
-
-    public String manageJoinRequest(String groupname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getCurrentUser();
-
-        var membership = membershipRepository.findByCommunityAndUser(community, user);
-        if (!community.isClosed() || membership.isPresent())
-            throw new BadRequestException("Bad request");
-
-        var request = joinRequestRepository.findTopByCommunityAndUser(community, user);
-        if (request.isPresent()) {
-            joinRequestRepository.delete(request.get());
-            return "Request is cancelled successfully";
-        }
-
-        var newRequest = JoinRequest.builder()
-                .community(community)
-                .user(user)
-                .build();
-        joinRequestRepository.save(newRequest);
-        return "Request is sent successfully";
-    }
-
-    public ArrayList<UserPublicDto> getAllJoinRequests(String groupname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getCurrentUser();
-
-        var membership = relationsService.getMembershipOrThrowErr(user, community);
-        var array = new ArrayList<UserPublicDto>();
-        if (membership.getRole().isInviteUsers() || community.getType() == CommunityType.ANARCHY) {
-            Iterable<JoinRequest> list = joinRequestRepository.findAllByCommunity(community);
-            for (JoinRequest r : list) {
-                array.add(UserPublicDto.builder()
-                                .nickname(r.getUser().getNickname())
-                                .image(userMethodsService.getTopUserImage(r.getUser()))
-                        .build()
-                );
-            }
-            return array;
-        }
-
-        throw new UnauthorizedException("No access to data");
-    }
-
-    private void deleteJoinRequest(Community community, UserEntity user) {
-        var request = joinRequestRepository.findTopByCommunityAndUser(community, user);
-        if (request.isPresent())
-            joinRequestRepository.delete(request.get());
-        else
-            throw new EntityNotFoundException("There is no request by user @" + user.getNickname());
-    }
-
-    @Transactional
-    public void acceptJoinRequest(String groupname, String nickname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
-        deleteJoinRequest(community, user);
-
-        var membership = Membership.builder()
-                .user(user)
-                .community(community)
-                .build();
-        membershipRepository.save(membership);
-    }
-
-    public void cancelJoinRequest(String groupname, String nickname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
-        deleteJoinRequest(community, user);
-    }
-
 
 }

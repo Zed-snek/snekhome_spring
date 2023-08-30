@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -77,7 +77,7 @@ public class PostController {
     }
 
     @GetMapping("/post/{id}/commentaries")
-    public ArrayList<CommentaryDto> getComments(@PathVariable Long id) {
+    public List<CommentaryDto> getComments(@PathVariable Long id) {
         return commentaryService.getCommentariesByPostId(id);
     }
 
@@ -98,7 +98,7 @@ public class PostController {
     }
 
     @GetMapping("/user/posts/{nickname}")
-    public ArrayList<PostDto> getPostsUser(
+    public List<PostDto> getPostsUser(
             @PathVariable String nickname,
             @RequestParam(defaultValue = "0", required = false) int page,
             @RequestParam(defaultValue = DEFAULT_PAGE_SIZE, required = false) int pageSize
@@ -107,7 +107,7 @@ public class PostController {
     }
 
     @GetMapping("/community/posts/{groupname}")
-    public ArrayList<PostDto> getPostsCommunity(
+    public List<PostDto> getPostsCommunity(
             @PathVariable String groupname,
             @RequestParam(defaultValue = "0", required = false) int page,
             @RequestParam(defaultValue = DEFAULT_PAGE_SIZE, required = false) int pageSize
@@ -116,7 +116,7 @@ public class PostController {
     }
 
     @GetMapping("/auth/user/posts/home")
-    public ArrayList<PostDto> getPostsHome(
+    public List<PostDto> getPostsHome(
             @RequestParam(defaultValue = "0", required = false) int page,
             @RequestParam(defaultValue = DEFAULT_PAGE_SIZE, required = false) int pageSize
     ) {

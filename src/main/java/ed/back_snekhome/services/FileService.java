@@ -30,11 +30,12 @@ public class FileService {
     @Value("${upload.path}")
     private String uploadPath;
 
+    final private UserMethodsService userMethodsService;
+    final private MembershipService membershipService;
+    final private CommunityLogService communityLogService;
+    final private PostImageRepository postImageRepository;
     final private CommunityImageRepository communityImageRepository;
     final private UserImageRepository userImageRepository;
-    final private UserMethodsService userMethodsService;
-    final private RelationsService relationsService;
-    final private PostImageRepository postImageRepository;
 
 
     @Transactional
@@ -50,12 +51,13 @@ public class FileService {
 
         var communityImage = communityImageRepository.findByName(name);
         if (communityImage.isPresent()) {
-            var membership = relationsService.getMembershipOrThrowErr(
+            var membership = membershipService.getMembershipOrThrowErr(
                     userMethodsService.getCurrentUser(),
                     communityImage.get().getCommunity()
             );
             if (membership.getRole() == null || !membership.getRole().isEditDescription())
                 throw new UnauthorizedException("No permissions to delete image");
+            communityLogService.createLogUpdateImage(communityImage.get().getCommunity(), true);
             communityImageRepository.delete(communityImage.get());
             deleteImageFromStorage(name);
             return "Image is deleted";

@@ -3,6 +3,7 @@ package ed.back_snekhome.repositories;
 import ed.back_snekhome.entities.relations.Friendship;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
@@ -12,5 +13,5 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     int countAllByIdFirstUserAndIsFirstUserAndIsSecondUser(Long id, boolean first, boolean second);
     int countAllByIdSecondUserAndIsFirstUserAndIsSecondUser(Long id, boolean first, boolean second);
 
-    Iterable<Friendship> findAllByIdFirstUserOrIdSecondUser(Long idFirstUser, Long idSecondUser);
+    List<Friendship> findAllByIdFirstUserOrIdSecondUser(Long idFirstUser, Long idSecondUser);
 }
