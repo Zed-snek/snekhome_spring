@@ -34,5 +34,6 @@ public class Membership {
     private CommunityRole role;
 
     private boolean isBanned;
+    private boolean isCitizen;
 
 }

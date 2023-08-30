@@ -1,14 +1,12 @@
 package ed.back_snekhome.controllers;
 
-import ed.back_snekhome.dto.communityDTOs.CommunityRoleDto;
-import ed.back_snekhome.dto.communityDTOs.MembersDto;
-import ed.back_snekhome.dto.communityDTOs.NewCommunityDto;
-import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
-import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
-import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
+import ed.back_snekhome.dto.communityDTOs.*;
+import ed.back_snekhome.dto.postDTOs.PostDto;
 import ed.back_snekhome.dto.userDTOs.UserPublicDto;
+import ed.back_snekhome.entities.community.CommunityLog;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.response.OwnSuccessResponse;
+import ed.back_snekhome.services.CommunityLogService;
 import ed.back_snekhome.services.CommunityService;
 import ed.back_snekhome.services.MembershipService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +26,7 @@ public class CommunityController {
 
     private final CommunityService communityService;
     private final MembershipService membershipService;
+    private final CommunityLogService communityLogService;
 
     @GetMapping("/community/{name}")
     public PublicCommunityDto getCommunity(@PathVariable String name) {
@@ -222,7 +221,13 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
-
+    @GetMapping("/auth/community/{groupname}/logs")
+    public List<CommunityLogDto> getCommunityLogs(
+            @RequestParam(defaultValue = "0", required = false) int page,
+            @RequestParam(defaultValue = "30", required = false) int pageSize,
+            @PathVariable String groupname
+    ) {
+        return communityLogService.getLogsByGroupname(groupname, page, pageSize);
+    }
 
 }

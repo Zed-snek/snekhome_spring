@@ -5,12 +5,9 @@ import ed.back_snekhome.dto.communityDTOs.NewCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
-import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import ed.back_snekhome.entities.community.*;
 import ed.back_snekhome.entities.relations.Membership;
-import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
-import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityAlreadyExistsException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
@@ -44,20 +41,19 @@ public class CommunityService {
     private final JoinRequestRepository joinRequestRepository;
 
 
-
     @Transactional
     public void newCommunity(NewCommunityDto dto) {
         var owner = userMethodsService.getCurrentUser();
 
         var community = Community.builder()
-                .type( dto.getType() )
-                .groupname( dto.getIdName() )
-                .name( dto.getName() )
-                .description( dto.getDescription() )
-                .isClosed( dto.isClosed() )
-                .isInviteUsers( dto.isInviteUsers() )
-                .owner( owner )
-                .creation( LocalDate.now() )
+                .type(dto.getType())
+                .groupname(dto.getIdName())
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .isInviteUsers(dto.isInviteUsers())
+                .isClosed(dto.isClosed())
+                .owner(owner)
+                .creation(LocalDate.now())
                 .build();
 
         if (dto.getType() == CommunityType.NEWSPAPER)
@@ -327,9 +323,18 @@ public class CommunityService {
     public void updateCommunitySettings(String groupname, NewCommunityDto dto) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         if (communityMethodsService.isCurrentUserOwner(community)) {
-            community.setClosed(dto.isClosed());
-            community.setAnonAllowed(dto.isAnonAllowed());
-            community.setInviteUsers(dto.isInviteUsers());
+            if (community.isClosed() != dto.isClosed()) {
+                community.setClosed(dto.isClosed());
+                communityLogService.createLogRuleClosedCommunity(community, dto.isClosed());
+            }
+            if (community.isAnonAllowed() != dto.isAnonAllowed()) {
+                community.setAnonAllowed(dto.isAnonAllowed());
+                communityLogService.createLogRuleAnonPosts(community, dto.isAnonAllowed());
+            }
+            if (community.isInviteUsers() != dto.isInviteUsers()) {
+                community.setInviteUsers(dto.isInviteUsers());
+                communityLogService.createLogRuleInviteUsers(community, dto.isInviteUsers());
+            }
             communityRepository.save(community);
         }
     }

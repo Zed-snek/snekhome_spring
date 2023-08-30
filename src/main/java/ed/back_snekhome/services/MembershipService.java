@@ -34,16 +34,17 @@ public class MembershipService {
     private final CommunityMethodsService communityMethodsService;
     private final CommunityLogService communityLogService;
 
-
     private final MembershipRepository membershipRepository;
     private final CommunityRoleRepository communityRoleRepository;
     private final JoinRequestRepository joinRequestRepository;
 
 
-
     public Membership getMembershipOrThrowErr(UserEntity user, Community community) {
         return membershipRepository.findByCommunityAndUser(community, user)
                 .orElseThrow(() -> new EntityNotFoundException("User is not a member"));
+    }
+    public Membership getMembershipOfCurrentUserOrThrowErr(Community community) {
+        return getMembershipOrThrowErr(userMethodsService.getCurrentUser(), community);
     }
 
     public Iterable<Membership> getMembershipsByUser(UserEntity user, boolean isBanned) {

@@ -1,20 +1,31 @@
 package ed.back_snekhome.services;
 
+import ed.back_snekhome.dto.communityDTOs.CommunityLogDto;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.CommunityLog;
 import ed.back_snekhome.entities.user.UserEntity;
+import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.enums.LogType;
+import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.CommunityLogRepository;
+import ed.back_snekhome.repositories.MembershipRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class CommunityLogService {
 
-    private final CommunityLogRepository communityLogRepository;
     private final UserMethodsService userMethodsService;
+    private final CommunityMethodsService communityMethodsService;
+    private final MembershipRepository membershipRepository;
+    private final CommunityLogRepository communityLogRepository;
+
 
     private void saveLog(CommunityLog.CommunityLogBuilder log) {
         communityLogRepository.save(log.build());
@@ -35,6 +46,32 @@ public class CommunityLogService {
         saveLog(builderWithCurrentUser(community)
                 .logType(type)
                 .message(value + ""));
+    }
+
+    public List<CommunityLogDto> getLogsByGroupname(String groupname, int pageNumber, int pageSize) {
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var membership
+                = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser())
+                .orElseThrow(() -> new UnauthorizedException("User has no permissions"));
+
+        if (community.getType() == CommunityType.DEMOCRACY ||
+                (community.getType() == CommunityType.CORPORATE || community.getType() == CommunityType.NEWSPAPER)
+                && membership.getRole() != null
+        ) {
+            var pageable = PageRequest.of(pageNumber, pageSize);
+            var list
+                    = communityLogRepository.getCommunityLogsByCommunityOrderByIdDesc(community, pageable);
+            var dtoList = new ArrayList<CommunityLogDto>();
+            list.forEach(log -> dtoList.add(CommunityLogDto.builder()
+                    .date(log.getDate())
+                    .message(log.getMessage())
+                    .logType(log.getLogType())
+                    .actionNickname(log.getActionUser().getNickname())
+                    .secondNickname(log.getSecondUser() != null ? log.getSecondUser().getNickname() : null)
+                    .build()));
+            return dtoList;
+        }
+        throw new UnauthorizedException("User has no permissions");
     }
 
 
@@ -111,6 +148,8 @@ public class CommunityLogService {
         saveLog(builderWithCurrentUser(community)
                 .logType(isDeleted ? LogType.DELETE_IMAGE : LogType.NEW_IMAGE));
     }
+
+
 
 
 }
