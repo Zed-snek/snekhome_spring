@@ -95,15 +95,14 @@ public class MembershipService {
         return array;
     }
 
-
-    public MembersDto getMembersByCommunity(String groupname) {
+    public MembersDto getMembersByCommunity(String groupname, boolean isBanned) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         if (community.isClosed() && !communityMethodsService.isContextUserMember(community)) {
             return MembersDto.builder()
                     .isContextUserAccess(false)
                     .build();
         }
-        var memberships = getMembershipsByCommunity(community, false);
+        var memberships = getMembershipsByCommunity(community, isBanned);
         var users = new ArrayList<UserPublicDto>();
         for (Membership m : memberships) {
             var user = m.getUser();
@@ -115,10 +114,13 @@ public class MembershipService {
                             .communityRole(m.getRole())
                             .build());
         }
-        var roles = new ArrayList<String>();
-        for (CommunityRole r : communityRoleRepository.findAllByCommunity(community)) {
-            if (!r.isCreator())
-                roles.add(r.getTitle());
+        List<String> roles = null;
+        if (!isBanned) {
+            roles = new ArrayList<>();
+            for (CommunityRole r : communityRoleRepository.findAllByCommunity(community)) {
+                if (!r.isCreator())
+                    roles.add(r.getTitle());
+            }
         }
         return MembersDto.builder()
                 .users(users)
@@ -127,26 +129,40 @@ public class MembershipService {
                 .build();
     }
 
-    @Transactional
-    public void banUser(String groupname, String user) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var userEntity = userMethodsService.getUserByNicknameOrThrowErr(user);
+
+
+    private Membership canBanUser(Community community, UserEntity userEntity) {
         var userMembership = getMembershipOrThrowErr(userEntity, community);
         var admin = userMethodsService.getCurrentUser();
         var adminMembership = getMembershipOrThrowErr(admin, community);
 
         if ((userMembership.getRole() == null && adminMembership.getRole().isBanUser())
                 || (userMembership.getRole().isCitizen() && adminMembership.getRole().isBanCitizen())
-                || (community.getOwner().equals(admin))
+                || adminMembership.getRole().isCreator()
         ) {
-            userMembership.setBanned(true);
-            userMembership.setRole(null);
-            membershipRepository.save(userMembership);
-            communityLogService.createLogBanUser(community, userEntity);
+            return userMembership;
         }
-        else {
-            throw new UnauthorizedException("No permissions to ban user");
-        }
+        throw new UnauthorizedException("No permissions to ban user");
+    }
+
+    @Transactional
+    public void banUser(String groupname, String user) {
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var userEntity = userMethodsService.getUserByNicknameOrThrowErr(user);
+        var userMembership = canBanUser(community, userEntity);
+        userMembership.setBanned(true);
+        userMembership.setRole(null);
+        membershipRepository.save(userMembership);
+        communityLogService.createLogBanUser(community, userEntity);
+    }
+
+    @Transactional
+    public void unbanUser(String groupname, String user) {
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var userEntity = userMethodsService.getUserByNicknameOrThrowErr(user);
+        var userMembership = canBanUser(community, userEntity);
+        communityLogService.createLogUnbanUser(community, userEntity);
+        membershipRepository.delete(userMembership);
     }
 
     @Transactional

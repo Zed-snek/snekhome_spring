@@ -45,7 +45,7 @@ public class CommunityLogService {
     private <T> void createLogWithMessage(Community community, T value, LogType type) {
         saveLog(builderWithCurrentUser(community)
                 .logType(type)
-                .message(value + ""));
+                .message(String.valueOf(value)));
     }
 
     public List<CommunityLogDto> getLogsByGroupname(String groupname, int pageNumber, int pageSize) {
@@ -87,6 +87,11 @@ public class CommunityLogService {
                 .logType(LogType.BAN_USER)
                 .secondUser(banned));
     }
+    public void createLogUnbanUser(Community community, UserEntity unbanned) {
+        saveLog(builderWithCurrentUser(community)
+                .logType(LogType.UNBAN_USER)
+                .secondUser(unbanned));
+    }
 
     public void createLogGrantRole(Community community, UserEntity grantedWithRole, String roleTitle) {
         saveLog(builderWithCurrentUser(community)
@@ -109,9 +114,9 @@ public class CommunityLogService {
     }
 
     public void createLogJoinByInvite(Community community, UserEntity actor, UserEntity joinedUser) {
-        saveLog(builder(actor, community)
+        saveLog(builder(joinedUser, community)
                 .logType(LogType.JOIN_BY_INVITE)
-                .secondUser(joinedUser));
+                .secondUser(actor));
     }
 
     public void createLogNewCommunityTitle(Community community, String newTitle) {

@@ -21,7 +21,7 @@ public class CommunityMethodsService {
     private final UserMethodsService userMethodsService;
 
     public int countMembers(Community community) {
-        return membershipRepository.countAllByCommunity(community);
+        return membershipRepository.countAllByCommunityAndIsBanned(community, false);
     }
 
     public boolean isContextUserMember(Community community) {

@@ -5,15 +5,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
 @Builder
 public class MembersDto {
 
-    private ArrayList<String> roles;
-    private ArrayList<UserPublicDto> users;
+    private List<String> roles;
+    private List<UserPublicDto> users;
     private boolean isContextUserAccess;
 
 }

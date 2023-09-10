@@ -104,7 +104,12 @@ public class CommunityController {
 
     @GetMapping("/members/{groupname}")
     public MembersDto getMembers(@PathVariable String groupname) {
-        return membershipService.getMembersByCommunity(groupname);
+        return membershipService.getMembersByCommunity(groupname, false);
+    }
+
+    @GetMapping("/banned_users/{groupname}")
+    public MembersDto getBannedUsers(@PathVariable String groupname) {
+        return membershipService.getMembersByCommunity(groupname, true);
     }
 
     @PostMapping("/auth/community/role/{groupname}")
@@ -147,6 +152,16 @@ public class CommunityController {
     ) {
         membershipService.banUser(groupname, username);
         var response = new OwnSuccessResponse("User is banned");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/auth/community/{groupname}/unban/{username}")
+    public ResponseEntity<OwnSuccessResponse> unbanUser(
+            @PathVariable String groupname,
+            @PathVariable String username
+    ) {
+        membershipService.unbanUser(groupname, username);
+        var response = new OwnSuccessResponse("User is unbanned");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
