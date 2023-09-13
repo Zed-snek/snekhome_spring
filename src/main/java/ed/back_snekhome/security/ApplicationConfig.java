@@ -1,6 +1,6 @@
 package ed.back_snekhome.security;
 
-import ed.back_snekhome.repositories.UserRepository;
+import ed.back_snekhome.repositories.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

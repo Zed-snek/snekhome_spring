@@ -1,4 +1,4 @@
-package ed.back_snekhome.repositories;
+package ed.back_snekhome.repositories.community;
 
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.user.UserEntity;

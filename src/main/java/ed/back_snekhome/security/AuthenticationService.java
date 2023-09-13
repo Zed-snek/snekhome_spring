@@ -13,7 +13,7 @@ import ed.back_snekhome.exceptionHandler.exceptions.LoginNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.PasswordDoesntMatchException;
 import ed.back_snekhome.exceptionHandler.exceptions.TokenExpiredException;
 import ed.back_snekhome.exceptionHandler.exceptions.UserAlreadyExistsException;
-import ed.back_snekhome.repositories.UserRepository;
+import ed.back_snekhome.repositories.user.UserRepository;
 import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.services.UserMethodsService;
 import jakarta.servlet.http.HttpServletRequest;

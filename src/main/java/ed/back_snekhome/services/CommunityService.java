@@ -6,12 +6,12 @@ import ed.back_snekhome.dto.communityDTOs.PublicCommunityCardDto;
 import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
 import ed.back_snekhome.entities.community.*;
-import ed.back_snekhome.entities.relations.Membership;
+import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityAlreadyExistsException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
-import ed.back_snekhome.repositories.*;
+import ed.back_snekhome.repositories.community.*;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -295,7 +295,7 @@ public class CommunityService {
                 role.setBanCitizen(dto.isBanCitizen());
                 role.setDeletePosts(dto.isDeletePosts());
                 role.setEditDescription(dto.isEditDescription());
-                role.setEditId(dto.isBanUser());
+                role.setEditId(dto.isEditId());
                 communityRoleRepository.save(role);
             }
         }

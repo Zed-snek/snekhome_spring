@@ -1,4 +1,4 @@
-package ed.back_snekhome.repositories;
+package ed.back_snekhome.repositories.user;
 
 import ed.back_snekhome.entities.user.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,9 +1,9 @@
 package ed.back_snekhome.services;
 
 import ed.back_snekhome.dto.userDTOs.UserPublicDto;
-import ed.back_snekhome.entities.relations.Friendship;
+import ed.back_snekhome.entities.user.Friendship;
 import ed.back_snekhome.entities.user.UserEntity;
-import ed.back_snekhome.repositories.FriendshipRepository;
+import ed.back_snekhome.repositories.user.FriendshipRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,6 +1,6 @@
-package ed.back_snekhome.repositories;
+package ed.back_snekhome.repositories.user;
 
-import ed.back_snekhome.entities.relations.Friendship;
+import ed.back_snekhome.entities.user.Friendship;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

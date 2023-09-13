@@ -8,8 +8,8 @@ import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.RatingType;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
-import ed.back_snekhome.repositories.CommentaryRatingRepository;
-import ed.back_snekhome.repositories.CommentaryRepository;
+import ed.back_snekhome.repositories.post.CommentaryRatingRepository;
+import ed.back_snekhome.repositories.post.CommentaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +45,7 @@ public class CommentaryService {
                 .user(user)
                 .type(RatingType.UPVOTE)
                 .build();
+
         commentaryRatingRepository.save(rating);
         return comment.getIdCommentary();
     }

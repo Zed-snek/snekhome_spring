@@ -7,23 +7,20 @@ import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.community.JoinRequest;
 import ed.back_snekhome.entities.user.UserEntity;
-import ed.back_snekhome.entities.relations.Friendship;
-import ed.back_snekhome.entities.relations.Membership;
+import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
-import ed.back_snekhome.repositories.CommunityRoleRepository;
-import ed.back_snekhome.repositories.FriendshipRepository;
-import ed.back_snekhome.repositories.JoinRequestRepository;
-import ed.back_snekhome.repositories.MembershipRepository;
+import ed.back_snekhome.repositories.community.CommunityRoleRepository;
+import ed.back_snekhome.repositories.community.JoinRequestRepository;
+import ed.back_snekhome.repositories.community.MembershipRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service

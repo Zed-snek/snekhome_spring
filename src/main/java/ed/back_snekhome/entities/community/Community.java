@@ -3,7 +3,6 @@ package ed.back_snekhome.entities.community;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.user.UserEntity;
-import ed.back_snekhome.entities.relations.Membership;
 import ed.back_snekhome.enums.CommunityType;
 import jakarta.persistence.*;
 import lombok.*;

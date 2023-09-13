@@ -1,4 +1,4 @@
-package ed.back_snekhome.repositories;
+package ed.back_snekhome.repositories.post;
 
 
 import ed.back_snekhome.entities.post.Post;
