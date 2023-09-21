@@ -52,8 +52,9 @@ public class CommunityMethodsService {
     }
 
     public boolean isAccessToCommunity(Community community, Optional<Membership> membership) {
-        return (membership.isPresent() && !membership.get().isBanned())
-                || !community.isClosed()
+        boolean isMember = membership.isPresent();
+        boolean isBanned = isMember && membership.get().isBanned();
+        return (!community.isClosed() || community.isClosed() && isMember) && !isBanned
                 || isCurrentUserOwner(community);
     }
 

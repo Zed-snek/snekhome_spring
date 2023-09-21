@@ -5,6 +5,7 @@ import ed.back_snekhome.entities.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -38,5 +39,6 @@ public class Commentary {
     private List<CommentaryRating> ratings;
 
     private Long referenceId;
+    private LocalDateTime date;
 
 }

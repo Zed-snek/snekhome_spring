@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Builder
@@ -17,5 +19,6 @@ public class CommentaryDto {
     private int rating;
     private RatingType ratedType;
     private String text;
+    private LocalDateTime date;
 
 }

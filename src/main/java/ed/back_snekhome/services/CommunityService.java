@@ -8,6 +8,7 @@ import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
 import ed.back_snekhome.entities.community.*;
 import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.enums.CommunityType;
+import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityAlreadyExistsException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
@@ -155,8 +156,9 @@ public class CommunityService {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(name);
         var membership = membershipService.getOptionalMembershipOfCurrentUser(community);
 
+        PublicCommunityDto dto;
         if (communityMethodsService.isAccessToCommunity(community, membership)) {
-            var dto = PublicCommunityDto.builder()
+            dto = PublicCommunityDto.builder()
                     .community(community)
                     .members(communityMethodsService.countMembers(community))
                     .ownerNickname(community.getOwner().getNickname())
@@ -165,22 +167,11 @@ public class CommunityService {
                     .build();
             dto.setMember(false);
 
-            if (membership.isPresent()) {
-                if (membership.get().isBanned()) {
-                    dto.setBanned(true);
-                }
-                else {
-                    dto.setMember(true);
-                    dto.setCurrentUserRole(membership.get().getRole());
-                }
-            }
             if (community.isClosed())
                 dto.setJoinRequests(joinRequestRepository.countAllByCommunity(community));
-
-            return dto;
         }
         else { //Limited information, if user has no permissions:
-            return PublicCommunityDto.builder()
+            dto = PublicCommunityDto.builder()
                     .name(community.getName())
                     .groupname(community.getGroupname())
                     .description(community.getDescription())
@@ -192,6 +183,17 @@ public class CommunityService {
                     )
                     .build();
         }
+
+        if (membership.isPresent()) {
+            if (membership.get().isBanned()) {
+                dto.setBanned(true);
+            }
+            else {
+                dto.setMember(true);
+                dto.setCurrentUserRole(membership.get().getRole());
+            }
+        }
+        return dto;
     }
 
     public List<PublicCommunityCardDto> getHomeCards() {
@@ -291,11 +293,15 @@ public class CommunityService {
                 role.setTitle(dto.getTitle());
                 role.setTextColor(dto.getTextColor());
                 role.setBannerColor(dto.getBannerColor());
-                role.setBanUser(dto.isBanUser());
-                role.setBanCitizen(dto.isBanCitizen());
-                role.setDeletePosts(dto.isDeletePosts());
-                role.setEditDescription(dto.isEditDescription());
-                role.setEditId(dto.isEditId());
+
+                if (!(role.isCitizen() || role.isCreator())){
+                    role.setBanUser(dto.isBanUser());
+                    role.setBanCitizen(dto.isBanCitizen());
+                    role.setDeletePosts(dto.isDeletePosts());
+                    role.setEditDescription(dto.isEditDescription());
+                    role.setEditId(dto.isEditId());
+                }
+
                 communityRoleRepository.save(role);
             }
         }
@@ -309,14 +315,20 @@ public class CommunityService {
     @Transactional
     public void deleteRole(String groupname, String roleName) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var role = communityMethodsService.findRoleOrThrowErr(community, roleName);
+        if (role.isCreator() || role.isCitizen())
+            throw new BadRequestException("Action is not able due to citizen policy");
+
         if (communityMethodsService.isCurrentUserOwner(community)) {
-            var role = communityMethodsService.findRoleOrThrowErr(community, roleName);
             var memberships = membershipRepository.findAllByCommunityAndRole(community, role);
             for (var m: memberships) {
                 m.setRole(null);
                 membershipRepository.save(m);
             }
             communityRoleRepository.delete(role);
+        }
+        else {
+            throw new UnauthorizedException("No permission to delete role");
         }
     }
 

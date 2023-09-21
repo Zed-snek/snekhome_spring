@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +38,7 @@ public class CommentaryService {
                 .user(user)
                 .text(dto.getText())
                 .referenceId(dto.getReferenceId())
+                .date(LocalDateTime.now())
                 .build();
         commentaryRepository.save(comment);
 
@@ -132,6 +134,7 @@ public class CommentaryService {
                             .image(userMethodsService.getTopUserImage(comment.getUser()))
                             .rating(countRating(comment))
                             .ratedType(user == null ? RatingType.NONE : getRatedType(comment, user))
+                            .date(comment.getDate())
                     .build())
             );
             return array;
