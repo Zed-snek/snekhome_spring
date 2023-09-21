@@ -4,7 +4,6 @@ import ed.back_snekhome.dto.userDTOs.UserPrivateDto;
 import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.FriendshipService;
-import ed.back_snekhome.services.MembershipService;
 import ed.back_snekhome.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
