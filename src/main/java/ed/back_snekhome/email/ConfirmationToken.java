@@ -1,6 +1,6 @@
 package ed.back_snekhome.email;
 
-import ed.back_snekhome.utils.GenerationFunctions;
+import ed.back_snekhome.utils.MyFunctions;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +31,7 @@ public class ConfirmationToken {
     public ConfirmationToken( Long idAccount, ConfirmationType confirmationType, int tokenLength, int expiresAtMinutes ) {
         idUser = idAccount;
         this.confirmationType = confirmationType;
-        token = GenerationFunctions.generateCode(tokenLength) + System.currentTimeMillis();
+        token = MyFunctions.generateCode(tokenLength) + System.currentTimeMillis();
         expiresAt = expiresAt(expiresAtMinutes);
     }
 

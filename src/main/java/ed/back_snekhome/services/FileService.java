@@ -8,7 +8,7 @@ import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.community.CommunityImageRepository;
 import ed.back_snekhome.repositories.post.PostImageRepository;
 import ed.back_snekhome.repositories.user.UserImageRepository;
-import ed.back_snekhome.utils.GenerationFunctions;
+import ed.back_snekhome.utils.MyFunctions;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;;
 import org.springframework.beans.factory.annotation.Value;
@@ -100,7 +100,7 @@ public class FileService {
 
     public String uploadImageNameReturned(MultipartFile file) throws IOException { //returns new file name
 
-        String name = GenerationFunctions.generateCode(5) + System.currentTimeMillis();
+        String name = MyFunctions.generateCode(5) + System.currentTimeMillis();
 
         name += getFileExtension(file.getOriginalFilename());
 

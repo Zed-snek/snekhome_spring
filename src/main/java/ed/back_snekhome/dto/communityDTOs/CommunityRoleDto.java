@@ -17,4 +17,5 @@ public class CommunityRoleDto {
     private boolean deletePosts;
     private boolean banUser;
     private boolean banCitizen;
+    private boolean inviteUsers;
 }

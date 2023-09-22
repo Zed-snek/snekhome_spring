@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -124,9 +125,7 @@ public class CommentaryService {
 
         if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership)) {
             var list = commentaryRepository.findAllByPostOrderByIdCommentaryAsc(post);
-            ArrayList<CommentaryDto> array = new ArrayList<>();
-            list.forEach(comment -> array.add(
-                    CommentaryDto.builder()
+            return list.stream().map(comment -> CommentaryDto.builder()
                             .text(comment.getText())
                             .id(comment.getIdCommentary())
                             .reference(comment.getReferenceId())
@@ -135,9 +134,8 @@ public class CommentaryService {
                             .rating(countRating(comment))
                             .ratedType(user == null ? RatingType.NONE : getRatedType(comment, user))
                             .date(comment.getDate())
-                    .build())
-            );
-            return array;
+                            .build())
+                            .collect(Collectors.toList());
         }
         throw new UnauthorizedException("No access to commentaries");
     }

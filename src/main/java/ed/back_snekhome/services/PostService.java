@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -313,20 +314,19 @@ public class PostService {
     public List<PostDto> getPostDtoListHome(int pageNumber, int pageSize) {
         var user = userMethodsService.getCurrentUser();
         var memberships = membershipService.getMembershipsByUser(user, false);
-        var communities = new ArrayList<Community>();
-        for (Membership m : memberships) {
-            communities.add(m.getCommunity());
-        }
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        var posts = postRepository.getPostsByCommunitiesOrderByIdPostDesc(communities, pageable);
 
-        var array = new ArrayList<PostDto>();
-        for (Post post : posts) {
-            array.add(setPostItemInfo(post, true, !post.isAnonymous()).build());
-        }
-        return array;
+        var communities = memberships
+                .stream()
+                .map(Membership::getCommunity)
+                .toList();
+
+        return postRepository.getPostsByCommunitiesOrderByIdPostDesc(communities, pageable)
+                .stream()
+                .map(post -> setPostItemInfo(post, true, !post.isAnonymous())
+                        .build())
+                .toList();
     }
-
 
 }
 

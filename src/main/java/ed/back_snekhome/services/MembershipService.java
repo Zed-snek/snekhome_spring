@@ -44,11 +44,11 @@ public class MembershipService {
         return getMembershipOrThrowErr(userMethodsService.getCurrentUser(), community);
     }
 
-    public Iterable<Membership> getMembershipsByUser(UserEntity user, boolean isBanned) {
+    public List<Membership> getMembershipsByUser(UserEntity user, boolean isBanned) {
         return membershipRepository.findAllByUserAndIsBanned(user, isBanned);
     }
 
-    public Iterable<Membership> getMembershipsByCommunity(Community community, boolean isBanned) {
+    public List<Membership> getMembershipsByCommunity(Community community, boolean isBanned) {
         return membershipRepository.findAllByCommunityAndIsBanned(community, isBanned);
     }
 

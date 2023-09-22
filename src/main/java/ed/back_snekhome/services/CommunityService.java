@@ -14,6 +14,7 @@ import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.community.*;
 import ed.back_snekhome.response.OwnSuccessResponse;
+import ed.back_snekhome.utils.MyFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +22,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -199,13 +203,12 @@ public class CommunityService {
     public List<PublicCommunityCardDto> getHomeCards() {
         var list =
                 membershipRepository.findTop4ByUserAndIsBanned(userMethodsService.getCurrentUser(), false);
-        var array = new ArrayList<PublicCommunityCardDto>();
-        list.forEach(o ->
-                array.add(PublicCommunityCardDto.builder()
-                        .image(communityMethodsService.getTopCommunityImage(o.getCommunity()))
-                        .groupname( o.getCommunity().getGroupname() )
-                        .build()));
-        return array;
+
+        return list.stream().map(m -> PublicCommunityCardDto.builder()
+                        .image(communityMethodsService.getTopCommunityImage(m.getCommunity()))
+                        .groupname(m.getCommunity().getGroupname())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public void updateCommunity(UpdateCommunityDto dto) {
@@ -290,16 +293,18 @@ public class CommunityService {
             }
             else {
                 var role = communityMethodsService.findRoleOrThrowErr(community, oldRoleName);
-                role.setTitle(dto.getTitle());
-                role.setTextColor(dto.getTextColor());
-                role.setBannerColor(dto.getBannerColor());
+
+                MyFunctions.setIfNotEquals(role.getTitle(), dto.getTitle(), role::setTitle);
+                MyFunctions.setIfNotEquals(role.getTextColor(), dto.getTextColor(), role::setTextColor);
+                MyFunctions.setIfNotEquals(role.getBannerColor(), dto.getBannerColor(), role::setBannerColor);
 
                 if (!(role.isCitizen() || role.isCreator())){
-                    role.setBanUser(dto.isBanUser());
-                    role.setBanCitizen(dto.isBanCitizen());
-                    role.setDeletePosts(dto.isDeletePosts());
-                    role.setEditDescription(dto.isEditDescription());
-                    role.setEditId(dto.isEditId());
+                    MyFunctions.setIfNotEquals(role.isBanUser(), dto.isBanUser(), role::setBanUser);
+                    MyFunctions.setIfNotEquals(role.isBanCitizen(), dto.isBanCitizen(), role::setBanCitizen);
+                    MyFunctions.setIfNotEquals(role.isDeletePosts(), dto.isDeletePosts(), role::setDeletePosts);
+                    MyFunctions.setIfNotEquals(role.isEditDescription(), dto.isEditDescription(), role::setEditDescription);
+                    MyFunctions.setIfNotEquals(role.isEditId(), dto.isEditId(), role::setEditId);
+                    MyFunctions.setIfNotEquals(role.isInviteUsers(), dto.isInviteUsers(), role::setInviteUsers);
                 }
 
                 communityRoleRepository.save(role);
@@ -321,10 +326,10 @@ public class CommunityService {
 
         if (communityMethodsService.isCurrentUserOwner(community)) {
             var memberships = membershipRepository.findAllByCommunityAndRole(community, role);
-            for (var m: memberships) {
+            memberships.forEach(m -> {
                 m.setRole(null);
                 membershipRepository.save(m);
-            }
+            });
             communityRoleRepository.delete(role);
         }
         else {
@@ -332,21 +337,28 @@ public class CommunityService {
         }
     }
 
+    private <V> void setIfNotEqualsWithLog(V value, V value2, Consumer<V> setter,
+                                           Community community, BiConsumer<Community, V> logger
+    ) {
+        if (!Objects.equals(value, value2)) {
+            setter.accept(value2);
+            logger.accept(community, value2);
+        }
+    }
+
     public void updateCommunitySettings(String groupname, NewCommunityDto dto) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         if (communityMethodsService.isCurrentUserOwner(community)) {
-            if (community.isClosed() != dto.isClosed()) {
-                community.setClosed(dto.isClosed());
-                communityLogService.createLogRuleClosedCommunity(community, dto.isClosed());
-            }
-            if (community.isAnonAllowed() != dto.isAnonAllowed()) {
-                community.setAnonAllowed(dto.isAnonAllowed());
-                communityLogService.createLogRuleAnonPosts(community, dto.isAnonAllowed());
-            }
-            if (community.isInviteUsers() != dto.isInviteUsers()) {
-                community.setInviteUsers(dto.isInviteUsers());
-                communityLogService.createLogRuleInviteUsers(community, dto.isInviteUsers());
-            }
+
+            setIfNotEqualsWithLog(community.isClosed(), dto.isClosed(), community::setClosed,
+                    community, communityLogService::createLogRuleClosedCommunity);
+
+            setIfNotEqualsWithLog(community.isAnonAllowed(), dto.isAnonAllowed(), community::setAnonAllowed,
+                community, communityLogService::createLogRuleAnonPosts);
+
+            setIfNotEqualsWithLog(community.isInviteUsers(), dto.isInviteUsers(), community::setInviteUsers,
+                community, communityLogService::createLogRuleInviteUsers);
+
             communityRepository.save(community);
         }
     }
@@ -356,18 +368,15 @@ public class CommunityService {
         if (communityMethodsService.isCurrentUserOwner(community)) {
             var parameters = citizenParametersRepository.findTopByCommunity(community)
                     .orElseThrow(() -> new EntityNotFoundException("Entity not found"));
-            if (parameters.getDays() != dto.getCitizenDays()) {
-                parameters.setDays(dto.getCitizenDays());
-                communityLogService.createLogNewCitizenRequirementsDays(community, dto.getCitizenDays());
-            }
-            if (parameters.getElectionDays() != dto.getElectionDays()) {
-                parameters.setElectionDays(dto.getElectionDays());
-                communityLogService.createLogNewElectionsPeriod(community, dto.getElectionDays());
-            }
-            if (parameters.getRating() != dto.getCitizenRating()) {
-                parameters.setRating(dto.getCitizenRating());
-                communityLogService.createLogNewCitizenRequirementsRating(community, dto.getCitizenRating());
-            }
+
+            setIfNotEqualsWithLog(parameters.getDays(), dto.getCitizenDays(), parameters::setDays,
+                    community, communityLogService::createLogNewCitizenRequirementsDays);
+
+            setIfNotEqualsWithLog(parameters.getElectionDays(), dto.getElectionDays(), parameters::setElectionDays,
+                    community, communityLogService::createLogNewElectionsPeriod);
+
+            setIfNotEqualsWithLog(parameters.getRating(), dto.getCitizenRating(), parameters::setRating,
+                    community, communityLogService::createLogNewCitizenRequirementsRating);
 
             citizenParametersRepository.save(parameters);
         }

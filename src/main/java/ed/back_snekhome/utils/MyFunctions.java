@@ -1,8 +1,10 @@
 package ed.back_snekhome.utils;
 
+import java.util.Objects;
 import java.util.Random;
+import java.util.function.Consumer;
 
-public class GenerationFunctions {
+public class MyFunctions {
 
     public static String generateCode( int length ){
         Random rand = new Random();
@@ -19,5 +21,19 @@ public class GenerationFunctions {
         }
         return s.toString();
     }
+
+    public static <V> void setIfNotNull(V value, Consumer<V> setter) {
+        if (Objects.nonNull(value)) {
+            setter.accept(value);
+        }
+    }
+
+    public static <V> void setIfNotEquals(V value, V value2, Consumer<V> setter) {
+        if (!Objects.equals(value, value2)) {
+            setter.accept(value2);
+        }
+    }
+
+
 }
 
