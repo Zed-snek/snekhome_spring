@@ -105,7 +105,9 @@ public class UserService {
 
         //Checks the relation between current user and related one: are friends/aren't friends/context user follows related/related follows context user
         if (userMethodsService.isContextUser() && !userMethodsService.getCurrentUser().getNickname().equals(nickname)) {
-            dto.setFriendshipType(userMethodsService.getFriendshipType(userMethodsService.getCurrentUser().getIdAccount(), user.getIdAccount()));
+            dto.setFriendshipType(
+                    userMethodsService.getFriendshipType(userMethodsService.getCurrentUser().getIdAccount(),
+                            user.getIdAccount()));
         }
         return dto;
     }
@@ -114,19 +116,19 @@ public class UserService {
         var currentUser = userMethodsService.getCurrentUser();
 
         return UserPrivateDto.builder()
-                .email( currentUser.getEmail() )
-                .name( currentUser.getName() )
-                .surname( currentUser.getSurname() )
-                .tags( currentUser.getTags() )
+                .email(currentUser.getEmail())
+                .name(currentUser.getName())
+                .surname(currentUser.getSurname())
+                .tags(currentUser.getTags())
                 .build();
     }
 
 
     public void newTag(TagDto tagDto) {
         var infoTag = InfoTag.builder()
-                .user( userMethodsService.getCurrentUser() )
-                .title( tagDto.getTitle() )
-                .text( tagDto.getText() )
+                .user(userMethodsService.getCurrentUser())
+                .title(tagDto.getTitle())
+                .text(tagDto.getText())
                 .build();
 
         infoTagRepository.save(infoTag);

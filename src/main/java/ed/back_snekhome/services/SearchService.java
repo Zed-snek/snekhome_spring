@@ -5,9 +5,12 @@ import ed.back_snekhome.dto.searchDTOs.SearchUserCommunityDto;
 import ed.back_snekhome.repositories.community.CommunityRepository;
 import ed.back_snekhome.repositories.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -15,18 +18,37 @@ public class SearchService {
 
     private final UserRepository userRepository;
     private final CommunityRepository communityRepository;
+    private final UserMethodsService userMethodsService;
+    private final CommunityMethodsService communityMethodsService;
 
     public List<SearchItemDto> findCommunitiesByRequest(String request, int pageNumber, int pageSize) {
-        return null;
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        var list =
+                communityRepository.searchCommunitiesByRequest(request, pageable);
+        return list.stream().map(community -> SearchItemDto
+                        .builder()
+                        .idName(community.getGroupname())
+                        .image(communityMethodsService.getTopCommunityImage(community))
+                        .title(community.getName())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public List<SearchItemDto> findUsersByRequest(String request, int pageNumber, int pageSize) {
-        return null;
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        var list = userRepository.searchUsersByRequest(request, pageable);
+        return list.stream().map(user -> SearchItemDto
+                        .builder()
+                        .idName(user.getNickname())
+                        .image(userMethodsService.getTopUserImage(user))
+                        .title(user.getName() + " " + user.getSurname())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public SearchUserCommunityDto findByRequest(String request) {
         return SearchUserCommunityDto.builder()
-                .communities(findCommunitiesByRequest(request, 0, 6))
+                .communities(findCommunitiesByRequest(request, 0, 4))
                 .users(findUsersByRequest(request, 0, 4))
                 .build();
     }
