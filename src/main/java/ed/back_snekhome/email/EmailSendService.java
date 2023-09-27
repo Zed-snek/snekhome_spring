@@ -20,7 +20,6 @@ public class EmailSendService {
     private String serverEmail;
     @Value("${domain.address}")
     private String domain;
-    private final String api = "/api/user/confirmation?token=";
 
     private final JavaMailSender mailSender;
 

@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.security.Role;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,8 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
-
-
 
 @Entity
 @Table(name = "account", uniqueConstraints = @UniqueConstraint(columnNames = {"email", "nickname"} ) )
@@ -29,12 +30,22 @@ public class UserEntity implements UserDetails {
     private Long idAccount;
 
     private String password;
+
+    @Max(value = 17, message = "Name should contain not more than 16 symbols")
     private String name;
+
+    @Max(value = 22, message = "Surname should contain not more than 22 symbols")
     private String surname;
+
+    @Email(message = "The provided value is not e-mail")
     private String email;
+
     private LocalDate registration;
 
+    @NotBlank(message = "Nickname must not be blank")
+    @Max(value = 19, message = "Nickname should contain not more than 18 symbols")
     private String nickname;
+
     private String nicknameColor;
 
     @Enumerated(EnumType.STRING)

@@ -7,6 +7,7 @@ import ed.back_snekhome.security.AuthenticationService;
 import ed.back_snekhome.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +45,7 @@ public class UserManagementController {
 
 
     @PostMapping("/user/register")
-    public ResponseEntity<OwnSuccessResponse> registerUser(@RequestBody RegisterDto registerDto){
+    public ResponseEntity<OwnSuccessResponse> registerUser(@Valid @RequestBody RegisterDto registerDto) {
 
         authenticationService.saveNewAccount(registerDto);
         var response = new OwnSuccessResponse("Confirm registration on email");
@@ -63,7 +64,7 @@ public class UserManagementController {
 
 
     @PutMapping("/auth/user/password")
-    public ResponseEntity<OwnSuccessResponse> updatePassword(@RequestBody ChangePasswordDto dto) {
+    public ResponseEntity<OwnSuccessResponse> updatePassword(@Valid @RequestBody ChangePasswordDto dto) {
 
         authenticationService.changePassword(dto);
         var response = new OwnSuccessResponse("Password has been changed");
@@ -102,7 +103,7 @@ public class UserManagementController {
 
 
     @PostMapping("/auth/tag")
-    public ResponseEntity<OwnSuccessResponse> newTag(@RequestBody TagDto tagDto) {
+    public ResponseEntity<OwnSuccessResponse> newTag(@Valid @RequestBody TagDto tagDto) {
 
         userService.newTag(tagDto);
         var response = new OwnSuccessResponse("Added successfully");
@@ -111,7 +112,7 @@ public class UserManagementController {
     }
 
     @PutMapping("/auth/tag")
-    public ResponseEntity<OwnSuccessResponse> updateTag(@RequestBody TagDto tagDto) {
+    public ResponseEntity<OwnSuccessResponse> updateTag(@Valid @RequestBody TagDto tagDto) {
 
         userService.updateTag(tagDto);
         var response = new OwnSuccessResponse("Updated successfully");

@@ -209,10 +209,10 @@ public class AuthenticationService {
 
     public void changePassword(ChangePasswordDto dto) {
         var user = userMethodsService.getCurrentUser();
-        if ( !passwordEncoder.matches(dto.getOldPass(), user.getPassword()) ) {
+        if (!passwordEncoder.matches(dto.getOldPass(), user.getPassword())) {
             throw new PasswordDoesntMatchException("Invalid old password, please try again");
         }
-        //if old password matches:
+
         user.setPassword(passwordEncoder.encode(dto.getNewPass()));
         userRepository.save(user);
     }

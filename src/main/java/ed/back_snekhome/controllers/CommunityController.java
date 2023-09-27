@@ -1,9 +1,7 @@
 package ed.back_snekhome.controllers;
 
 import ed.back_snekhome.dto.communityDTOs.*;
-import ed.back_snekhome.dto.postDTOs.PostDto;
 import ed.back_snekhome.dto.userDTOs.UserPublicDto;
-import ed.back_snekhome.entities.community.CommunityLog;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.CommunityLogService;

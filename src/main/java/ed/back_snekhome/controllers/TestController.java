@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TestController {
 
-
     @GetMapping("/api/test")
     public ResponseEntity<OwnSuccessResponse> apiTest() {
 
@@ -21,7 +20,5 @@ public class TestController {
         var response = new OwnSuccessResponse("it worked!");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-
 
 }

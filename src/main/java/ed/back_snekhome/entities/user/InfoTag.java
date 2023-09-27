@@ -2,6 +2,8 @@ package ed.back_snekhome.entities.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Entity
@@ -23,8 +25,6 @@ public class InfoTag {
     private UserEntity user;
 
     private String title;
-
-    @Column(columnDefinition = "TEXT")
     private String text;
 
 
