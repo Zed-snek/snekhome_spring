@@ -2,6 +2,7 @@ package ed.back_snekhome.entities.communityDemocracy;
 
 import ed.back_snekhome.entities.user.UserEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Entity
@@ -17,6 +18,7 @@ public class Candidate {
     private Long id;
 
     @Column(columnDefinition = "TEXT")
+    @Size(max = 1024, message = "Program must not exceed 1024 symbols")
     String program;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,5 +28,9 @@ public class Candidate {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_elections")
     Elections elections;
+
+    int deletedPosts;
+    int bannedUsers;
+    int bannedCitizens;
 
 }

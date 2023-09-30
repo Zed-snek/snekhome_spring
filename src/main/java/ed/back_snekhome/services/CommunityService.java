@@ -7,6 +7,7 @@ import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
 import ed.back_snekhome.entities.community.*;
 import ed.back_snekhome.entities.community.Membership;
+import ed.back_snekhome.entities.communityDemocracy.CommunityCitizenParameters;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityAlreadyExistsException;

@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,10 +32,10 @@ public class UserEntity implements UserDetails {
 
     private String password;
 
-    @Max(value = 17, message = "Name should contain not more than 16 symbols")
+    @Size(max = 16, message = "Name should contain not more than 16 symbols")
     private String name;
 
-    @Max(value = 22, message = "Surname should contain not more than 22 symbols")
+    @Size(max = 22, message = "Surname should contain not more than 22 symbols")
     private String surname;
 
     @Email(message = "The provided value is not e-mail")
@@ -43,7 +44,7 @@ public class UserEntity implements UserDetails {
     private LocalDate registration;
 
     @NotBlank(message = "Nickname must not be blank")
-    @Max(value = 19, message = "Nickname should contain not more than 18 symbols")
+    @Size(max = 18, message = "Nickname should contain not more than 18 symbols")
     private String nickname;
 
     private String nicknameColor;

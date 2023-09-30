@@ -123,21 +123,20 @@ public class CommentaryService {
         else
             user = null;
 
-        if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership)) {
-            var list = commentaryRepository.findAllByPostOrderByIdCommentaryAsc(post);
-            return list.stream().map(comment -> CommentaryDto.builder()
-                            .text(comment.getText())
-                            .id(comment.getIdCommentary())
-                            .reference(comment.getReferenceId())
-                            .nickname(comment.getUser().getNickname())
-                            .image(userMethodsService.getTopUserImage(comment.getUser()))
-                            .rating(countRating(comment))
-                            .ratedType(user == null ? RatingType.NONE : getRatedType(comment, user))
-                            .date(comment.getDate())
-                            .build())
-                            .collect(Collectors.toList());
-        }
-        throw new UnauthorizedException("No access to commentaries");
+        communityMethodsService.throwErrIfNoAccessToCommunity(post.getCommunity(), membership);
+
+        var list = commentaryRepository.findAllByPostOrderByIdCommentaryAsc(post);
+        return list.stream().map(comment -> CommentaryDto.builder()
+                        .text(comment.getText())
+                        .id(comment.getIdCommentary())
+                        .reference(comment.getReferenceId())
+                        .nickname(comment.getUser().getNickname())
+                        .image(userMethodsService.getTopUserImage(comment.getUser()))
+                        .rating(countRating(comment))
+                        .ratedType(user == null ? RatingType.NONE : getRatedType(comment, user))
+                        .date(comment.getDate())
+                        .build())
+                        .collect(Collectors.toList());
     }
 
     public void updateCommentary(String text, Long id) {

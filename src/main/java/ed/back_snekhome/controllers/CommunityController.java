@@ -7,6 +7,7 @@ import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.CommunityLogService;
 import ed.back_snekhome.services.CommunityService;
 import ed.back_snekhome.services.MembershipService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -111,7 +112,9 @@ public class CommunityController {
     }
 
     @PostMapping("/auth/community/role/{groupname}")
-    public ResponseEntity<OwnSuccessResponse> newRole(@RequestBody CommunityRoleDto dto, @PathVariable String groupname) {
+    public ResponseEntity<OwnSuccessResponse> newRole(@Valid @RequestBody CommunityRoleDto dto,
+                                                      @PathVariable String groupname
+    ) {
         communityService.newRole(dto, groupname);
         var response = new OwnSuccessResponse("Role is created");
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -119,7 +122,7 @@ public class CommunityController {
 
     @PutMapping("/auth/community/role/{groupname}/{oldRoleName}")
     public ResponseEntity<OwnSuccessResponse> updateRole(
-            @RequestBody CommunityRoleDto dto,
+            @Valid @RequestBody CommunityRoleDto dto,
             @PathVariable String groupname,
             @PathVariable String oldRoleName
     ) {

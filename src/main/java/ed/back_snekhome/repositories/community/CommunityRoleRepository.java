@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public interface CommunityRoleRepository extends JpaRepository<CommunityRole, Long> {
     Optional<CommunityRole> findTopByCommunityAndIsCreator(Community community, boolean isCreator);
+    Optional<CommunityRole> findTopByCommunityAndIsCitizen(Community community, boolean isCitizen);
     List<CommunityRole> findAllByCommunity(Community community);
     boolean existsByCommunityAndTitle(Community community, String title);
     Optional<CommunityRole> findByCommunityAndTitle(Community community, String title);

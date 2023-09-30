@@ -5,6 +5,7 @@ import ed.back_snekhome.enums.RatingType;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.CommentaryService;
 import ed.back_snekhome.services.PostService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,7 +72,9 @@ public class PostController {
     }
 
     @PostMapping("/auth/post/{id}/commentary")
-    public ResponseEntity<OwnSuccessResponse> newComment(@PathVariable Long id, @RequestBody NewCommentaryDto dto) {
+    public ResponseEntity<OwnSuccessResponse> newComment(@PathVariable Long id,
+                                                         @Valid @RequestBody NewCommentaryDto dto
+    ) {
         var response = new OwnSuccessResponse(commentaryService.newComment(id, dto).toString());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -82,7 +85,9 @@ public class PostController {
     }
 
     @PutMapping("/auth/commentary/{id}")
-    public ResponseEntity<OwnSuccessResponse> updateComment(@PathVariable Long id, @RequestBody NewCommentaryDto dto) {
+    public ResponseEntity<OwnSuccessResponse> updateComment(@PathVariable Long id,
+                                                            @Valid @RequestBody NewCommentaryDto dto
+    ) {
         commentaryService.updateCommentary(dto.getText(), id);
 
         var response = new OwnSuccessResponse("Commentary has been updated successfully");

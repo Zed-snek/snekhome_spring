@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.user.UserEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -46,6 +47,7 @@ public class Post {
     private boolean isAnonymous;
 
     @Column(columnDefinition = "TEXT")
+    @Size(max = 2048, message = "Text length should not exceed 2048 symbols")
     private String text;
 
     private LocalDateTime date;

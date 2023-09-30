@@ -1,6 +1,5 @@
 package ed.back_snekhome.dto.userDTOs;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,7 +15,6 @@ public class TagDto {
     @Size(min = 1, max = 50, message = "Title is required and should not exceed 50 symbols")
     private String title;
 
-    @Column(columnDefinition = "TEXT")
     @Size(min = 1, max = 1024, message = "Text is required and should not exceed 1024 symbols")
     private String text;
 

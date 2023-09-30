@@ -4,6 +4,7 @@ import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
+import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.community.CommunityImageRepository;
 import ed.back_snekhome.repositories.community.CommunityRepository;
 import ed.back_snekhome.repositories.community.CommunityRoleRepository;
@@ -49,6 +50,11 @@ public class CommunityMethodsService {
 
     public boolean isCurrentUserOwner(Community community) {
         return userMethodsService.isCurrentUserEqual(community.getOwner());
+    }
+
+    public void throwErrIfNoAccessToCommunity(Community community, Optional<Membership> membership) {
+        if (!isAccessToCommunity(community, membership))
+            throw new UnauthorizedException("No access to community");
     }
 
     public boolean isAccessToCommunity(Community community, Optional<Membership> membership) {

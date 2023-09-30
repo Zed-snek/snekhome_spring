@@ -1,5 +1,6 @@
 package ed.back_snekhome.dto.communityDTOs;
 
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,7 +10,9 @@ import lombok.Setter;
 @Builder
 public class CommunityRoleDto {
 
+    @Size(max = 12, message = "The length of title should not exceed 12 symbols")
     private String title;
+
     private String bannerColor;
     private String textColor;
     private boolean editId;

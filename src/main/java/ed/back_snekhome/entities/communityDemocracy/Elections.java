@@ -3,7 +3,7 @@ package ed.back_snekhome.entities.communityDemocracy;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -19,8 +19,8 @@ public class Elections {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
 
     @OneToMany(mappedBy = "elections", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Candidate> candidates;

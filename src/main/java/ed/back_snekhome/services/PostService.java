@@ -146,25 +146,23 @@ public class PostService {
         var membership =
                 membershipService.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
-        if (communityMethodsService.isAccessToCommunity(post.getCommunity(), membership)) {
-            var postDto = setMainInfo(post)
-                    .groupImage(communityMethodsService.getTopCommunityImage(post.getCommunity()))
-                    .groupname(post.getCommunity().getGroupname())
-                    .groupTitle(post.getCommunity().getName())
-                    .communityDate(post.getCommunity().getCreation());
-            if (!post.isAnonymous()) {
-                postDto
-                        .userImage(userMethodsService.getTopUserImage(post.getUser()))
-                        .userNickname(post.getUser().getNickname())
-                        .userName(post.getUser().getName())
-                        .userSurname(post.getUser().getSurname());
-            }
-            membership.ifPresent(value -> postDto.role(value.getRole()));
-            return postDto.build();
+        communityMethodsService.throwErrIfNoAccessToCommunity(post.getCommunity(), membership);
+
+        var postDto = setMainInfo(post)
+                .groupImage(communityMethodsService.getTopCommunityImage(post.getCommunity()))
+                .groupname(post.getCommunity().getGroupname())
+                .groupTitle(post.getCommunity().getName())
+                .communityDate(post.getCommunity().getCreation());
+        if (!post.isAnonymous()) {
+            postDto
+                    .userImage(userMethodsService.getTopUserImage(post.getUser()))
+                    .userNickname(post.getUser().getNickname())
+                    .userName(post.getUser().getName())
+                    .userSurname(post.getUser().getSurname());
         }
-        else {
-            throw new UnauthorizedException("No access to post");
-        }
+        membership.ifPresent(value -> postDto.role(value.getRole()));
+
+        return postDto.build();
     }
 
     private PostRating findPostRatingOrCreate(Post post) {

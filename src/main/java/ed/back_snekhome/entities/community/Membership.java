@@ -1,11 +1,11 @@
 package ed.back_snekhome.entities.community;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import ed.back_snekhome.entities.community.Community;
-import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDate;
 
 @Entity
 @Table
@@ -34,6 +34,7 @@ public class Membership {
     private CommunityRole role;
 
     private boolean isBanned;
-    private boolean isCitizen;
+
+    private LocalDate joined;
 
 }
