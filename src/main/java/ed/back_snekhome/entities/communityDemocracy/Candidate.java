@@ -29,8 +29,6 @@ public class Candidate {
     @JoinColumn(name = "id_elections")
     Elections elections;
 
-    int deletedPosts;
-    int bannedUsers;
-    int bannedCitizens;
+
 
 }

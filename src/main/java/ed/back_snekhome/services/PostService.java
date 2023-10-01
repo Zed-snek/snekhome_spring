@@ -11,6 +11,7 @@ import ed.back_snekhome.entities.post.PostImage;
 import ed.back_snekhome.entities.post.PostRating;
 import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.enums.CommunityType;
+import ed.back_snekhome.enums.PresidencyDataType;
 import ed.back_snekhome.enums.RatingType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
@@ -31,7 +32,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,8 +40,9 @@ public class PostService {
     private final CommunityMethodsService communityMethodsService;
     private final UserMethodsService userMethodsService;
     private final FileService fileService;
-    private final MembershipService membershipService;
+    private final MembershipMethodsService membershipMethodsService;
     private final CommunityLogService communityLogService;
+    private final DemocracyService democracyService;
 
     private final MembershipRepository membershipRepository;
     private final PostRepository postRepository;
@@ -144,7 +145,7 @@ public class PostService {
     public PostDto getPostPage(Long id) {
         var post = getPostById(id);
         var membership =
-                membershipService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+                membershipMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
         communityMethodsService.throwErrIfNoAccessToCommunity(post.getCommunity(), membership);
 
@@ -189,7 +190,7 @@ public class PostService {
         var post = getPostById(id);
         var user = userMethodsService.getCurrentUser();
         var membership =
-                membershipService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+                membershipMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
         boolean isCurrentUserAuthor = post.getUser().equals(user);
         boolean isDeletePermit = membership.isPresent() && membership.get().getRole().isDeletePosts();
 
@@ -197,6 +198,7 @@ public class PostService {
             for (PostImage img : post.getImages()) {
                 fileService.deleteImageFromStorage(img.getName());
             }
+
             if (isDeletePermit && !isCurrentUserAuthor) {
                 String text = post.getText();
                 communityLogService.createLogDeletePost(
@@ -204,6 +206,10 @@ public class PostService {
                         post.getUser(),
                         text.length() > 100 ? text.substring(0, 100) : text
                 );
+
+                if (post.getCommunity().getType() == CommunityType.DEMOCRACY) {
+                    democracyService.addStatsToPresidency(post.getCommunity(), PresidencyDataType.DELETED_POST);
+                }
             }
             postRepository.delete(post);
         }
@@ -233,6 +239,7 @@ public class PostService {
         );
         return array;
     }
+
     private PostDto.PostDtoBuilder setPostItemInfo(Post post, boolean isCommunity, boolean isUser) {
         var builder = setMainInfo(post)
                     .comments(countComments(post))
@@ -294,8 +301,8 @@ public class PostService {
             var dto = setPostItemInfo(post, false, !post.isAnonymous());
             dto.isCurrentUserAuthor(post.getUser().equals(user));
             if (!post.isAnonymous()) {
-                var membership
-                        = membershipService.getOptionalMembershipOfUser(post.getCommunity(), post.getUser());
+                var membership = membershipMethodsService
+                        .getOptionalMembershipOfUser(post.getCommunity(), post.getUser());
                 if (membership.isPresent() && membership.get().getRole() != null) {
                     var role = membership.get().getRole();
                     dto
@@ -311,7 +318,7 @@ public class PostService {
 
     public List<PostDto> getPostDtoListHome(int pageNumber, int pageSize) {
         var user = userMethodsService.getCurrentUser();
-        var memberships = membershipService.getMembershipsByUser(user, false);
+        var memberships = membershipMethodsService.getMembershipsByUser(user, false);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         var communities = memberships

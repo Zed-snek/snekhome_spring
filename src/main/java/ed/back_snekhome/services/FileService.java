@@ -30,12 +30,12 @@ public class FileService {
     @Value("${upload.path}")
     private String uploadPath;
 
-    final private UserMethodsService userMethodsService;
-    final private MembershipService membershipService;
-    final private CommunityLogService communityLogService;
-    final private PostImageRepository postImageRepository;
-    final private CommunityImageRepository communityImageRepository;
-    final private UserImageRepository userImageRepository;
+    private final MembershipMethodsService membershipMethodsService;
+    private final UserMethodsService userMethodsService;
+    private final CommunityLogService communityLogService;
+    private final PostImageRepository postImageRepository;
+    private final CommunityImageRepository communityImageRepository;
+    private final UserImageRepository userImageRepository;
 
 
     @Transactional
@@ -51,7 +51,7 @@ public class FileService {
 
         var communityImage = communityImageRepository.findByName(name);
         if (communityImage.isPresent()) {
-            var membership = membershipService.getMembershipOrThrowErr(
+            var membership = membershipMethodsService.getMembershipOrThrowErr(
                     userMethodsService.getCurrentUser(),
                     communityImage.get().getCommunity()
             );

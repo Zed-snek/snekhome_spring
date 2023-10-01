@@ -3,6 +3,7 @@ package ed.back_snekhome.entities.community;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.communityDemocracy.CommunityCitizenParameters;
+import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import jakarta.persistence.*;
@@ -67,9 +68,13 @@ public class Community {
     @JsonIgnore
     private List<CommunityLog> logs;
 
-    //for democracy, citizen requirements:
+    //for democracy:
     @OneToOne(mappedBy = "community", cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
     private CommunityCitizenParameters citizenParameters;
+
+    @OneToOne(mappedBy = "community", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private PresidencyData presidencyData;
 
 }

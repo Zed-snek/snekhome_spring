@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,7 +27,7 @@ public class CommentaryService {
     private final PostService postService;
     private final UserMethodsService userMethodsService;
     private final CommunityMethodsService communityMethodsService;
-    private final MembershipService membershipService;
+    private final MembershipMethodsService membershipMethodsService;
 
 
     @Transactional
@@ -57,8 +56,8 @@ public class CommentaryService {
     public void deleteComment(Long id) {
         var comment = getCommentaryById(id);
         var user = userMethodsService.getCurrentUser();
-        var membership =
-                membershipService.getOptionalMembershipOfCurrentUser(comment.getPost().getCommunity());
+        var membership = membershipMethodsService
+                .getOptionalMembershipOfCurrentUser(comment.getPost().getCommunity());
         if (comment.getUser().equals(user) || (membership.isPresent() && membership.get().getRole().isDeletePosts()))
             deleteAllReferencedComments(id);
         else
@@ -113,8 +112,8 @@ public class CommentaryService {
 
     public List<CommentaryDto> getCommentariesByPostId(Long id) {
         var post = postService.getPostById(id);
-        var membership
-                = membershipService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+        var membership = membershipMethodsService
+                .getOptionalMembershipOfCurrentUser(post.getCommunity());
 
         boolean isContext = userMethodsService.isContextUser();
         UserEntity user;

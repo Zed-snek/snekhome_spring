@@ -36,7 +36,7 @@ public class CommunityService {
     private final FileService fileService;
     private final UserMethodsService userMethodsService;
     private final CommunityMethodsService communityMethodsService;
-    private final MembershipService membershipService;
+    private final MembershipMethodsService membershipMethodsService;
     private final CommunityLogService communityLogService;
 
     private final CommunityRepository communityRepository;
@@ -159,7 +159,7 @@ public class CommunityService {
 
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(name);
-        var membership = membershipService.getOptionalMembershipOfCurrentUser(community);
+        var membership = membershipMethodsService.getOptionalMembershipOfCurrentUser(community);
 
         PublicCommunityDto dto;
         if (communityMethodsService.isAccessToCommunity(community, membership)) {
