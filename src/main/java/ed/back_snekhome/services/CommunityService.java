@@ -7,13 +7,16 @@ import ed.back_snekhome.dto.communityDTOs.PublicCommunityDto;
 import ed.back_snekhome.dto.communityDTOs.UpdateCommunityDto;
 import ed.back_snekhome.entities.community.*;
 import ed.back_snekhome.entities.community.Membership;
+import ed.back_snekhome.entities.communityDemocracy.Candidate;
 import ed.back_snekhome.entities.communityDemocracy.CommunityCitizenParameters;
+import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
+import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityAlreadyExistsException;
-import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.community.*;
+import ed.back_snekhome.repositories.communityDemocracy.*;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.utils.MyFunctions;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +41,7 @@ public class CommunityService {
     private final CommunityMethodsService communityMethodsService;
     private final MembershipMethodsService membershipMethodsService;
     private final CommunityLogService communityLogService;
+    private final DemocracyService democracyService;
 
     private final CommunityRepository communityRepository;
     private final CommunityRoleRepository communityRoleRepository;
@@ -45,12 +49,15 @@ public class CommunityService {
     private final MembershipRepository membershipRepository;
     private final CommunityImageRepository communityImageRepository;
     private final JoinRequestRepository joinRequestRepository;
+    private final CandidateRepository candidateRepository;
+    private final PresidencyDataRepository presidencyDataRepository;
 
 
     @Transactional
     public void newCommunity(NewCommunityDto dto) {
         var owner = userMethodsService.getCurrentUser();
 
+        var nowDate = LocalDate.now();
         var community = Community.builder()
                 .type(dto.getType())
                 .groupname(dto.getIdName())
@@ -59,87 +66,87 @@ public class CommunityService {
                 .isInviteUsers(dto.isInviteUsers())
                 .isClosed(dto.isClosed())
                 .owner(owner)
-                .creation(LocalDate.now())
+                .creation(nowDate)
                 .build();
-
         if (dto.getType() == CommunityType.NEWSPAPER)
             community.setAnonAllowed(false);
         else
             community.setAnonAllowed(dto.isAnonAllowed());
-
         communityRepository.save(community);
 
-        var membership = Membership.builder()
-                .user(owner)
+
+        var ownerRoleBuilder = CommunityRole.builder()
                 .community(community)
-                .build();
-
-        CommunityRole ownerRole;
+                .bannerColor("#15151D")
+                .textColor("#E3E3E3")
+                .isCreator(true);
         if (!(dto.getType() == CommunityType.ANARCHY)) {
-            String title;
-            boolean isCitizen;
-            if (dto.getType() == CommunityType.DEMOCRACY) {
-                title = "president";
-                isCitizen = true;
-            }
-            else {
-                title = "owner";
-                isCitizen = false;
-            }
-
-            ownerRole = CommunityRole.builder()
-                    .title(title)
-                    .community(community)
-                    .bannerColor("#15151D")
-                    .textColor("#E3E3E3")
+            ownerRoleBuilder
+                    .title(dto.getType() == CommunityType.DEMOCRACY ? "president" : "owner")
                     .banCitizen(true)
                     .deletePosts(true)
                     .editDescription(true)
                     .banUser(true)
                     .editId(true)
-                    .isCitizen(isCitizen)
-                    .isCreator(true)
-                    .inviteUsers(true)
-                    .build();
+                    .inviteUsers(true);
         }
         else {
-            ownerRole = CommunityRole.builder()
-                    .title("creator")
-                    .community(community)
-                    .bannerColor("#15151D")
-                    .textColor("#E3E3E3")
-                    .banCitizen(false)
-                    .deletePosts(false)
-                    .editDescription(false)
-                    .banUser(false)
-                    .editId(false)
-                    .isCitizen(false)
-                    .isCreator(true)
-                    .inviteUsers(false)
-                    .build();
+            ownerRoleBuilder.title("creator");
         }
+
+        var ownerRole = ownerRoleBuilder.build();
         communityRoleRepository.save(ownerRole);
-        membership.setRole(ownerRole);
+
+        var membership = Membership.builder()
+                .user(owner)
+                .community(community)
+                .joined(nowDate)
+                .role(ownerRole)
+                .build();
         membershipRepository.save(membership);
 
-        if (dto.getType() == CommunityType.DEMOCRACY) {
-            var citizenRole = CommunityRole.builder()
-                    .title( dto.getTitle() )
-                    .bannerColor( dto.getBannerColor() )
-                    .textColor( dto.getTextColor() )
-                    .isCitizen( true )
-                    .community( community )
-                    .build();
-            communityRoleRepository.save(citizenRole);
+        if (dto.getType() == CommunityType.DEMOCRACY)
+            createStartDemocracyData(community, dto, owner);
+    }
 
-            var citizenParameters = CommunityCitizenParameters.builder()
-                    .days( dto.getCitizenDays() )
-                    .rating( dto.getCitizenRating() )
-                    .electionDays( dto.getElectionDays() )
-                    .community( community )
-                    .build();
-            citizenParametersRepository.save(citizenParameters);
-        }
+    @Transactional
+    public void createStartDemocracyData(
+            Community community,
+            NewCommunityDto dto,
+            UserEntity user
+    ) {
+        var citizenRole = CommunityRole.builder()
+                .title(dto.getTitle())
+                .bannerColor(dto.getBannerColor())
+                .textColor(dto.getTextColor())
+                .isCitizen(true)
+                .community(community)
+                .build();
+        communityRoleRepository.save(citizenRole);
+
+        var citizenParameters = CommunityCitizenParameters.builder()
+                .days(dto.getCitizenDays())
+                .rating(dto.getCitizenRating())
+                .electionDays(dto.getElectionDays())
+                .community(community)
+                .build();
+        citizenParametersRepository.save(citizenParameters);
+
+        var presidencyData = PresidencyData.builder()
+                .community(community)
+                .build();
+        presidencyData.clearData();
+        presidencyDataRepository.save(presidencyData);
+
+        var currentPresident = Candidate.builder()
+                .user(user)
+                .isActive(false)
+                .community(community)
+                .program("First creator")
+                .build();
+        candidateRepository.save(currentPresident);
+
+        democracyService.createElections(currentPresident, community, dto.getElectionDays());
     }
 
     public void deleteCommunity(String name) {
@@ -170,7 +177,6 @@ public class CommunityService {
                     .ownerImage(userMethodsService.getTopUserImage(community.getOwner()))
                     .isAccess(true)
                     .build();
-            dto.setMember(false);
 
             if (community.isClosed())
                 dto.setJoinRequests(joinRequestRepository.countAllByCommunity(community));
@@ -183,8 +189,8 @@ public class CommunityService {
                     .image(communityMethodsService.getTopCommunityImage(community))
                     .type(community.getType())
                     .isAccess(false)
-                    .isRequestSent(joinRequestRepository.existsByCommunityAndUser(
-                            community, userMethodsService.getCurrentUser())
+                    .isRequestSent(joinRequestRepository
+                            .existsByCommunityAndUser(community, userMethodsService.getCurrentUser())
                     )
                     .build();
         }
@@ -367,8 +373,8 @@ public class CommunityService {
     public void updateCommunityDemocracySettings(String groupname, NewCommunityDto dto) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         if (communityMethodsService.isCurrentUserOwner(community)) {
-            var parameters = citizenParametersRepository.findTopByCommunity(community)
-                    .orElseThrow(() -> new EntityNotFoundException("Entity not found"));
+
+            var parameters = community.getCitizenParameters();
 
             setIfNotEqualsWithLog(parameters.getDays(), dto.getCitizenDays(), parameters::setDays,
                     community, communityLogService::createLogNewCitizenRequirementsDays);

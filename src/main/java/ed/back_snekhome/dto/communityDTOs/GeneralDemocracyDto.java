@@ -1,4 +1,4 @@
-package ed.back_snekhome.dto.communityDTOs.democracy;
+package ed.back_snekhome.dto.communityDTOs;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -11,7 +11,8 @@ import java.time.LocalDate;
 @Builder
 public class GeneralDemocracyDto {
 
-    private ProgressDto progressDto;
+    private int currentUserRating;
+    private int currentUserDays;;
     private boolean isCitizenRight;
 
     private int citizenAmount;

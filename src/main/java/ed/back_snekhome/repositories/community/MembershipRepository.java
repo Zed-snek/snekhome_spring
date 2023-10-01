@@ -5,6 +5,7 @@ import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.entities.community.Membership;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,8 +13,13 @@ import java.util.Optional;
 public interface MembershipRepository extends JpaRepository<Membership, Long> {
 
     Optional<Membership> findByCommunityAndUser(Community community, UserEntity user);
+
     int countAllByCommunityAndIsBanned(Community community, boolean isBanned);
     int countAllByUserAndIsBanned(UserEntity user, boolean isBanned);
+
+    @Query("SELECT COUNT(m) FROM Membership m WHERE m.community = :community AND m.role.isCitizen = true")
+    int countCitizensByCommunity(Community community);
+
     List<Membership> findTop4ByUserAndIsBanned(UserEntity user, boolean isBanned);
     List<Membership> findAllByUserAndIsBanned(UserEntity user, boolean isBanned);
     List<Membership> findAllByCommunityAndIsBanned(Community community, boolean isBanned);

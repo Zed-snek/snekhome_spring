@@ -2,7 +2,9 @@ package ed.back_snekhome.entities.community;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ed.back_snekhome.entities.communityDemocracy.Candidate;
 import ed.back_snekhome.entities.communityDemocracy.CommunityCitizenParameters;
+import ed.back_snekhome.entities.communityDemocracy.Elections;
 import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
@@ -69,12 +71,22 @@ public class Community {
     private List<CommunityLog> logs;
 
     //for democracy:
+    @OneToMany(mappedBy = "community", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Candidate> candidates;
+
     @OneToOne(mappedBy = "community", cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
     private CommunityCitizenParameters citizenParameters;
 
     @OneToOne(mappedBy = "community", cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
+    @JsonIgnore
     private PresidencyData presidencyData;
+
+    @OneToOne(mappedBy = "community", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    @JsonIgnore
+    private Elections elections;
 
 }

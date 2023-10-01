@@ -1,10 +1,11 @@
 package ed.back_snekhome.services;
 
-import ed.back_snekhome.dto.communityDTOs.democracy.GeneralDemocracyDto;
-import ed.back_snekhome.dto.communityDTOs.democracy.ProgressDto;
+import ed.back_snekhome.dto.communityDTOs.GeneralDemocracyDto;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.community.Membership;
+import ed.back_snekhome.entities.communityDemocracy.Candidate;
+import ed.back_snekhome.entities.communityDemocracy.Elections;
 import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
@@ -12,13 +13,14 @@ import ed.back_snekhome.enums.PresidencyDataType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.repositories.community.CommunityRoleRepository;
 import ed.back_snekhome.repositories.community.MembershipRepository;
-import ed.back_snekhome.repositories.community.PresidencyDataRepository;
+import ed.back_snekhome.repositories.communityDemocracy.PresidencyDataRepository;
 import ed.back_snekhome.repositories.communityDemocracy.CandidateRepository;
 import ed.back_snekhome.repositories.communityDemocracy.ElectionsRepository;
 import ed.back_snekhome.repositories.communityDemocracy.VoteRepository;
 import ed.back_snekhome.repositories.post.CommentaryRatingRepository;
 import ed.back_snekhome.repositories.post.PostRatingRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -43,6 +45,8 @@ public class DemocracyService {
     private final UserMethodsService userMethodsService;
     private final CommunityMethodsService communityMethodsService;
 
+    @Value("${democracy.elections.duration}")
+    private int electionsDuration;
 
     private void throwErrIfNotDemocracy(Community community) {
         if (community.getType() != CommunityType.DEMOCRACY)
@@ -83,7 +87,6 @@ public class DemocracyService {
         return false;
     }
 
-
     private PresidencyData getPresidencyDataByCommunity(Community community) {
         return presidencyDataRepository.findById(community.getIdCommunity())
                 .orElseThrow(() -> new BadRequestException("Community is not Democracy"));
@@ -91,9 +94,7 @@ public class DemocracyService {
 
     private void clearPresidencyDataByCommunity(Community community) {
         var data = getPresidencyDataByCommunity(community);
-        data.setDeletedPosts(0);
-        data.setBannedUsers(0);
-        data.setBannedCitizens(0);
+        data.clearData();
         presidencyDataRepository.save(data);
     }
 
@@ -118,24 +119,39 @@ public class DemocracyService {
 
         var dtoBuilder = GeneralDemocracyDto.builder();
 
+        var presidencyData = getPresidencyDataByCommunity(community);
+        dtoBuilder.bannedUsersStats(presidencyData.getBannedUsers())
+                .bannedCitizensStats(presidencyData.getBannedCitizens())
+                .deletedPostsStats(presidencyData.getDeletedPosts())
+                .citizenAmount(membershipRepository.countCitizensByCommunity(community));
+
         if (optMembership.isPresent()) {
             var membership = optMembership.get();
 
             boolean isRight = isCitizenRight(community, user);
             dtoBuilder.isCitizenRight(isRight); // is citizen rights
 
-            if (!isRight) { // citizen progress data
-                var parameters = community.getCitizenParameters();
-                dtoBuilder.progressDto(ProgressDto.builder()
-                        .days(getDaysAfterJoining(membership))
-                        .needed_days(parameters.getDays())
-                        .rating(getRating(community, user))
-                        .needed_rating(parameters.getRating())
-                        .build());
-            } // citizen progress data
+            if (!isRight) {
+                dtoBuilder
+                        .currentUserRating(getRating(community, user))
+                        .currentUserDays(getDaysAfterJoining(membership));
+            }
         }
+        community.getElections();
 
         return dtoBuilder.build();
+    }
+
+
+    public void createElections(Candidate currentPresident, Community community, int willStartIn) {
+        var date = LocalDate.now().plusDays(willStartIn);
+        var elections = Elections.builder()
+                .community(community)
+                .startDate(date)
+                .endDate(date.plusDays(electionsDuration))
+                .currentPresident(currentPresident)
+                .build();
+        electionsRepository.save(elections);
     }
 
 }

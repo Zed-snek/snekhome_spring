@@ -39,4 +39,10 @@ public class PresidencyData {
     public void addBannedCitizens() {
         bannedCitizens++;
     }
+
+    public void clearData() {
+        deletedPosts = 0;
+        bannedCitizens = 0;
+        bannedUsers = 0;
+    }
 }

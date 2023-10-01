@@ -1,4 +1,4 @@
-package ed.back_snekhome.repositories.community;
+package ed.back_snekhome.repositories.communityDemocracy;
 
 import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
 import org.springframework.data.jpa.repository.JpaRepository;
