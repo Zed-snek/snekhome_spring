@@ -34,4 +34,7 @@ public class Elections {
     @JoinColumn(name = "id_current_president")
     private Candidate currentPresident;
 
+
+    private boolean isActive;
+
 }

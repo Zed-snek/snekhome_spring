@@ -146,7 +146,7 @@ public class CommunityService {
                 .build();
         candidateRepository.save(currentPresident);
 
-        democracyService.createElections(currentPresident, community, dto.getElectionDays());
+        democracyService.createElections(currentPresident, community);
     }
 
     public void deleteCommunity(String name) {

@@ -11,6 +11,7 @@ import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.enums.PresidencyDataType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
+import ed.back_snekhome.repositories.community.CommunityRepository;
 import ed.back_snekhome.repositories.community.CommunityRoleRepository;
 import ed.back_snekhome.repositories.community.MembershipRepository;
 import ed.back_snekhome.repositories.communityDemocracy.PresidencyDataRepository;
@@ -22,10 +23,10 @@ import ed.back_snekhome.repositories.post.PostRatingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.function.Predicate;
 
 
 @Service
@@ -41,6 +42,7 @@ public class DemocracyService {
     private final MembershipRepository membershipRepository;
     private final CommunityRoleRepository communityRoleRepository;
     private final PresidencyDataRepository presidencyDataRepository;
+    private final CommunityRepository communityRepository;
 
     private final MembershipMethodsService membershipMethodsService;
     private final UserMethodsService userMethodsService;
@@ -109,18 +111,32 @@ public class DemocracyService {
         presidencyDataRepository.save(data);
     }
 
+
     private boolean processDemocracy(Elections elections) { //method to start/finish elections | works only when someone checks community
         var nowDate = LocalDate.now();
         if (elections.getEndDate().isBefore(nowDate)) {
-            //finish elections:
-            //1. change president (if 0 votes, leaves the same president)
-            //2. new dates to elections and clear presidency data
-            //3. make all candidates inactive
+            var community = elections.getCommunity();
+            var winner = candidateRepository.findCandidateWithMostVotes(community);
+            winner.ifPresent(candidate -> { //(if 0 votes, leaves the same president)
+                updateElectionsDate(elections, candidate);
+                community.setOwner(candidate.getUser());
+            });
+            clearPresidencyDataByCommunity(community);
+            candidateRepository.makeAllCandidatesInActive(community);
+
+            communityRepository.save(community);
             return false;
         }
-        return elections.getStartDate().isAfter(nowDate); //if true, then elections in progress right now
+        boolean isElectionsNow = elections.getStartDate().isAfter(nowDate);
+        if (isElectionsNow && !elections.isActive()) { //if elections only have started
+            elections.setActive(true);
+            electionsRepository.save(elections);
+            voteRepository.deleteAllByCommunity(elections.getCommunity());
+        }
+        return isElectionsNow;
     }
 
+    @Transactional
     public GeneralDemocracyDto getGeneralDemocracyData(String groupname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         var user = userMethodsService.getCurrentUser();
@@ -171,16 +187,20 @@ public class DemocracyService {
         return dtoBuilder.build();
     }
 
+    private Elections updateElectionsDate(Elections elections, Candidate newPresident) {
+        var date = LocalDate.now().plusDays(
+                elections.getCommunity().getCitizenParameters().getElectionDays()
+        );
+        elections.setStartDate(date);
+        elections.setEndDate(date.plusDays(electionsDuration));
+        elections.setCurrentPresident(newPresident);
+        return elections;
+    }
 
-    public void createElections(Candidate currentPresident, Community community, int willStartIn) {
-        var date = LocalDate.now().plusDays(willStartIn);
-        var elections = Elections.builder()
-                .community(community)
-                .startDate(date)
-                .endDate(date.plusDays(electionsDuration))
-                .currentPresident(currentPresident)
-                .build();
-        electionsRepository.save(elections);
+    public void createElections(Candidate currentPresident, Community community) {
+        var elections = new Elections();
+        elections.setCommunity(community);
+        electionsRepository.save(updateElectionsDate(elections, currentPresident));
     }
 
 }
