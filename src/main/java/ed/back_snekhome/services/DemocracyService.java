@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.function.Predicate;
 
 
 @Service
@@ -108,6 +109,17 @@ public class DemocracyService {
         presidencyDataRepository.save(data);
     }
 
+    private boolean processDemocracy(Elections elections) { //method to start/finish elections | works only when someone checks community
+        var nowDate = LocalDate.now();
+        if (elections.getEndDate().isBefore(nowDate)) {
+            //finish elections:
+            //1. change president (if 0 votes, leaves the same president)
+            //2. new dates to elections and clear presidency data
+            //3. make all candidates inactive
+            return false;
+        }
+        return elections.getStartDate().isAfter(nowDate); //if true, then elections in progress right now
+    }
 
     public GeneralDemocracyDto getGeneralDemocracyData(String groupname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
@@ -116,8 +128,14 @@ public class DemocracyService {
 
         var optMembership = membershipMethodsService.getOptionalMembershipOfUser(community, user);
         communityMethodsService.throwErrIfNoAccessToCommunity(community, optMembership);
+        var elections = community.getElections();
 
         var dtoBuilder = GeneralDemocracyDto.builder();
+
+        boolean isElectionsNow = processDemocracy(elections);
+        dtoBuilder
+                .isElectionsNow(isElectionsNow)
+                .electionsDate(isElectionsNow ? elections.getEndDate() : elections.getStartDate());
 
         var presidencyData = getPresidencyDataByCommunity(community);
         dtoBuilder.bannedUsersStats(presidencyData.getBannedUsers())
@@ -125,19 +143,30 @@ public class DemocracyService {
                 .deletedPostsStats(presidencyData.getDeletedPosts())
                 .citizenAmount(membershipRepository.countCitizensByCommunity(community));
 
+        dtoBuilder.currentPresidentProgram(elections.getCurrentPresident().getProgram());
+
         if (optMembership.isPresent()) {
             var membership = optMembership.get();
 
             boolean isRight = isCitizenRight(community, user);
             dtoBuilder.isCitizenRight(isRight); // is citizen rights
 
-            if (!isRight) {
+            if (isRight) {
+                candidateRepository.findTopByUserAndCommunity(user, community)
+                        .ifPresentOrElse(
+                                candidate -> {
+                                    dtoBuilder.currentUserProgram(candidate.getProgram());
+                                    dtoBuilder.isCurrentUserActiveCandidate(candidate.isActive());
+                                },
+                                () -> dtoBuilder.isCurrentUserActiveCandidate(false)
+                        );
+            }
+            else {
                 dtoBuilder
                         .currentUserRating(getRating(community, user))
                         .currentUserDays(getDaysAfterJoining(membership));
             }
         }
-        community.getElections();
 
         return dtoBuilder.build();
     }

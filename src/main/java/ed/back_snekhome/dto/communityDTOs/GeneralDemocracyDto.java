@@ -23,6 +23,8 @@ public class GeneralDemocracyDto {
     private LocalDate electionsDate;
     private boolean isElectionsNow;
 
-    private boolean isCurrentUserCandidate;
-    private String candidateProgram;
+    private String currentPresidentProgram;
+
+    private boolean isCurrentUserActiveCandidate;
+    private String currentUserProgram;
 }
