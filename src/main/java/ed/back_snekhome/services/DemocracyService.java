@@ -1,6 +1,7 @@
 package ed.back_snekhome.services;
 
 import ed.back_snekhome.dto.communityDTOs.GeneralDemocracyDto;
+import ed.back_snekhome.dto.communityDTOs.NewCandidateDto;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.community.Membership;
@@ -10,9 +11,11 @@ import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
 import ed.back_snekhome.entities.communityDemocracy.Vote;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
+import ed.back_snekhome.enums.ElectionsStatus;
 import ed.back_snekhome.enums.PresidencyDataType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
+import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.community.CommunityRepository;
 import ed.back_snekhome.repositories.community.CommunityRoleRepository;
 import ed.back_snekhome.repositories.community.MembershipRepository;
@@ -22,6 +25,7 @@ import ed.back_snekhome.repositories.communityDemocracy.ElectionsRepository;
 import ed.back_snekhome.repositories.communityDemocracy.VoteRepository;
 import ed.back_snekhome.repositories.post.CommentaryRatingRepository;
 import ed.back_snekhome.repositories.post.PostRatingRepository;
+import ed.back_snekhome.utils.MyFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 
 @Service
@@ -92,6 +98,11 @@ public class DemocracyService {
         return false;
     }
 
+    public void throwErrIfNotCitizenRight(Community community, UserEntity user) {
+        if (!isCitizenRight(community, user))
+            throw new UnauthorizedException("No citizen rights");
+    }
+
     private PresidencyData getPresidencyDataByCommunity(Community community) {
         return presidencyDataRepository.findById(community.getIdCommunity())
                 .orElseThrow(() -> new BadRequestException("Community is not Democracy"));
@@ -113,11 +124,19 @@ public class DemocracyService {
         presidencyDataRepository.save(data);
     }
 
+    private ElectionsStatus getElectionsStatus(Elections elections) {
+        var nowDate = LocalDate.now();
+        if (elections.getEndDate().isBefore(nowDate))
+            return ElectionsStatus.FINISHED;
+        if (elections.getStartDate().isBefore(nowDate))
+            return ElectionsStatus.IN_PROGRESS;
+        return ElectionsStatus.NOT_STARTED;
+    }
 
     private boolean processDemocracy(Elections elections) { //method to start/finish elections | works only when someone checks community
-        var nowDate = LocalDate.now();
+        var status = getElectionsStatus(elections);
 
-        if (elections.getEndDate().isBefore(nowDate)) {
+        if (status == ElectionsStatus.FINISHED) {
             var community = elections.getCommunity();
             var winner = candidateRepository.findCandidateWithMostVotes(community);
             winner.ifPresent(candidate -> { //(if 0 votes, leaves the same president)
@@ -131,8 +150,8 @@ public class DemocracyService {
             return false;
         }
 
-        boolean isElectionsNow = elections.getStartDate().isBefore(nowDate);
-        if (isElectionsNow && !elections.isActive()) { //if elections only have started
+        boolean isElectionsNow = status == ElectionsStatus.IN_PROGRESS;
+        if (isElectionsNow && !elections.isActive()) { //if elections just have started
             elections.setActive(true);
             electionsRepository.save(elections);
             voteRepository.deleteAllByCommunity(elections.getCommunity());
@@ -207,25 +226,72 @@ public class DemocracyService {
         electionsRepository.save(updateElectionsDate(elections, currentPresident));
     }
 
-    private Candidate findCandidateOrThrowErr(String groupname, String candidateNickname) {
-        return candidateRepository.findTopByUserAndCommunity(
-                userMethodsService.getUserByNicknameOrThrowErr(candidateNickname),
-                communityMethodsService.getCommunityByNameOrThrowErr(groupname)
-        ).orElseThrow(() -> new EntityNotFoundException(candidateNickname + " is not a candidate"));
+    private Candidate findCandidateOrThrowErr(Community community, UserEntity user) {
+        return candidateRepository.findTopByUserAndCommunity(user, community)
+                .orElseThrow(() -> new EntityNotFoundException(user.getNickname() + " is not a candidate"));
     }
 
     public void makeVote(String groupname, String candidateNickname) {
-        var candidate = findCandidateOrThrowErr(groupname, candidateNickname);
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var userCandidate = userMethodsService.getUserByNicknameOrThrowErr(candidateNickname);
+        var candidate = findCandidateOrThrowErr(community, userCandidate);
         var voter = userMethodsService.getCurrentUser();
 
+        throwErrIfNotCitizenRight(community, voter);
         if (voteRepository.existsByCandidateAndVoter(candidate, voter))
-            throw new BadRequestException("User has already voted in this elections");
+            throw new BadRequestException("User has already voted in these elections");
+        if (getElectionsStatus(community.getElections()) != ElectionsStatus.IN_PROGRESS)
+            throw new BadRequestException("Elections haven't started yet");
 
         var vote = Vote.builder()
                 .candidate(candidate)
                 .voter(voter)
                 .build();
         voteRepository.save(vote);
+    }
+
+    private Candidate getCandidateAfterCheck(BiConsumer<Community, UserEntity> checkFunction, String groupname) {
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var user = userMethodsService.getCurrentUser();
+        throwErrIfNotCitizenRight(community, user);
+        checkFunction.accept(community, user);
+        return findCandidateOrThrowErr(community, user);
+    }
+
+    public void activateCandidate(String groupname) {
+        var candidate = getCandidateAfterCheck((c, u) -> {
+            throwErrIfNotCitizenRight(c, u);
+            if (getElectionsStatus(c.getElections()) != ElectionsStatus.NOT_STARTED)
+                throw new BadRequestException("Elections have been already started");
+        }, groupname);
+        candidate.setActive(true);
+        candidateRepository.save(candidate);
+    }
+
+    public void updateCandidateProgram(NewCandidateDto dto) {
+        var candidate = getCandidateAfterCheck(
+                this::throwErrIfNotCitizenRight,
+                dto.getGroupname()
+        );
+        candidate.setProgram(dto.getProgram());
+        candidateRepository.save(candidate);
+    }
+
+    public void becomeCandidate(NewCandidateDto dto) {
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(dto.getGroupname());
+        var user = userMethodsService.getCurrentUser();
+        throwErrIfNotDemocracy(community);
+        throwErrIfNotCitizenRight(community, user);
+        if (getElectionsStatus(community.getElections()) != ElectionsStatus.NOT_STARTED)
+            throw new BadRequestException("Elections have been already started");
+
+        var candidate = Candidate.builder()
+                .program(dto.getProgram())
+                .community(community)
+                .user(user)
+                .isActive(true)
+                .build();
+        candidateRepository.save(candidate);
     }
 
 
