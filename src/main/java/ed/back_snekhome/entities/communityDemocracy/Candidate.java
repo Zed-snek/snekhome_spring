@@ -35,7 +35,5 @@ public class Candidate {
     @OneToMany(mappedBy = "candidate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Vote> votes;
 
-
     private boolean isActive;
-
 }

@@ -7,10 +7,12 @@ import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.entities.communityDemocracy.Candidate;
 import ed.back_snekhome.entities.communityDemocracy.Elections;
 import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
+import ed.back_snekhome.entities.communityDemocracy.Vote;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.enums.PresidencyDataType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
+import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.repositories.community.CommunityRepository;
 import ed.back_snekhome.repositories.community.CommunityRoleRepository;
 import ed.back_snekhome.repositories.community.MembershipRepository;
@@ -114,6 +116,7 @@ public class DemocracyService {
 
     private boolean processDemocracy(Elections elections) { //method to start/finish elections | works only when someone checks community
         var nowDate = LocalDate.now();
+
         if (elections.getEndDate().isBefore(nowDate)) {
             var community = elections.getCommunity();
             var winner = candidateRepository.findCandidateWithMostVotes(community);
@@ -127,12 +130,14 @@ public class DemocracyService {
             communityRepository.save(community);
             return false;
         }
-        boolean isElectionsNow = elections.getStartDate().isAfter(nowDate);
+
+        boolean isElectionsNow = elections.getStartDate().isBefore(nowDate);
         if (isElectionsNow && !elections.isActive()) { //if elections only have started
             elections.setActive(true);
             electionsRepository.save(elections);
             voteRepository.deleteAllByCommunity(elections.getCommunity());
         }
+
         return isElectionsNow;
     }
 
@@ -183,7 +188,6 @@ public class DemocracyService {
                         .currentUserDays(getDaysAfterJoining(membership));
             }
         }
-
         return dtoBuilder.build();
     }
 
@@ -202,5 +206,28 @@ public class DemocracyService {
         elections.setCommunity(community);
         electionsRepository.save(updateElectionsDate(elections, currentPresident));
     }
+
+    private Candidate findCandidateOrThrowErr(String groupname, String candidateNickname) {
+        return candidateRepository.findTopByUserAndCommunity(
+                userMethodsService.getUserByNicknameOrThrowErr(candidateNickname),
+                communityMethodsService.getCommunityByNameOrThrowErr(groupname)
+        ).orElseThrow(() -> new EntityNotFoundException(candidateNickname + " is not a candidate"));
+    }
+
+    public void makeVote(String groupname, String candidateNickname) {
+        var candidate = findCandidateOrThrowErr(groupname, candidateNickname);
+        var voter = userMethodsService.getCurrentUser();
+
+        if (voteRepository.existsByCandidateAndVoter(candidate, voter))
+            throw new BadRequestException("User has already voted in this elections");
+
+        var vote = Vote.builder()
+                .candidate(candidate)
+                .voter(voter)
+                .build();
+        voteRepository.save(vote);
+    }
+
+
 
 }
