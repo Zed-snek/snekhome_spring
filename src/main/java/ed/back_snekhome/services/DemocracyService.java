@@ -25,7 +25,6 @@ import ed.back_snekhome.repositories.communityDemocracy.ElectionsRepository;
 import ed.back_snekhome.repositories.communityDemocracy.VoteRepository;
 import ed.back_snekhome.repositories.post.CommentaryRatingRepository;
 import ed.back_snekhome.repositories.post.PostRatingRepository;
-import ed.back_snekhome.utils.MyFunctions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 
 @Service

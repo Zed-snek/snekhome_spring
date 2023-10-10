@@ -1,6 +1,5 @@
 package ed.back_snekhome.security;
 
-import ed.back_snekhome.services.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
