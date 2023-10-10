@@ -1,5 +1,6 @@
 package ed.back_snekhome.services;
 
+import ed.back_snekhome.dto.communityDTOs.CandidateDto;
 import ed.back_snekhome.dto.communityDTOs.GeneralDemocracyDto;
 import ed.back_snekhome.dto.communityDTOs.NewCandidateDto;
 import ed.back_snekhome.entities.community.Community;
@@ -19,10 +20,10 @@ import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.community.CommunityRepository;
 import ed.back_snekhome.repositories.community.CommunityRoleRepository;
 import ed.back_snekhome.repositories.community.MembershipRepository;
-import ed.back_snekhome.repositories.communityDemocracy.PresidencyDataRepository;
-import ed.back_snekhome.repositories.communityDemocracy.CandidateRepository;
-import ed.back_snekhome.repositories.communityDemocracy.ElectionsRepository;
-import ed.back_snekhome.repositories.communityDemocracy.VoteRepository;
+import ed.back_snekhome.repositories.democracy.PresidencyDataRepository;
+import ed.back_snekhome.repositories.democracy.CandidateRepository;
+import ed.back_snekhome.repositories.democracy.ElectionsRepository;
+import ed.back_snekhome.repositories.democracy.VoteRepository;
 import ed.back_snekhome.repositories.post.CommentaryRatingRepository;
 import ed.back_snekhome.repositories.post.PostRatingRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -290,6 +293,31 @@ public class DemocracyService {
                 .isActive(true)
                 .build();
         candidateRepository.save(candidate);
+    }
+
+    public List<CandidateDto> getListOfCandidates(String groupname) {
+        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        throwErrIfNotDemocracy(community);
+
+        var status = getElectionsStatus(community.getElections());
+
+        var candidates = candidateRepository.getAllByCommunityAndIsActive(community, true);
+        return candidates.stream()
+                .map(candidate -> {
+                    var user = candidate.getUser();
+                    return CandidateDto.builder()
+                            .name(user.getName())
+                            .surname(user.getSurname())
+                            .image(userMethodsService.getTopUserImage(user))
+                            .nickname(user.getNickname())
+                            .program(candidate.getProgram())
+                            .votes(status == ElectionsStatus.IN_PROGRESS
+                                    ? 0
+                                    : voteRepository.countAllByCandidate(candidate)
+                            )
+                            .build();
+                    })
+                .collect(Collectors.toList());
     }
 
 

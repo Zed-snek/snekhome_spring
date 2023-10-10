@@ -1,4 +1,4 @@
-package ed.back_snekhome.repositories.communityDemocracy;
+package ed.back_snekhome.repositories.democracy;
 
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.communityDemocracy.Candidate;
@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CandidateRepository extends JpaRepository<Candidate, Long> {
@@ -22,4 +23,6 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
             "c.votes = (SELECT MAX(c2.votes) FROM Candidate c2 WHERE c.community = :community) " +
             "AND c.community = :community")
     Optional<Candidate> findCandidateWithMostVotes(@Param("community") Community community);
+
+    List<Candidate> getAllByCommunityAndIsActive(Community community, boolean isActive);
 }

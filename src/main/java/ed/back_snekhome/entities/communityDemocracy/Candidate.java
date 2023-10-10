@@ -21,7 +21,7 @@ public class Candidate {
     private Long id;
 
     @Column(columnDefinition = "TEXT")
-    @Size(max = 1024, message = "Program must not exceed 1024 symbols")
+    @Size(min = 5, max = 1024, message = "Program must not exceed 1024 symbols")
     private String program;
 
     @ManyToOne(fetch = FetchType.LAZY)

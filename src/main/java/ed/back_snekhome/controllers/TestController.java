@@ -1,8 +1,8 @@
 package ed.back_snekhome.controllers;
 
 import ed.back_snekhome.repositories.community.MembershipRepository;
-import ed.back_snekhome.repositories.communityDemocracy.CandidateRepository;
-import ed.back_snekhome.repositories.communityDemocracy.VoteRepository;
+import ed.back_snekhome.repositories.democracy.CandidateRepository;
+import ed.back_snekhome.repositories.democracy.VoteRepository;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.services.CommunityMethodsService;
 import ed.back_snekhome.services.DemocracyService;

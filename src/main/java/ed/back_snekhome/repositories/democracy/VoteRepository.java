@@ -1,4 +1,4 @@
-package ed.back_snekhome.repositories.communityDemocracy;
+package ed.back_snekhome.repositories.democracy;
 
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.communityDemocracy.Candidate;
@@ -16,5 +16,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     void deleteAllByCommunity(@Param("community") Community community);
 
     boolean existsByCandidateAndVoter(Candidate candidate, UserEntity voter);
+
+    int countAllByCandidate(Candidate candidate);
 
 }

@@ -16,7 +16,7 @@ import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityAlreadyExistsException;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.community.*;
-import ed.back_snekhome.repositories.communityDemocracy.*;
+import ed.back_snekhome.repositories.democracy.*;
 import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.utils.MyFunctions;
 import lombok.RequiredArgsConstructor;
