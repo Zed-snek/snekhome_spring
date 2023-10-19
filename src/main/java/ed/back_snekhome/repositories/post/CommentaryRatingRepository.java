@@ -16,6 +16,7 @@ public interface CommentaryRatingRepository extends JpaRepository<CommentaryRati
     int countByCommentaryAndType(Commentary commentary, RatingType type);
     Optional<CommentaryRating> getTopByCommentaryAndUser(Commentary commentary, UserEntity user);
 
-    @Query("SELECT COUNT(r) FROM CommentaryRating r WHERE r.user = :user AND r.commentary.post.community = :community")
+    @Query("SELECT COUNT(r) FROM CommentaryRating r WHERE r.commentary.user = :user " +
+            "AND r.commentary.post.community = :community")
     int countAllByCommunityAndUser(@Param("community") Community community, @Param("user") UserEntity user);
 }

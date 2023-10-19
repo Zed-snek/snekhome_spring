@@ -15,7 +15,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Optional<Post> getByIdPost(Long idPost);
 
     List<Post> getPostsByUserOrderByIdPostDesc(UserEntity user, Pageable pageable);
-    List<Post> getPostsByUserAndIsAnonymousOrderByIdPostDesc(UserEntity user, boolean isAnonymous, Pageable pageable);
+
+
+    List<Post> getPostsByUserAndIsAnonymousFalseAndCommunity_IsClosedFalseOrderByIdPostDesc(UserEntity user, Pageable pageable);
 
     List<Post> getPostsByCommunityOrderByIdPostDesc(Community community, Pageable pageable);
 
@@ -25,10 +27,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             Pageable pageable
     );
 
-    @Query("SELECT p FROM Post p WHERE p.isAnonymous = false AND p.user = :user AND " +
-            "(p.community.isClosed = false OR p.community IN :communities) " +
+    @Query("SELECT p FROM Post p WHERE p.isAnonymous = false AND p.user = :user " +
+            "AND (p.community.isClosed = false OR p.community IN :communities) " +
             "ORDER BY p.idPost DESC")
-    List<Post> getPostsByNotCurrentUserOrderByIdPostDesc(
+    List<Post> getPostsByNotCurrentUser(
             @Param("user") UserEntity user,
             @Param("communities") List<Community> communities,
             Pageable pageable

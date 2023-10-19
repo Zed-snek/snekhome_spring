@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,12 +42,18 @@ public class MembershipService {
         var current = userMethodsService.getCurrentUser();
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         var optional = membershipRepository.findByCommunityAndUser(community, current);
-        if (optional.isPresent() && optional.get().isBanned()) {
-            throw new UnauthorizedException("You are banned");
-        }
+
+        optional.ifPresent(m -> {
+            if (m.isBanned())
+                throw new UnauthorizedException("You are banned");
+            else
+                throw new BadRequestException("You are already a member");
+        });
+
         var membership = Membership.builder()
                 .user(current)
                 .community(community)
+                .joined(LocalDate.now())
                 .build();
         if (community.getOwner().equals(current))
             membership.setRole(communityRoleRepository.findTopByCommunityAndIsCreator(community, true)

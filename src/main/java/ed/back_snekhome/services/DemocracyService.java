@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -85,11 +86,15 @@ public class DemocracyService {
 
         if (optionalMembership.isPresent()) {
             var membership = optionalMembership.get();
+            var optRole = optionalMembership.map(Membership::getRole);
+            if (optRole.isPresent() && optRole.get().isCreator())
+                return true;
+
             var citizenParameters = community.getCitizenParameters();
             if (getDaysAfterJoining(membership) >= citizenParameters.getDays()
                     && getRating(community, membership.getUser()) >= citizenParameters.getRating()
             ) {
-                if (optionalMembership.map(Membership::getRole).isEmpty()) { //if citizen rights, but user doesn't have a role, grants him a role
+                if (optRole.isEmpty()) { //if citizen rights, but user doesn't have a role, grants him a role
                     membership.setRole(getCitizenRole(community));
                     membershipRepository.save(membership);
                 }
@@ -145,7 +150,7 @@ public class DemocracyService {
                 community.setOwner(candidate.getUser());
             });
             clearPresidencyDataByCommunity(community);
-            candidateRepository.makeAllCandidatesInActive(community);
+            candidateRepository.makeAllCandidatesInactive(community);
 
             communityRepository.save(community);
             return false;
@@ -164,14 +169,42 @@ public class DemocracyService {
     @Transactional
     public GeneralDemocracyDto getGeneralDemocracyData(String groupname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getCurrentUser();
         throwErrIfNotDemocracy(community);
 
-        var optMembership = membershipMethodsService.getOptionalMembershipOfUser(community, user);
+        Optional<Membership> optMembership;
+        UserEntity user = null;
+        if (userMethodsService.isContextUser()) {
+            user = userMethodsService.getCurrentUser();
+            optMembership = membershipMethodsService.getOptionalMembershipOfUser(community, user);
+        }
+        else {
+            optMembership = Optional.empty();
+        }
         communityMethodsService.throwErrIfNoAccessToCommunity(community, optMembership);
+
         var elections = community.getElections();
 
         var dtoBuilder = GeneralDemocracyDto.builder();
+
+        if (optMembership.isPresent()) { //if not user, membership is empty
+            var membership = optMembership.get();
+
+            boolean isRight = isCitizenRight(community, user);
+            dtoBuilder.isCitizenRight(isRight); // is citizen rights
+
+            if (isRight) {
+                candidateRepository.findTopByUserAndCommunity(user, community)
+                        .ifPresent(candidate -> {
+                                    dtoBuilder.currentUserProgram(candidate.getProgram());
+                                    dtoBuilder.isCurrentUserActiveCandidate(candidate.isActive());
+                        });
+            }
+            else {
+                dtoBuilder
+                        .currentUserRating(getRating(community, user))
+                        .currentUserDays(getDaysAfterJoining(membership));
+            }
+        }
 
         boolean isElectionsNow = processDemocracy(elections);
         dtoBuilder
@@ -186,28 +219,6 @@ public class DemocracyService {
 
         dtoBuilder.currentPresidentProgram(elections.getCurrentPresident().getProgram());
 
-        if (optMembership.isPresent()) {
-            var membership = optMembership.get();
-
-            boolean isRight = isCitizenRight(community, user);
-            dtoBuilder.isCitizenRight(isRight); // is citizen rights
-
-            if (isRight) {
-                candidateRepository.findTopByUserAndCommunity(user, community)
-                        .ifPresentOrElse(
-                                candidate -> {
-                                    dtoBuilder.currentUserProgram(candidate.getProgram());
-                                    dtoBuilder.isCurrentUserActiveCandidate(candidate.isActive());
-                                },
-                                () -> dtoBuilder.isCurrentUserActiveCandidate(false)
-                        );
-            }
-            else {
-                dtoBuilder
-                        .currentUserRating(getRating(community, user))
-                        .currentUserDays(getDaysAfterJoining(membership));
-            }
-        }
         return dtoBuilder.build();
     }
 
@@ -301,7 +312,7 @@ public class DemocracyService {
 
         var status = getElectionsStatus(community.getElections());
 
-        var candidates = candidateRepository.getAllByCommunityAndIsActive(community, true);
+        var candidates = candidateRepository.getAllByCommunityAndIsActiveTrue(community);
         return candidates.stream()
                 .map(candidate -> {
                     var user = candidate.getUser();

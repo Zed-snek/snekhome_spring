@@ -12,7 +12,7 @@ import java.time.LocalDate;
 public class GeneralDemocracyDto {
 
     private int currentUserRating;
-    private int currentUserDays;;
+    private int currentUserDays;
     private boolean isCitizenRight;
 
     private int citizenAmount;

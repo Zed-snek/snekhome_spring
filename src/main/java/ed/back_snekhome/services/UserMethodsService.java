@@ -25,21 +25,26 @@ public class UserMethodsService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
+
     public UserEntity getUserByNicknameOrThrowErr(String nickname) {
         return userRepository.findByNicknameIgnoreCase(nickname)
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
+
     public UserEntity getCurrentUser() {
         return userRepository.findByEmailIgnoreCase(SecurityContextHolder.getContext().getAuthentication().getName())
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
+
     public boolean isContextUser() {
         String s = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toArray()[0].toString();
         return !s.equals("ROLE_ANONYMOUS");
     }
+
     public boolean isCurrentUserEqual(UserEntity user2) {
-        return getCurrentUser().equals(user2);
+        return isContextUser() && getCurrentUser().equals(user2);
     }
+
     public void throwErrIfExistsByNickname(String nickname) {
         if (userRepository.existsByNicknameIgnoreCase(nickname)
                 || communityRepository.existsByGroupnameIgnoreCase(nickname)) {

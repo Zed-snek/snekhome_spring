@@ -17,12 +17,13 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
 
     @Modifying
     @Query("UPDATE Candidate c SET c.isActive = false WHERE c.community = :community")
-    void makeAllCandidatesInActive(@Param("community") Community community);
+    void makeAllCandidatesInactive(@Param("community") Community community);
 
     @Query("SELECT c FROM Candidate c WHERE " +
             "c.votes = (SELECT MAX(c2.votes) FROM Candidate c2 WHERE c.community = :community) " +
             "AND c.community = :community")
     Optional<Candidate> findCandidateWithMostVotes(@Param("community") Community community);
 
-    List<Candidate> getAllByCommunityAndIsActive(Community community, boolean isActive);
+    List<Candidate> getAllByCommunityAndIsActiveTrue(Community community);
+
 }

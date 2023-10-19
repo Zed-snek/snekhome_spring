@@ -266,27 +266,25 @@ public class PostService {
         boolean isCurrentUser = isContext && userMethodsService.isCurrentUserEqual(user);
 
         List<Post> posts;
-        if (isCurrentUser)
+        if (isCurrentUser) {
             posts = postRepository.getPostsByUserOrderByIdPostDesc(user, pageable);
+        }
         else if (isContext) {
             var currentUser = userMethodsService.getCurrentUser();
-            List<Community> communities = communityRepository.getCommunitiesByUser(currentUser);
-            posts = postRepository.getPostsByNotCurrentUserOrderByIdPostDesc(user, communities, pageable);
+            List<Community> communities = communityRepository.getClosedCommunitiesByUser(currentUser);
+            posts = postRepository.getPostsByNotCurrentUser(user, communities, pageable);
         }
         else {
-            posts = postRepository.getPostsByUserAndIsAnonymousOrderByIdPostDesc(user, false, pageable);
+            posts = postRepository
+                    .getPostsByUserAndIsAnonymousFalseAndCommunity_IsClosedFalseOrderByIdPostDesc(user, pageable);
         }
 
-        var array = new ArrayList<PostDto>();
-        for (Post post : posts) {
-            if (!(post.isAnonymous() && !isCurrentUser)) {
-                array.add(setPostItemInfo(post, true, false)
-                            .isCurrentUserAuthor(isCurrentUser)
-                            .build()
-                );
-            }
-        }
-        return array;
+        return posts.stream()
+                .map(post ->
+                        setPostItemInfo(post, true, false)
+                        .isCurrentUserAuthor(isCurrentUser)
+                        .build())
+                .toList();
     }
 
     public List<PostDto> getPostDtoListByCommunity(String groupname, int pageNumber, int pageSize) {
@@ -296,8 +294,7 @@ public class PostService {
 
         var user = userMethodsService.isContextUser() ? userMethodsService.getCurrentUser() : null;
 
-        var array = new ArrayList<PostDto>();
-        for (Post post : posts) {
+        return posts.stream().map(post -> {
             var dto = setPostItemInfo(post, false, !post.isAnonymous());
             dto.isCurrentUserAuthor(post.getUser().equals(user));
             if (!post.isAnonymous()) {
@@ -311,9 +308,8 @@ public class PostService {
                             .roleTitle(role.getTitle());
                 }
             }
-            array.add(dto.build());
-        }
-        return array;
+            return dto.build();
+        }).toList();
     }
 
     public List<PostDto> getPostDtoListHome(int pageNumber, int pageSize) {

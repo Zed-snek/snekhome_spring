@@ -24,7 +24,7 @@ public class DemocracyController {
         return democracyService.getGeneralDemocracyData(name);
     }
 
-    @PostMapping("/democracy/vote/{groupname}")
+    @PostMapping("/auth/democracy/vote/{groupname}")
     public ResponseEntity<OwnSuccessResponse> makeVote(
             @RequestParam(name = "nickname") String candidateNickname,
             @PathVariable String groupname
@@ -35,7 +35,7 @@ public class DemocracyController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping("/democracy/candidate/{groupname}/activate")
+    @PutMapping("/auth/democracy/candidate/{groupname}/activate")
     public ResponseEntity<OwnSuccessResponse> activateCandidate(@PathVariable String groupname) {
         democracyService.activateCandidate(groupname);
 
@@ -43,8 +43,8 @@ public class DemocracyController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PostMapping("/democracy/candidate")
-    public ResponseEntity<OwnSuccessResponse> newCandidate(@ModelAttribute NewCandidateDto dto) {
+    @PostMapping("/auth/democracy/candidate")
+    public ResponseEntity<OwnSuccessResponse> newCandidate(@RequestBody NewCandidateDto dto) {
 
         democracyService.becomeCandidate(dto);
 
@@ -52,8 +52,8 @@ public class DemocracyController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping("/democracy/candidate")
-    public ResponseEntity<OwnSuccessResponse> updateCandidateProgram(@ModelAttribute NewCandidateDto dto) {
+    @PutMapping("/auth/democracy/candidate")
+    public ResponseEntity<OwnSuccessResponse> updateCandidateProgram(@RequestBody NewCandidateDto dto) {
 
         democracyService.updateCandidateProgram(dto);
 
