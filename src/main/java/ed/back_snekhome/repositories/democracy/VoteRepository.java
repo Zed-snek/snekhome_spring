@@ -4,6 +4,7 @@ import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.communityDemocracy.Candidate;
 import ed.back_snekhome.entities.communityDemocracy.Vote;
 import ed.back_snekhome.entities.user.UserEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,5 +19,11 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     boolean existsByCandidateAndVoter(Candidate candidate, UserEntity voter);
 
     int countAllByCandidate(Candidate candidate);
+
+
+    @Query("SELECT COUNT(v) FROM Vote v WHERE v.candidate.community = :community")
+    int countAllByCommunity(@Param("community") Community community);
+
+
 
 }

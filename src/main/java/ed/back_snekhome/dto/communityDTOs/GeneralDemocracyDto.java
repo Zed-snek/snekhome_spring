@@ -15,7 +15,6 @@ public class GeneralDemocracyDto {
     private int currentUserDays;
     private boolean isCitizenRight;
 
-    private int citizenAmount;
     private int bannedUsersStats;
     private int bannedCitizensStats;
     private int deletedPostsStats;

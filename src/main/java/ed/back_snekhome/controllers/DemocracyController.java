@@ -1,6 +1,6 @@
 package ed.back_snekhome.controllers;
 
-import ed.back_snekhome.dto.communityDTOs.CandidateDto;
+import ed.back_snekhome.dto.communityDTOs.CandidateListDto;
 import ed.back_snekhome.dto.communityDTOs.GeneralDemocracyDto;
 import ed.back_snekhome.dto.communityDTOs.NewCandidateDto;
 import ed.back_snekhome.response.OwnSuccessResponse;
@@ -9,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -62,7 +60,7 @@ public class DemocracyController {
     }
 
     @GetMapping("/democracy/candidates/{groupname}")
-    public List<CandidateDto> getCandidateList(@PathVariable String groupname) {
+    public CandidateListDto getCandidateList(@PathVariable String groupname) {
 
         return democracyService.getListOfCandidates(groupname);
     }

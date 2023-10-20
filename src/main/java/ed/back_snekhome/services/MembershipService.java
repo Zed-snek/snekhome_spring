@@ -140,7 +140,7 @@ public class MembershipService {
         var userMembership = canBanUser(community, userEntity);
         userMembership.setBanned(true);
 
-        if (userMembership.getRole() != null && userMembership.getRole().isCitizen())
+        if (democracyService.isCitizenRight(community, userEntity))
             democracyService.addStatsToPresidency(community, PresidencyDataType.BANNED_CITIZEN);
         else
             democracyService.addStatsToPresidency(community, PresidencyDataType.BANNED_USER);

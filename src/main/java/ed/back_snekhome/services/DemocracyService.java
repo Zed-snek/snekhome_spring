@@ -1,6 +1,7 @@
 package ed.back_snekhome.services;
 
 import ed.back_snekhome.dto.communityDTOs.CandidateDto;
+import ed.back_snekhome.dto.communityDTOs.CandidateListDto;
 import ed.back_snekhome.dto.communityDTOs.GeneralDemocracyDto;
 import ed.back_snekhome.dto.communityDTOs.NewCandidateDto;
 import ed.back_snekhome.entities.community.Community;
@@ -87,7 +88,7 @@ public class DemocracyService {
         if (optionalMembership.isPresent()) {
             var membership = optionalMembership.get();
             var optRole = optionalMembership.map(Membership::getRole);
-            if (optRole.isPresent() && optRole.get().isCreator())
+            if (optRole.isPresent() && (optRole.get().isCreator() || optRole.get().isCitizen()))
                 return true;
 
             var citizenParameters = community.getCitizenParameters();
@@ -145,10 +146,12 @@ public class DemocracyService {
         if (status == ElectionsStatus.FINISHED) {
             var community = elections.getCommunity();
             var winner = candidateRepository.findCandidateWithMostVotes(community);
-            winner.ifPresent(candidate -> { //(if 0 votes, leaves the same president)
-                updateElectionsDate(elections, candidate);
-                community.setOwner(candidate.getUser());
-            });
+
+            //(if 0 votes, leaves the same president)
+            var candidate = winner.orElse(elections.getCurrentPresident());
+            community.setOwner(candidate.getUser());
+            updateElectionsDate(elections, candidate);
+
             clearPresidencyDataByCommunity(community);
             candidateRepository.makeAllCandidatesInactive(community);
 
@@ -214,8 +217,7 @@ public class DemocracyService {
         var presidencyData = getPresidencyDataByCommunity(community);
         dtoBuilder.bannedUsersStats(presidencyData.getBannedUsers())
                 .bannedCitizensStats(presidencyData.getBannedCitizens())
-                .deletedPostsStats(presidencyData.getDeletedPosts())
-                .citizenAmount(membershipRepository.countCitizensByCommunity(community));
+                .deletedPostsStats(presidencyData.getDeletedPosts());
 
         dtoBuilder.currentPresidentProgram(elections.getCurrentPresident().getProgram());
 
@@ -306,29 +308,37 @@ public class DemocracyService {
         candidateRepository.save(candidate);
     }
 
-    public List<CandidateDto> getListOfCandidates(String groupname) {
+    public CandidateListDto getListOfCandidates(String groupname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         throwErrIfNotDemocracy(community);
 
         var status = getElectionsStatus(community.getElections());
 
         var candidates = candidateRepository.getAllByCommunityAndIsActiveTrue(community);
-        return candidates.stream()
-                .map(candidate -> {
-                    var user = candidate.getUser();
-                    return CandidateDto.builder()
-                            .name(user.getName())
-                            .surname(user.getSurname())
-                            .image(userMethodsService.getTopUserImage(user))
-                            .nickname(user.getNickname())
-                            .program(candidate.getProgram())
-                            .votes(status == ElectionsStatus.IN_PROGRESS
-                                    ? 0
-                                    : voteRepository.countAllByCandidate(candidate)
-                            )
-                            .build();
-                    })
-                .collect(Collectors.toList());
+        return CandidateListDto.builder()
+            .candidates(
+                    candidates.stream()
+                            .map(candidate -> {
+                                var user = candidate.getUser();
+                                return CandidateDto.builder()
+                                        .name(user.getName())
+                                        .surname(user.getSurname())
+                                        .image(userMethodsService.getTopUserImage(user))
+                                        .nickname(user.getNickname())
+                                        .program(candidate.getProgram())
+                                        .votes(status == ElectionsStatus.IN_PROGRESS
+                                                ? 0
+                                                : voteRepository.countAllByCandidate(candidate)
+                                        )
+                                        .build();
+                                })
+                            .collect(Collectors.toList())
+            )
+            .totalVotes(status == ElectionsStatus.IN_PROGRESS
+                    ? 0
+                    : voteRepository.countAllByCommunity(community)
+            )
+            .build();
     }
 
 

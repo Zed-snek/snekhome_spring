@@ -3,6 +3,8 @@ package ed.back_snekhome.repositories.democracy;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.communityDemocracy.Candidate;
 import ed.back_snekhome.entities.user.UserEntity;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,11 +21,16 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     @Query("UPDATE Candidate c SET c.isActive = false WHERE c.community = :community")
     void makeAllCandidatesInactive(@Param("community") Community community);
 
-    @Query("SELECT c FROM Candidate c WHERE " +
-            "c.votes = (SELECT MAX(c2.votes) FROM Candidate c2 WHERE c.community = :community) " +
-            "AND c.community = :community")
-    Optional<Candidate> findCandidateWithMostVotes(@Param("community") Community community);
 
     List<Candidate> getAllByCommunityAndIsActiveTrue(Community community);
+
+
+    @Query("SELECT c FROM Candidate c " +
+            "JOIN c.votes v " +
+            "WHERE c.community = :community " +
+            "GROUP BY c ORDER BY COUNT(v) DESC")
+    Optional<Candidate> findCandidateWithMostVotes(
+            @Param("community") Community community
+    );
 
 }
