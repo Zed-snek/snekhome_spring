@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface VoteRepository extends JpaRepository<Vote, Long> {
 
     @Modifying
@@ -20,10 +22,15 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
 
     int countAllByCandidate(Candidate candidate);
 
-
     @Query("SELECT COUNT(v) FROM Vote v WHERE v.candidate.community = :community")
     int countAllByCommunity(@Param("community") Community community);
 
+    @Query("SELECT v.candidate FROM Vote v " +
+            "WHERE v.voter = :voter AND v.candidate.community = :community")
+    Optional<Candidate> getCandidateByCommunityAndVoter(
+            @Param("community") Community community,
+            @Param("voter") UserEntity voter
+    );
 
 
 }

@@ -312,33 +312,49 @@ public class DemocracyService {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         throwErrIfNotDemocracy(community);
 
+        var membership = membershipMethodsService.getOptionalMembershipOfCurrentUser(community);
+        communityMethodsService.throwErrIfNoAccessToCommunity(community, membership);
+
         var status = getElectionsStatus(community.getElections());
 
         var candidates = candidateRepository.getAllByCommunityAndIsActiveTrue(community);
+
+        Long votedId = (long) -1;
+        if (userMethodsService.isContextUser()) {
+            var candidate = voteRepository.getCandidateByCommunityAndVoter(
+                    community,
+                    userMethodsService.getCurrentUser()
+            );
+
+            if (candidate.isPresent())
+                votedId = candidate.get().getId();
+        }
+
         return CandidateListDto.builder()
-            .candidates(
-                    candidates.stream()
-                            .map(candidate -> {
-                                var user = candidate.getUser();
-                                return CandidateDto.builder()
-                                        .name(user.getName())
-                                        .surname(user.getSurname())
-                                        .image(userMethodsService.getTopUserImage(user))
-                                        .nickname(user.getNickname())
-                                        .program(candidate.getProgram())
-                                        .votes(status == ElectionsStatus.IN_PROGRESS
-                                                ? 0
-                                                : voteRepository.countAllByCandidate(candidate)
-                                        )
-                                        .build();
-                                })
-                            .collect(Collectors.toList())
-            )
-            .totalVotes(status == ElectionsStatus.IN_PROGRESS
-                    ? 0
-                    : voteRepository.countAllByCommunity(community)
-            )
-            .build();
+                .candidates(
+                        candidates.stream()
+                                .map(candidate -> {
+                                    var user = candidate.getUser();
+                                    return CandidateDto.builder()
+                                            .name(user.getName())
+                                            .surname(user.getSurname())
+                                            .image(userMethodsService.getTopUserImage(user))
+                                            .nickname(user.getNickname())
+                                            .program(candidate.getProgram())
+                                            .votes(status == ElectionsStatus.IN_PROGRESS
+                                                    ? 0
+                                                    : voteRepository.countAllByCandidate(candidate)
+                                            )
+                                            .build();
+                                    })
+                                .collect(Collectors.toList())
+                )
+                .totalVotes(status == ElectionsStatus.IN_PROGRESS
+                        ? 0
+                        : voteRepository.countAllByCommunity(community)
+                )
+                .votedId(votedId)
+                .build();
     }
 
 

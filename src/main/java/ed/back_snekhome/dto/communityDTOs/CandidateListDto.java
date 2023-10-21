@@ -12,5 +12,6 @@ import java.util.List;
 public class CandidateListDto {
 
     private int totalVotes;
+    private Long votedId;
     private List<CandidateDto> candidates;
 }
