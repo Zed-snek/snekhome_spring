@@ -35,6 +35,4 @@ public class Elections {
     private Candidate currentPresident;
 
 
-    private boolean isActive;
-
 }

@@ -32,19 +32,15 @@ public class CommentaryService {
 
     @Transactional
     public Long newComment(Long id, NewCommentaryDto dto) {
-        var user = userMethodsService.getCurrentUser();
         var comment = Commentary.builder()
                 .post(postService.getPostById(id))
-                .user(user)
                 .text(dto.getText())
                 .referenceId(dto.getReferenceId())
-                .date(LocalDateTime.now())
                 .build();
         commentaryRepository.save(comment);
 
         var rating = CommentaryRating.builder()
                 .commentary(comment)
-                .user(user)
                 .type(RatingType.UPVOTE)
                 .build();
 
@@ -84,19 +80,20 @@ public class CommentaryService {
 
     private CommentaryRating findCommentaryRatingOrCreate(Commentary commentary) {
         var currentUser = userMethodsService.getCurrentUser();
-        var rating = commentaryRatingRepository.getTopByCommentaryAndUser(commentary, currentUser);
-        if (rating.isEmpty())
-            return CommentaryRating.builder()
-                    .commentary(commentary)
-                    .user(currentUser)
-                    .build();
-        else
-            return rating.get();
+
+        return commentaryRatingRepository
+                .getTopByCommentaryAndUser(commentary, currentUser)
+                .orElse(CommentaryRating.builder()
+                        .commentary(commentary)
+                        .build()
+                );
     }
+
     private int countRating(Commentary comment) {
         return commentaryRatingRepository.countByCommentaryAndType(comment, RatingType.UPVOTE)
                 - commentaryRatingRepository.countByCommentaryAndType(comment, RatingType.DOWNVOTE);
     }
+
     private RatingType getRatedType(Commentary comment, UserEntity user) {
         var rating =
                 commentaryRatingRepository.getTopByCommentaryAndUser(comment, user);

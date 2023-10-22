@@ -160,8 +160,7 @@ public class DemocracyService {
         }
 
         boolean isElectionsNow = status == ElectionsStatus.IN_PROGRESS;
-        if (isElectionsNow && !elections.isActive()) { //if elections just have started
-            elections.setActive(true);
+        if (isElectionsNow) { //if elections just have started
             electionsRepository.save(elections);
             voteRepository.deleteAllByCommunity(elections.getCommunity());
         }
@@ -259,7 +258,6 @@ public class DemocracyService {
 
         var vote = Vote.builder()
                 .candidate(candidate)
-                .voter(voter)
                 .build();
         voteRepository.save(vote);
     }
@@ -302,7 +300,6 @@ public class DemocracyService {
         var candidate = Candidate.builder()
                 .program(dto.getProgram())
                 .community(community)
-                .user(user)
                 .isActive(true)
                 .build();
         candidateRepository.save(candidate);

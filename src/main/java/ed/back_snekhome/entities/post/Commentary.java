@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +18,7 @@ import java.util.List;
 @Setter
 @Builder
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Commentary {
 
     @Id
@@ -27,6 +31,7 @@ public class Commentary {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_account")
     @JsonIgnore
+    @CreatedBy
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -39,6 +44,8 @@ public class Commentary {
     private List<CommentaryRating> ratings;
 
     private Long referenceId;
+
+    @CreatedDate
     private LocalDateTime date;
 
 }

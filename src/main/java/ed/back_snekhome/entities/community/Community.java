@@ -12,6 +12,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,6 +26,7 @@ import java.util.List;
 @Setter
 @Builder
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Community {
 
 
@@ -45,6 +49,7 @@ public class Community {
     @OneToMany(mappedBy = "community", fetch = FetchType.LAZY, cascade = CascadeType.ALL) //LAZY = loads only when is required. EAGER = loads all elements
     private List<CommunityImage> images;
 
+    @CreatedDate
     private LocalDate creation;
 
     @Enumerated(EnumType.STRING)
@@ -53,6 +58,7 @@ public class Community {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_account")
     @JsonIgnore
+    @CreatedBy
     private UserEntity owner;
 
     @OneToMany(mappedBy = "community", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

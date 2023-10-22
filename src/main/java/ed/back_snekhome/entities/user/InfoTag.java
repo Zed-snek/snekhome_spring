@@ -2,17 +2,17 @@ package ed.back_snekhome.entities.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class InfoTag {
 
     @Id
@@ -22,6 +22,7 @@ public class InfoTag {
     @ManyToOne(optional = false)
     @JoinColumn(name = "id_account")
     @JsonIgnore
+    @CreatedBy
     private UserEntity user;
 
     private String title;

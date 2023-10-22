@@ -6,6 +6,8 @@ import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.RatingType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Table
@@ -14,6 +16,7 @@ import lombok.*;
 @Setter
 @Builder
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class PostRating extends Rating {
 
     @Id
@@ -27,6 +30,7 @@ public class PostRating extends Rating {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_account")
     @JsonIgnore
+    @CreatedBy
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)

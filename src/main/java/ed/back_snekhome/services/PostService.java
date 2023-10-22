@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,9 +68,7 @@ public class PostService {
             throw new BadRequestException("Images limit");
 
         var post = Post.builder()
-                .date(LocalDateTime.now())
                 .community(community)
-                .user(user)
                 .text(dto.getText())
                 .isAnonymous(isAnon)
                 .build();
@@ -125,6 +122,7 @@ public class PostService {
         return postRatingRepository.countByPostAndType(post, RatingType.UPVOTE)
                 - postRatingRepository.countByPostAndType(post, RatingType.DOWNVOTE);
     }
+
     private RatingType getRatedType(Post post) {
         if (userMethodsService.isContextUser()) {
             var rating =
@@ -168,14 +166,12 @@ public class PostService {
 
     private PostRating findPostRatingOrCreate(Post post) {
         var currentUser = userMethodsService.getCurrentUser();
-        var rating = postRatingRepository.getTopByPostAndUser(post, currentUser);
-        if (rating.isEmpty())
-            return PostRating.builder()
-                    .post(post)
-                    .user(currentUser)
-                    .build();
-        else
-            return rating.get();
+
+        return postRatingRepository
+                .getTopByPostAndUser(post, currentUser)
+                .orElse(PostRating.builder()
+                        .post(post)
+                        .build());
     }
 
     public void ratePost(Long id, RatingType newStatus) {
@@ -220,6 +216,7 @@ public class PostService {
     private int countComments(Post post) {
         return commentaryRepository.countAllByPost(post);
     }
+
     private List<CommentaryDto> get2CommentsByPost(Post post) {
         Long ref = (long) -1;
         List<Commentary> list;

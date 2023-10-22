@@ -32,7 +32,6 @@ public class CommunityLogService {
 
     private CommunityLog.CommunityLogBuilder builder(UserEntity actor, Community community) {
         return CommunityLog.builder()
-                .date(LocalDateTime.now())
                 .actionUser(actor)
                 .community(community);
     }
@@ -66,7 +65,10 @@ public class CommunityLogService {
                     .message(log.getMessage())
                     .logType(log.getLogType())
                     .actionNickname(log.getActionUser().getNickname())
-                    .secondNickname(log.getSecondUser() != null ? log.getSecondUser().getNickname() : null)
+                    .secondNickname(log.getSecondUser() != null
+                            ? log.getSecondUser().getNickname()
+                            : null
+                    )
                     .build()));
             return dtoList;
         }

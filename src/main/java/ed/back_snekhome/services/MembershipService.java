@@ -51,9 +51,7 @@ public class MembershipService {
         });
 
         var membership = Membership.builder()
-                .user(current)
                 .community(community)
-                .joined(LocalDate.now())
                 .build();
         if (community.getOwner().equals(current))
             membership.setRole(communityRoleRepository.findTopByCommunityAndIsCreator(community, true)
@@ -204,7 +202,6 @@ public class MembershipService {
 
         var newRequest = JoinRequest.builder()
                 .community(community)
-                .user(user)
                 .build();
         joinRequestRepository.save(newRequest);
         return "Request is sent successfully";

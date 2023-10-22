@@ -6,6 +6,8 @@ import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.LogType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class CommunityLog {
 
     @Id
@@ -42,6 +45,7 @@ public class CommunityLog {
 
     private String message;
 
+    @CreatedDate
     private LocalDateTime date;
 
 }

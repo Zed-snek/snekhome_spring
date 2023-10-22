@@ -14,5 +14,4 @@ public class BackSnekhomeApplication {
         SpringApplication.run(BackSnekhomeApplication.class, args);
     }
 
-
 }

@@ -5,6 +5,8 @@ import ed.back_snekhome.entities.user.UserEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.List;
 
@@ -14,6 +16,7 @@ import java.util.List;
 @Setter
 @Builder
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Candidate {
 
     @Id
@@ -26,6 +29,7 @@ public class Candidate {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user")
+    @CreatedBy
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)

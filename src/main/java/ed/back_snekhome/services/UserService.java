@@ -57,7 +57,6 @@ public class UserService {
         String newName = fileService.uploadImageNameReturned(file);
         var userImage = UserImage.builder()
                 .name(newName)
-                .user(userMethodsService.getCurrentUser())
                 .build();
         userImageRepository.save(userImage);
 
@@ -81,6 +80,7 @@ public class UserService {
         friends += friendshipRepository.countAllByIdSecondUserAndIsFirstUserAndIsSecondUser(id, true, true);
         return friends;
     }
+
     private int countCommunities(UserEntity user) {
         int communities = 0;
         communities += membershipRepository.countAllByUserAndIsBanned(user, false);
@@ -89,7 +89,6 @@ public class UserService {
 
 
     public UserPublicDto getUserInfo(String nickname) {
-
         var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
 
         var dto = UserPublicDto.builder()
@@ -123,16 +122,14 @@ public class UserService {
                 .build();
     }
 
-
     public void newTag(TagDto tagDto) {
         var infoTag = InfoTag.builder()
-                .user(userMethodsService.getCurrentUser())
                 .title(tagDto.getTitle())
                 .text(tagDto.getText())
                 .build();
-
         infoTagRepository.save(infoTag);
     }
+
     public void updateTag(TagDto tagDto) {
         var tag = infoTagRepository.findById(tagDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
@@ -140,6 +137,7 @@ public class UserService {
         tag.setTitle(tagDto.getTitle());
         infoTagRepository.save(tag);
     }
+
     public void delTag(Long id) {
         var tag = infoTagRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));

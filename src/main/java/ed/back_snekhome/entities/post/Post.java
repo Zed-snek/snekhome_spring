@@ -7,6 +7,9 @@ import ed.back_snekhome.entities.user.UserEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,6 +20,7 @@ import java.util.List;
 @Setter
 @Builder
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Post {
 
     @Id
@@ -42,6 +46,7 @@ public class Post {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_account")
     @JsonIgnore
+    @CreatedBy
     private UserEntity user;
 
     private boolean isAnonymous;
@@ -50,6 +55,7 @@ public class Post {
     @Size(max = 2048, message = "Text length should not exceed 2048 symbols")
     private String text;
 
+    @CreatedDate
     private LocalDateTime date;
 
 }

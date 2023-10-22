@@ -55,9 +55,7 @@ public class CommunityService {
 
     @Transactional
     public void newCommunity(NewCommunityDto dto) {
-        var owner = userMethodsService.getCurrentUser();
 
-        var nowDate = LocalDate.now();
         var community = Community.builder()
                 .type(dto.getType())
                 .groupname(dto.getIdName())
@@ -65,15 +63,12 @@ public class CommunityService {
                 .description(dto.getDescription())
                 .isInviteUsers(dto.isInviteUsers())
                 .isClosed(dto.isClosed())
-                .owner(owner)
-                .creation(nowDate)
                 .build();
         if (dto.getType() == CommunityType.NEWSPAPER)
             community.setAnonAllowed(false);
         else
             community.setAnonAllowed(dto.isAnonAllowed());
         communityRepository.save(community);
-
 
         var ownerRoleBuilder = CommunityRole.builder()
                 .community(community)
@@ -98,22 +93,19 @@ public class CommunityService {
         communityRoleRepository.save(ownerRole);
 
         var membership = Membership.builder()
-                .user(owner)
                 .community(community)
-                .joined(nowDate)
                 .role(ownerRole)
                 .build();
         membershipRepository.save(membership);
 
         if (dto.getType() == CommunityType.DEMOCRACY)
-            createStartDemocracyData(community, dto, owner);
+            createStartDemocracyData(community, dto);
     }
 
     @Transactional
     public void createStartDemocracyData(
             Community community,
-            NewCommunityDto dto,
-            UserEntity user
+            NewCommunityDto dto
     ) {
         var citizenRole = CommunityRole.builder()
                 .title(dto.getTitle())
@@ -139,7 +131,6 @@ public class CommunityService {
         presidencyDataRepository.save(presidencyData);
 
         var currentPresident = Candidate.builder()
-                .user(user)
                 .isActive(false)
                 .community(community)
                 .program("First creator")
