@@ -25,7 +25,7 @@ public class Vote {
     private UserEntity voter;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_candidate")
-    private Candidate candidate;
+    @JoinColumn(name = "id_elections_participation")
+    private ElectionsParticipation electionsParticipation;
 
 }

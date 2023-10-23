@@ -7,10 +7,7 @@ import ed.back_snekhome.dto.communityDTOs.NewCandidateDto;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.community.Membership;
-import ed.back_snekhome.entities.communityDemocracy.Candidate;
-import ed.back_snekhome.entities.communityDemocracy.Elections;
-import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
-import ed.back_snekhome.entities.communityDemocracy.Vote;
+import ed.back_snekhome.entities.communityDemocracy.*;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.enums.ElectionsStatus;
@@ -21,10 +18,7 @@ import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.community.CommunityRepository;
 import ed.back_snekhome.repositories.community.CommunityRoleRepository;
 import ed.back_snekhome.repositories.community.MembershipRepository;
-import ed.back_snekhome.repositories.democracy.PresidencyDataRepository;
-import ed.back_snekhome.repositories.democracy.CandidateRepository;
-import ed.back_snekhome.repositories.democracy.ElectionsRepository;
-import ed.back_snekhome.repositories.democracy.VoteRepository;
+import ed.back_snekhome.repositories.democracy.*;
 import ed.back_snekhome.repositories.post.CommentaryRatingRepository;
 import ed.back_snekhome.repositories.post.PostRatingRepository;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +48,7 @@ public class DemocracyService {
     private final CommunityRoleRepository communityRoleRepository;
     private final PresidencyDataRepository presidencyDataRepository;
     private final CommunityRepository communityRepository;
+    private final ElectionsParticipationRepository electionsParticipationRepository;
 
     private final MembershipMethodsService membershipMethodsService;
     private final UserMethodsService userMethodsService;
@@ -145,7 +140,7 @@ public class DemocracyService {
 
         if (status == ElectionsStatus.FINISHED) {
             var community = elections.getCommunity();
-            var winner = candidateRepository.findCandidateWithMostVotes(community);
+            var winner = electionsParticipationRepository.findCandidateWithMostVotes(community);
 
             //(if 0 votes, leaves the same president)
             var candidate = winner.orElse(elections.getCurrentPresident());
@@ -230,18 +225,30 @@ public class DemocracyService {
         elections.setStartDate(date);
         elections.setEndDate(date.plusDays(electionsDuration));
         elections.setCurrentPresident(newPresident);
+        elections.setElectionsNumber(elections.getElectionsNumber() + 1);
         return elections;
     }
 
-    public void createElections(Candidate currentPresident, Community community) {
+    public Elections createElections(Candidate currentPresident, Community community) {
         var elections = new Elections();
         elections.setCommunity(community);
+        elections.setElectionsNumber(0);
         electionsRepository.save(updateElectionsDate(elections, currentPresident));
+        return elections;
     }
 
     private Candidate findCandidateOrThrowErr(Community community, UserEntity user) {
         return candidateRepository.findTopByUserAndCommunity(user, community)
                 .orElseThrow(() -> new EntityNotFoundException(user.getNickname() + " is not a candidate"));
+    }
+
+    private ElectionsParticipation findElectionsParticipationOrThrowErr(Candidate candidate, Community community) {
+        return electionsParticipationRepository
+                .findByElectionsAndCandidate(
+                        community.getElections(),
+                        candidate
+                )
+                .orElseThrow(() -> new BadRequestException("A candidate doesn't take part in elections"));
     }
 
     public void makeVote(String groupname, String candidateNickname) {
@@ -250,14 +257,19 @@ public class DemocracyService {
         var candidate = findCandidateOrThrowErr(community, userCandidate);
         var voter = userMethodsService.getCurrentUser();
 
+
         throwErrIfNotCitizenRight(community, voter);
-        if (voteRepository.existsByCandidateAndVoter(candidate, voter))
+        var electionsParticipation = findElectionsParticipationOrThrowErr(candidate, community);
+        if (electionsParticipation.getElectionsNumber() != community.getElections().getElectionsNumber())
+            throw new BadRequestException("A candidate doesn't take part in elections");
+        if (voteRepository.existsByElectionsParticipationAndVoter(electionsParticipation, voter))
             throw new BadRequestException("User has already voted in these elections");
         if (getElectionsStatus(community.getElections()) != ElectionsStatus.IN_PROGRESS)
             throw new BadRequestException("Elections haven't started yet");
 
+
         var vote = Vote.builder()
-                .candidate(candidate)
+                .electionsParticipation(electionsParticipation)
                 .build();
         voteRepository.save(vote);
     }
@@ -308,12 +320,10 @@ public class DemocracyService {
     public CandidateListDto getListOfCandidates(String groupname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         throwErrIfNotDemocracy(community);
-
         var membership = membershipMethodsService.getOptionalMembershipOfCurrentUser(community);
         communityMethodsService.throwErrIfNoAccessToCommunity(community, membership);
 
         var status = getElectionsStatus(community.getElections());
-
         var candidates = candidateRepository.getAllByCommunityAndIsActiveTrue(community);
 
         Long votedId = (long) -1;
@@ -340,7 +350,7 @@ public class DemocracyService {
                                             .program(candidate.getProgram())
                                             .votes(status == ElectionsStatus.IN_PROGRESS
                                                     ? 0
-                                                    : voteRepository.countAllByCandidate(candidate)
+                                                    : voteRepository.countAllByElectionsParticipation(candidate)
                                             )
                                             .build();
                                     })

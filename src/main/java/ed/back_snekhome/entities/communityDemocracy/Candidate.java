@@ -37,7 +37,7 @@ public class Candidate {
     private Community community;
 
     @OneToMany(mappedBy = "candidate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Vote> votes;
+    private List<ElectionsParticipation> electionsParticipations;
 
     private boolean isActive;
 }

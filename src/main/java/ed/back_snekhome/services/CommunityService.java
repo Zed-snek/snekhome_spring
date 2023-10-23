@@ -9,6 +9,7 @@ import ed.back_snekhome.entities.community.*;
 import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.entities.communityDemocracy.Candidate;
 import ed.back_snekhome.entities.communityDemocracy.CommunityCitizenParameters;
+import ed.back_snekhome.entities.communityDemocracy.ElectionsParticipation;
 import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
@@ -51,6 +52,7 @@ public class CommunityService {
     private final JoinRequestRepository joinRequestRepository;
     private final CandidateRepository candidateRepository;
     private final PresidencyDataRepository presidencyDataRepository;
+    private final ElectionsParticipationRepository electionsParticipationRepository;
 
 
     @Transactional
@@ -102,7 +104,6 @@ public class CommunityService {
             createStartDemocracyData(community, dto);
     }
 
-    @Transactional
     public void createStartDemocracyData(
             Community community,
             NewCommunityDto dto
@@ -137,7 +138,13 @@ public class CommunityService {
                 .build();
         candidateRepository.save(currentPresident);
 
-        democracyService.createElections(currentPresident, community);
+        var elections = democracyService.createElections(currentPresident, community);
+        var electionsParticipation = ElectionsParticipation.builder()
+                .candidate(currentPresident)
+                .electionsNumber(0)
+                .elections(elections)
+                .build();
+        electionsParticipationRepository.save(electionsParticipation);
     }
 
     public void deleteCommunity(String name) {

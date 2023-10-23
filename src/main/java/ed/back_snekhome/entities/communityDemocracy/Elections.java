@@ -2,6 +2,7 @@ package ed.back_snekhome.entities.communityDemocracy;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.community.Community;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,6 +30,8 @@ public class Elections {
 
     private LocalDate startDate;
     private LocalDate endDate;
+
+    private int electionsNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_current_president")
