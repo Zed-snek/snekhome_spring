@@ -132,7 +132,6 @@ public class CommunityService {
         presidencyDataRepository.save(presidencyData);
 
         var currentPresident = Candidate.builder()
-                .isActive(false)
                 .community(community)
                 .program("First creator")
                 .build();

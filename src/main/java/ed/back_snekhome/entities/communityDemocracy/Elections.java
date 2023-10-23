@@ -38,4 +38,12 @@ public class Elections {
     private Candidate currentPresident;
 
 
+    public ElectionsParticipation createElectionsParticipation(Candidate candidate) {
+        return ElectionsParticipation.builder()
+                .elections(this)
+                .electionsNumber(this.electionsNumber)
+                .candidate(candidate)
+                .build();
+    }
+
 }

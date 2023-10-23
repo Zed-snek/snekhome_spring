@@ -140,15 +140,13 @@ public class DemocracyService {
 
         if (status == ElectionsStatus.FINISHED) {
             var community = elections.getCommunity();
-            var winner = electionsParticipationRepository.findCandidateWithMostVotes(community);
+            var winner = candidateRepository.findCandidateWithMostVotes(community);
 
             //(if 0 votes, leaves the same president)
             var candidate = winner.orElse(elections.getCurrentPresident());
             community.setOwner(candidate.getUser());
             updateElectionsDate(elections, candidate);
-
             clearPresidencyDataByCommunity(community);
-            candidateRepository.makeAllCandidatesInactive(community);
 
             communityRepository.save(community);
             return false;
@@ -193,7 +191,11 @@ public class DemocracyService {
                 candidateRepository.findTopByUserAndCommunity(user, community)
                         .ifPresent(candidate -> {
                                     dtoBuilder.currentUserProgram(candidate.getProgram());
-                                    dtoBuilder.isCurrentUserActiveCandidate(candidate.isActive());
+                                    dtoBuilder.isCurrentUserActiveCandidate(
+                                            electionsParticipationRepository
+                                                    .findByCandidateIfActive(candidate)
+                                                    .isPresent()
+                                    );
                         });
             }
             else {
@@ -288,8 +290,14 @@ public class DemocracyService {
             if (getElectionsStatus(c.getElections()) != ElectionsStatus.NOT_STARTED)
                 throw new BadRequestException("Elections have been already started");
         }, groupname);
-        candidate.setActive(true);
+
         candidateRepository.save(candidate);
+
+        var electionsParticipation = candidate
+                .getCommunity()
+                .getElections()
+                .createElectionsParticipation(candidate);
+        electionsParticipationRepository.save(electionsParticipation);
     }
 
     public void updateCandidateProgram(NewCandidateDto dto) {
@@ -301,6 +309,7 @@ public class DemocracyService {
         candidateRepository.save(candidate);
     }
 
+    @Transactional
     public void becomeCandidate(NewCandidateDto dto) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(dto.getGroupname());
         var user = userMethodsService.getCurrentUser();
@@ -312,19 +321,19 @@ public class DemocracyService {
         var candidate = Candidate.builder()
                 .program(dto.getProgram())
                 .community(community)
-                .isActive(true)
                 .build();
         candidateRepository.save(candidate);
+
+        var electionsParticipation = community.getElections().createElectionsParticipation(candidate);
+        electionsParticipationRepository.save(electionsParticipation);
     }
+
 
     public CandidateListDto getListOfCandidates(String groupname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         throwErrIfNotDemocracy(community);
         var membership = membershipMethodsService.getOptionalMembershipOfCurrentUser(community);
         communityMethodsService.throwErrIfNoAccessToCommunity(community, membership);
-
-        var status = getElectionsStatus(community.getElections());
-        var candidates = candidateRepository.getAllByCommunityAndIsActiveTrue(community);
 
         Long votedId = (long) -1;
         if (userMethodsService.isContextUser()) {
@@ -337,8 +346,11 @@ public class DemocracyService {
                 votedId = candidate.get().getId();
         }
 
-        return CandidateListDto.builder()
-                .candidates(
+        var status = getElectionsStatus(community.getElections());
+        var candidates = candidateRepository.getAllCurrentByElections(community.getElections());
+
+        var dto = CandidateListDto.builder()
+                .currentCandidates(
                         candidates.stream()
                                 .map(candidate -> {
                                     var user = candidate.getUser();
@@ -348,10 +360,6 @@ public class DemocracyService {
                                             .image(userMethodsService.getTopUserImage(user))
                                             .nickname(user.getNickname())
                                             .program(candidate.getProgram())
-                                            .votes(status == ElectionsStatus.IN_PROGRESS
-                                                    ? 0
-                                                    : voteRepository.countAllByElectionsParticipation(candidate)
-                                            )
                                             .build();
                                     })
                                 .collect(Collectors.toList())
@@ -360,8 +368,27 @@ public class DemocracyService {
                         ? 0
                         : voteRepository.countAllByCommunity(community)
                 )
-                .votedId(votedId)
-                .build();
+                .votedId(votedId);
+
+        if (status != ElectionsStatus.IN_PROGRESS) {
+            var previousCandidates = candidateRepository
+                    .getAllPreviousElectionsCandidates(community.getElections());
+
+            dto.previousCandidates(
+                    previousCandidates.stream()
+                            .map(candidate -> CandidateDto.builder()
+                            .nickname(candidate.getUser().getNickname())
+                            .votes(voteRepository.countAllFromPreviousElections(
+                                    community.getElections(),
+                                    candidate
+                            ))
+                            .build()
+                            )
+                    .collect(Collectors.toList())
+            );
+        }
+
+        return dto.build();
     }
 
 

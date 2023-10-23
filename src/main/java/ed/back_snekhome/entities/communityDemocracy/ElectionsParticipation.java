@@ -29,4 +29,6 @@ public class ElectionsParticipation {
     @OneToMany(mappedBy = "electionsParticipation", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Vote> votes;
 
+    private int numberOfVotes; //set when elections are finished
+
 }

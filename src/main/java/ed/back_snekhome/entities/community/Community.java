@@ -2,10 +2,7 @@ package ed.back_snekhome.entities.community;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import ed.back_snekhome.entities.communityDemocracy.Candidate;
-import ed.back_snekhome.entities.communityDemocracy.CommunityCitizenParameters;
-import ed.back_snekhome.entities.communityDemocracy.Elections;
-import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
+import ed.back_snekhome.entities.communityDemocracy.*;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import jakarta.persistence.*;
@@ -94,5 +91,8 @@ public class Community {
     @PrimaryKeyJoinColumn
     @JsonIgnore
     private Elections elections;
+
+
+
 
 }

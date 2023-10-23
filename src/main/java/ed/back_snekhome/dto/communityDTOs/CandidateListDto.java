@@ -13,5 +13,6 @@ public class CandidateListDto {
 
     private int totalVotes;
     private Long votedId;
-    private List<CandidateDto> candidates;
+    private List<CandidateDto> previousCandidates;
+    private List<CandidateDto> currentCandidates;
 }
