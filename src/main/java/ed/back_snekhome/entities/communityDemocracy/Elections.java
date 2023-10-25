@@ -2,7 +2,6 @@ package ed.back_snekhome.entities.communityDemocracy;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.community.Community;
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 

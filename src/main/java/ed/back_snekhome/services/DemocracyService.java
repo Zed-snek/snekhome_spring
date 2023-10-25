@@ -140,25 +140,27 @@ public class DemocracyService {
 
         if (status == ElectionsStatus.FINISHED) {
             var community = elections.getCommunity();
-            var winner = candidateRepository.findCandidateWithMostVotes(community);
+
+            var winner = electionsParticipationRepository.findParticipantWithMostVotes(community);
 
             //(if 0 votes, leaves the same president)
-            var candidate = winner.orElse(elections.getCurrentPresident());
+            var candidate = winner
+                    .map(ElectionsParticipation::getCandidate)
+                    .orElse(elections.getCurrentPresident());
+
             community.setOwner(candidate.getUser());
-            updateElectionsDate(elections, candidate);
+            communityRepository.save(community);
+
+            electionsParticipationRepository.updateElectionsParticipationWithVotes(elections);
+            voteRepository.deleteAllByCommunity(elections.getCommunity());
+
+            electionsRepository.save(updateElectionsDate(elections, candidate));
             clearPresidencyDataByCommunity(community);
 
-            communityRepository.save(community);
             return false;
         }
 
-        boolean isElectionsNow = status == ElectionsStatus.IN_PROGRESS;
-        if (isElectionsNow) { //if elections just have started
-            electionsRepository.save(elections);
-            voteRepository.deleteAllByCommunity(elections.getCommunity());
-        }
-
-        return isElectionsNow;
+        return status == ElectionsStatus.IN_PROGRESS;
     }
 
     @Transactional
@@ -371,20 +373,17 @@ public class DemocracyService {
                 .votedId(votedId);
 
         if (status != ElectionsStatus.IN_PROGRESS) {
-            var previousCandidates = candidateRepository
+            var previousCandidates = electionsParticipationRepository
                     .getAllPreviousElectionsCandidates(community.getElections());
 
             dto.previousCandidates(
                     previousCandidates.stream()
-                            .map(candidate -> CandidateDto.builder()
-                            .nickname(candidate.getUser().getNickname())
-                            .votes(voteRepository.countAllFromPreviousElections(
-                                    community.getElections(),
-                                    candidate
-                            ))
-                            .build()
+                            .map(participation -> CandidateDto.builder()
+                                    .nickname(participation.getCandidate().getUser().getNickname())
+                                    .votes(participation.getNumberOfVotes())
+                                    .build()
                             )
-                    .collect(Collectors.toList())
+                            .collect(Collectors.toList())
             );
         }
 

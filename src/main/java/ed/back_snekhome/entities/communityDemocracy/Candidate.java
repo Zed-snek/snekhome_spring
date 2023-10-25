@@ -27,7 +27,7 @@ public class Candidate {
     @Size(min = 5, max = 1024, message = "Program must not exceed 1024 symbols")
     private String program;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_user")
     @CreatedBy
     private UserEntity user;

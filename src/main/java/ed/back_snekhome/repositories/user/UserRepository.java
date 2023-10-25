@@ -14,11 +14,12 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     boolean existsByNicknameIgnoreCase(String nickname);
+
     boolean existsByEmailIgnoreCase(String email);
 
     Optional<UserEntity> findByEmailIgnoreCase(String email);
-    Optional<UserEntity> findByNicknameIgnoreCase(String nickname);
 
+    Optional<UserEntity> findByNicknameIgnoreCase(String nickname);
 
     @Query("SELECT u FROM UserEntity u WHERE " +
             "LOWER(u.nickname) LIKE LOWER(CONCAT('%', :r, '%')) " +

@@ -11,6 +11,7 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     Optional<Friendship> findFriendshipByIdFirstUserAndIdSecondUser(Long idFirstUser, Long idSecondUser);
 
     int countAllByIdFirstUserAndIsFirstUserAndIsSecondUser(Long id, boolean first, boolean second);
+
     int countAllByIdSecondUserAndIsFirstUserAndIsSecondUser(Long id, boolean first, boolean second);
 
     List<Friendship> findAllByIdFirstUserOrIdSecondUser(Long idFirstUser, Long idSecondUser);

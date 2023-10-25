@@ -11,7 +11,6 @@ import ed.back_snekhome.entities.communityDemocracy.Candidate;
 import ed.back_snekhome.entities.communityDemocracy.CommunityCitizenParameters;
 import ed.back_snekhome.entities.communityDemocracy.ElectionsParticipation;
 import ed.back_snekhome.entities.communityDemocracy.PresidencyData;
-import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityAlreadyExistsException;
@@ -26,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
