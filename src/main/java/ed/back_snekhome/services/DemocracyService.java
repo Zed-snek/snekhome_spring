@@ -330,7 +330,7 @@ public class DemocracyService {
         electionsParticipationRepository.save(electionsParticipation);
     }
 
-
+    @Transactional
     public CandidateListDto getListOfCandidates(String groupname) {
         var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
         throwErrIfNotDemocracy(community);
@@ -353,7 +353,7 @@ public class DemocracyService {
 
         var dto = CandidateListDto.builder()
                 .currentCandidates(
-                        candidates.stream()
+                        candidates
                                 .map(candidate -> {
                                     var user = candidate.getUser();
                                     return CandidateDto.builder()
@@ -368,7 +368,7 @@ public class DemocracyService {
                 )
                 .totalVotes(status == ElectionsStatus.IN_PROGRESS
                         ? 0
-                        : voteRepository.countAllByCommunity(community)
+                        : voteRepository.getTotalVotesOfPrevElections(community.getElections())
                 )
                 .votedId(votedId);
 

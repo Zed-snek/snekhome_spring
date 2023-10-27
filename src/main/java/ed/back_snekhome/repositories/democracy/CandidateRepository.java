@@ -8,8 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface CandidateRepository extends JpaRepository<Candidate, Long> {
 
@@ -19,7 +20,7 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     @Query("SELECT eP.candidate FROM ElectionsParticipation eP " +
             "WHERE eP.elections = :elections " +
             "AND eP.electionsNumber = eP.elections.electionsNumber")
-    List<Candidate> getAllCurrentByElections(@Param("elections") Elections elections);
+    Stream<Candidate> getAllCurrentByElections(@Param("elections") Elections elections);
 
 
 }

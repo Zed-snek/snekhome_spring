@@ -7,10 +7,6 @@ import org.springframework.stereotype.Service;
 @NoArgsConstructor
 public class NotificationService {
 
-    //friend request notification
-    //invite to community notification
-    //commentary to post notification
-    //many upvotes has post
-    //in community elections started notification (if user a citizen)
+
 
 }

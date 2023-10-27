@@ -2,6 +2,7 @@ package ed.back_snekhome.repositories.democracy;
 
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.communityDemocracy.Candidate;
+import ed.back_snekhome.entities.communityDemocracy.Elections;
 import ed.back_snekhome.entities.communityDemocracy.ElectionsParticipation;
 import ed.back_snekhome.entities.communityDemocracy.Vote;
 import ed.back_snekhome.entities.user.UserEntity;
@@ -30,6 +31,10 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
             @Param("community") Community community,
             @Param("voter") UserEntity voter
     );
+
+    @Query("SELECT SUM(ep.numberOfVotes) FROM ElectionsParticipation ep " +
+            "WHERE ep.elections = :elections AND ep.electionsNumber = ep.elections.electionsNumber - 1")
+    int getTotalVotesOfPrevElections(@Param("elections") Elections elections);
 
 
 }
