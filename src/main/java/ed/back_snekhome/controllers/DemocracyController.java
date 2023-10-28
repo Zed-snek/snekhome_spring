@@ -24,8 +24,8 @@ public class DemocracyController {
 
     @PostMapping("/auth/democracy/vote/{groupname}")
     public ResponseEntity<OwnSuccessResponse> makeVote(
-            @RequestParam(name = "nickname") String candidateNickname,
-            @PathVariable String groupname
+            @PathVariable String groupname,
+            @RequestParam(name = "nickname") String candidateNickname
     ) {
         democracyService.makeVote(groupname, candidateNickname);
 

@@ -10,6 +10,7 @@ import lombok.Setter;
 @Builder
 public class CandidateDto {
 
+    private Long id;
 
     private String name;
     private String surname;

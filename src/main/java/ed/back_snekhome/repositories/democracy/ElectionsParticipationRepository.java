@@ -14,7 +14,15 @@ import java.util.Optional;
 
 public interface ElectionsParticipationRepository extends JpaRepository<ElectionsParticipation, Long> {
 
-    Optional<ElectionsParticipation> findByElectionsAndCandidate(Elections elections, Candidate candidate);
+
+    @Query("SELECT ep FROM ElectionsParticipation ep " +
+            "WHERE ep.candidate = :candidate AND ep.elections = :elections " +
+            "AND ep.electionsNumber = ep.elections.electionsNumber")
+    Optional<ElectionsParticipation> findCurrentByElectionsAndCandidate(
+            @Param("elections") Elections elections,
+            @Param("candidate") Candidate candidate
+    );
+
 
     @Query("SELECT eP.candidate FROM ElectionsParticipation eP " +
             "WHERE eP.candidate = :candidate " +

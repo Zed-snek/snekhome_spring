@@ -1,6 +1,7 @@
 package ed.back_snekhome.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -24,6 +25,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider; //created in ApplicationConfig
 
+    @Value("${domain.address}")
+    private String address;
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -40,10 +44,9 @@ public class SecurityConfig {
                         "/api/community/**",
                         "/api/post/**",
                         "/api/search/**",
-                        "/api/democracy/**"
+                        "/api/democracy/**",
+                        "/ws/**"
                 ).permitAll()
-                .requestMatchers("/bla")
-                .hasAnyRole("ADMIN")
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -60,10 +63,11 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://192.168.1.100:3000"));
+        configuration.setAllowedOrigins(List.of(address));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);
 

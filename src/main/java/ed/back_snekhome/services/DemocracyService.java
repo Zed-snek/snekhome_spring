@@ -246,9 +246,9 @@ public class DemocracyService {
                 .orElseThrow(() -> new EntityNotFoundException(user.getNickname() + " is not a candidate"));
     }
 
-    private ElectionsParticipation findElectionsParticipationOrThrowErr(Candidate candidate, Community community) {
+    private ElectionsParticipation findCurrentElectionsParticipationOrThrowErr(Candidate candidate, Community community) {
         return electionsParticipationRepository
-                .findByElectionsAndCandidate(
+                .findCurrentByElectionsAndCandidate(
                         community.getElections(),
                         candidate
                 )
@@ -261,9 +261,8 @@ public class DemocracyService {
         var candidate = findCandidateOrThrowErr(community, userCandidate);
         var voter = userMethodsService.getCurrentUser();
 
-
         throwErrIfNotCitizenRight(community, voter);
-        var electionsParticipation = findElectionsParticipationOrThrowErr(candidate, community);
+        var electionsParticipation = findCurrentElectionsParticipationOrThrowErr(candidate, community);
         if (electionsParticipation.getElectionsNumber() != community.getElections().getElectionsNumber())
             throw new BadRequestException("A candidate doesn't take part in elections");
         if (voteRepository.existsByElectionsParticipationAndVoter(electionsParticipation, voter))
@@ -357,6 +356,7 @@ public class DemocracyService {
                                 .map(candidate -> {
                                     var user = candidate.getUser();
                                     return CandidateDto.builder()
+                                            .id(candidate.getId())
                                             .name(user.getName())
                                             .surname(user.getSurname())
                                             .image(userMethodsService.getTopUserImage(user))
@@ -379,6 +379,7 @@ public class DemocracyService {
             dto.previousCandidates(
                     previousCandidates.stream()
                             .map(participation -> CandidateDto.builder()
+                                    .id(participation.getCandidate().getId())
                                     .nickname(participation.getCandidate().getUser().getNickname())
                                     .votes(participation.getNumberOfVotes())
                                     .build()
