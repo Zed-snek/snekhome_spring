@@ -90,6 +90,7 @@ public class CommunityLogService {
                 .logType(LogType.BAN_USER)
                 .secondUser(banned));
     }
+
     public void createLogUnbanUser(Community community, UserEntity unbanned) {
         saveLog(builderWithCurrentUser(community)
                 .logType(LogType.UNBAN_USER)
@@ -125,9 +126,11 @@ public class CommunityLogService {
     public void createLogNewCommunityTitle(Community community, String newTitle) {
         createLogWithMessage(community, newTitle, LogType.NEW_COMMUNITY_TITLE);
     }
+
     public void createLogNewGroupname(Community community, String newGroupname) {
         createLogWithMessage(community, newGroupname, LogType.NEW_GROUPNAME);
     }
+
     public void createLogNewDescription(Community community, String newDescription) {
         createLogWithMessage(community, newDescription, LogType.NEW_DESCRIPTION);
     }
@@ -135,9 +138,11 @@ public class CommunityLogService {
     public void createLogNewCitizenRequirementsDays(Community community, int days) {
         createLogWithMessage(community, days, LogType.NEW_CITIZEN_REQUIREMENTS_DAYS);
     }
+
     public void createLogNewCitizenRequirementsRating(Community community, int rating) {
         createLogWithMessage(community, rating, LogType.NEW_CITIZEN_REQUIREMENTS_RATING);
     }
+
     public void createLogNewElectionsPeriod(Community community, int days) {
         createLogWithMessage(community, days, LogType.NEW_ELECTIONS_PERIOD);
     }
@@ -145,9 +150,11 @@ public class CommunityLogService {
     public void createLogRuleAnonPosts(Community community, boolean rule) {
         createLogWithMessage(community, rule, LogType.RULE_ANON_POSTS);
     }
+
     public void createLogRuleClosedCommunity(Community community, boolean rule) {
         createLogWithMessage(community, rule, LogType.RULE_CLOSED_COMMUNITY);
     }
+
     public void createLogRuleInviteUsers(Community community, boolean rule) {
         createLogWithMessage(community, rule, LogType.RULE_INVITE_USERS);
     }
