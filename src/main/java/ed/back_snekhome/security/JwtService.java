@@ -1,14 +1,19 @@
 package ed.back_snekhome.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
+import javax.security.sasl.AuthenticationException;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -16,7 +21,11 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
+
+    private final UserDetailsService userDetailsService;
+
 
     @Value("${jwt.key}")
     private String secretKey;
@@ -81,6 +90,22 @@ public class JwtService {
     private Key getSecretKey() {
         byte[] keyInBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyInBytes);
+    }
+
+    public Authentication getAuthenticationFromToken(String authToken) {
+        // Remove prefix from token
+        final String jwtToken = authToken.replace("Bearer ", "");
+
+        final String userEmail = extractEmail(jwtToken);
+
+        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) { //updates authentication on server
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+
+            if (isTokenValid(jwtToken, userDetails)) {
+                return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            }
+        }
+        throw new JwtException("Jwt is wrong or not valid");
     }
 
 }
