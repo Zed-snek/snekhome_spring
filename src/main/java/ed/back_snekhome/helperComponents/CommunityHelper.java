@@ -1,4 +1,4 @@
-package ed.back_snekhome.services;
+package ed.back_snekhome.helperComponents;
 
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.CommunityRole;
@@ -10,28 +10,28 @@ import ed.back_snekhome.repositories.community.CommunityRepository;
 import ed.back_snekhome.repositories.community.CommunityRoleRepository;
 import ed.back_snekhome.repositories.community.MembershipRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class CommunityMethodsService {
+public class CommunityHelper {
 
     private final CommunityRepository communityRepository;
     private final CommunityImageRepository communityImageRepository;
     private final CommunityRoleRepository communityRoleRepository;
     private final MembershipRepository membershipRepository;
-    private final UserMethodsService userMethodsService;
+    private final UserHelper userHelper;
 
     public int countMembers(Community community) {
         return membershipRepository.countAllByCommunityAndIsBanned(community, false);
     }
 
     public boolean isContextUserMember(Community community) {
-        if (userMethodsService.isContextUser()) {
+        if (userHelper.isContextUser()) {
             var membership
-                    = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser());
+                    = membershipRepository.findByCommunityAndUser(community, userHelper.getCurrentUser());
             return membership.isPresent();
         }
         return false;
@@ -49,7 +49,7 @@ public class CommunityMethodsService {
     }
 
     public boolean isCurrentUserOwner(Community community) {
-        return userMethodsService.isCurrentUserEqual(community.getOwner());
+        return userHelper.isCurrentUserEqual(community.getOwner());
     }
 
     public void throwErrIfNoAccessToCommunity(Community community, Optional<Membership> membership) {

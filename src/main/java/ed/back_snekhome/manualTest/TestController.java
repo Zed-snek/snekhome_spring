@@ -1,7 +1,7 @@
 package ed.back_snekhome.manualTest;
 
 import ed.back_snekhome.response.OwnSuccessResponse;
-import ed.back_snekhome.services.CommunityMethodsService;
+import ed.back_snekhome.helperComponents.CommunityHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     private final TestRepository testRepository;
-    private final CommunityMethodsService communityMethodsService;
+    private final CommunityHelper communityHelper;
 
     private final SimpMessagingTemplate simpMessagingTemplate;
 

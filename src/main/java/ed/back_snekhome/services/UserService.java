@@ -11,6 +11,7 @@ import ed.back_snekhome.repositories.user.InfoTagRepository;
 import ed.back_snekhome.repositories.user.UserImageRepository;
 import ed.back_snekhome.repositories.user.UserRepository;
 import ed.back_snekhome.response.OwnSuccessResponse;
+import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +24,7 @@ import java.io.IOException;
 public class UserService {
 
 
-    private final UserMethodsService userMethodsService;
+    private final UserHelper userHelper;
     private final UserRepository userRepository;
     private final InfoTagRepository infoTagRepository;
     private final FileService fileService;
@@ -33,7 +34,7 @@ public class UserService {
 
 
     public void updateUser(UserUpdateDto userUpdateDto) {
-        var user = userMethodsService.getCurrentUser();
+        var user = userHelper.getCurrentUser();
 
         if (userUpdateDto.getNicknameColor() != null) {
             user.setNicknameColor(userUpdateDto.getNicknameColor());
@@ -45,7 +46,7 @@ public class UserService {
             user.setSurname(userUpdateDto.getSurname());
         }
         else if (userUpdateDto.getNickname() != null) {
-            userMethodsService.throwErrIfExistsByNickname(userUpdateDto.getNickname());
+            userHelper.throwErrIfExistsByNickname(userUpdateDto.getNickname());
             user.setNickname(userUpdateDto.getNickname());
         }
 
@@ -65,10 +66,10 @@ public class UserService {
 
 
     public UserPublicDto getNavbarInfo() {
-        var currentUser = userMethodsService.getCurrentUser();
+        var currentUser = userHelper.getCurrentUser();
 
         return UserPublicDto.builder()
-                .image(userMethodsService.getTopUserImage(currentUser))
+                .image(userHelper.getTopUserImage(currentUser))
                 .nickname(currentUser.getNickname())
                 .nicknameColor(currentUser.getNicknameColor())
                 .build();
@@ -89,7 +90,7 @@ public class UserService {
 
 
     public UserPublicDto getUserInfo(String nickname) {
-        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
+        var user = userHelper.getUserByNicknameOrThrowErr(nickname);
 
         var dto = UserPublicDto.builder()
                 .images(user.getImages())
@@ -103,16 +104,16 @@ public class UserService {
                 .build();
 
         //Checks the relation between current user and related one: are friends/aren't friends/context user follows related/related follows context user
-        if (userMethodsService.isContextUser() && !userMethodsService.getCurrentUser().getNickname().equals(nickname)) {
+        if (userHelper.isContextUser() && !userHelper.getCurrentUser().getNickname().equals(nickname)) {
             dto.setFriendshipType(
-                    userMethodsService.getFriendshipType(userMethodsService.getCurrentUser().getIdAccount(),
+                    userHelper.getFriendshipType(userHelper.getCurrentUser().getIdAccount(),
                             user.getIdAccount()));
         }
         return dto;
     }
 
     public UserPrivateDto getCurrentUserInfo() {
-        var currentUser = userMethodsService.getCurrentUser();
+        var currentUser = userHelper.getCurrentUser();
 
         return UserPrivateDto.builder()
                 .email(currentUser.getEmail())
@@ -142,7 +143,7 @@ public class UserService {
         var tag = infoTagRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
 
-        if (userMethodsService.isCurrentUserEqual(tag.getUser()))
+        if (userHelper.isCurrentUserEqual(tag.getUser()))
             infoTagRepository.delete(tag);
         else
             throw new UnauthorizedException("Entity is not belonged to authorized user");

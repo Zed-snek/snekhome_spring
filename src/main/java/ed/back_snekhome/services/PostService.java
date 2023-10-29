@@ -21,6 +21,9 @@ import ed.back_snekhome.repositories.community.MembershipRepository;
 import ed.back_snekhome.repositories.post.CommentaryRepository;
 import ed.back_snekhome.repositories.post.PostRatingRepository;
 import ed.back_snekhome.repositories.post.PostRepository;
+import ed.back_snekhome.helperComponents.CommunityHelper;
+import ed.back_snekhome.helperComponents.MembershipHelper;
+import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,10 +39,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostService {
 
-    private final CommunityMethodsService communityMethodsService;
-    private final UserMethodsService userMethodsService;
+    private final CommunityHelper communityHelper;
+    private final UserHelper userHelper;
     private final FileService fileService;
-    private final MembershipMethodsService membershipMethodsService;
+    private final MembershipHelper membershipHelper;
     private final CommunityLogService communityLogService;
     private final DemocracyService democracyService;
 
@@ -52,8 +55,8 @@ public class PostService {
     @Transactional
     public Long newPost(NewPostDto dto) throws IOException {
         boolean isAnon = dto.getIsAnonymous().equals("true");
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(dto.getGroupname());
-        var user = userMethodsService.getCurrentUser();
+        var community = communityHelper.getCommunityByNameOrThrowErr(dto.getGroupname());
+        var user = userHelper.getCurrentUser();
         var membership = membershipRepository.findByCommunityAndUser(community, user);
         if (membership.isEmpty() && community.isClosed()
                 || membership.isPresent() && (membership.get().isBanned()
@@ -87,7 +90,7 @@ public class PostService {
     @Transactional
     public void updatePost(EditPostDto dto, Long id) throws IOException {
         var post = getPostById(id);
-        var user = userMethodsService.getCurrentUser();
+        var user = userHelper.getCurrentUser();
 
         if (dto.getOldImages().size() + dto.getNewImages().size() > 10)
             throw new BadRequestException("Images limit");
@@ -124,9 +127,9 @@ public class PostService {
     }
 
     private RatingType getRatedType(Post post) {
-        if (userMethodsService.isContextUser()) {
+        if (userHelper.isContextUser()) {
             var rating =
-                    postRatingRepository.getTopByPostAndUser(post, userMethodsService.getCurrentUser());
+                    postRatingRepository.getTopByPostAndUser(post, userHelper.getCurrentUser());
             if (rating.isPresent())
                 return rating.get().getType();
         }
@@ -143,18 +146,18 @@ public class PostService {
     public PostDto getPostPage(Long id) {
         var post = getPostById(id);
         var membership =
-                membershipMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+                membershipHelper.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
-        communityMethodsService.throwErrIfNoAccessToCommunity(post.getCommunity(), membership);
+        communityHelper.throwErrIfNoAccessToCommunity(post.getCommunity(), membership);
 
         var postDto = setMainInfo(post)
-                .groupImage(communityMethodsService.getTopCommunityImage(post.getCommunity()))
+                .groupImage(communityHelper.getTopCommunityImage(post.getCommunity()))
                 .groupname(post.getCommunity().getGroupname())
                 .groupTitle(post.getCommunity().getName())
                 .communityDate(post.getCommunity().getCreation());
         if (!post.isAnonymous()) {
             postDto
-                    .userImage(userMethodsService.getTopUserImage(post.getUser()))
+                    .userImage(userHelper.getTopUserImage(post.getUser()))
                     .userNickname(post.getUser().getNickname())
                     .userName(post.getUser().getName())
                     .userSurname(post.getUser().getSurname());
@@ -165,7 +168,7 @@ public class PostService {
     }
 
     private PostRating findPostRatingOrCreate(Post post) {
-        var currentUser = userMethodsService.getCurrentUser();
+        var currentUser = userHelper.getCurrentUser();
 
         return postRatingRepository
                 .getTopByPostAndUser(post, currentUser)
@@ -184,9 +187,9 @@ public class PostService {
     @Transactional
     public void deletePost(Long id) throws FileNotFoundException {
         var post = getPostById(id);
-        var user = userMethodsService.getCurrentUser();
+        var user = userHelper.getCurrentUser();
         var membership =
-                membershipMethodsService.getOptionalMembershipOfCurrentUser(post.getCommunity());
+                membershipHelper.getOptionalMembershipOfCurrentUser(post.getCommunity());
         boolean isCurrentUserAuthor = post.getUser().equals(user);
         boolean isDeletePermit = membership.isPresent() && membership.get().getRole().isDeletePosts();
 
@@ -245,29 +248,29 @@ public class PostService {
             builder
                     .groupname(post.getCommunity().getGroupname())
                     .groupTitle(post.getCommunity().getName())
-                    .groupImage(communityMethodsService.getTopCommunityImage(post.getCommunity()));
+                    .groupImage(communityHelper.getTopCommunityImage(post.getCommunity()));
         }
         if (isUser) {
             builder
                     .userNickname(post.getUser().getNickname())
-                    .userImage(userMethodsService.getTopUserImage(post.getUser()));
+                    .userImage(userHelper.getTopUserImage(post.getUser()));
         }
         return builder;
     }
 
     public List<PostDto> getPostDtoListByUser(String nickname, int pageNumber, int pageSize) {
-        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
+        var user = userHelper.getUserByNicknameOrThrowErr(nickname);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
-        boolean isContext = userMethodsService.isContextUser();
-        boolean isCurrentUser = isContext && userMethodsService.isCurrentUserEqual(user);
+        boolean isContext = userHelper.isContextUser();
+        boolean isCurrentUser = isContext && userHelper.isCurrentUserEqual(user);
 
         List<Post> posts;
         if (isCurrentUser) {
             posts = postRepository.getPostsByUserOrderByIdPostDesc(user, pageable);
         }
         else if (isContext) {
-            var currentUser = userMethodsService.getCurrentUser();
+            var currentUser = userHelper.getCurrentUser();
             List<Community> communities = communityRepository.getClosedCommunitiesByUser(currentUser);
             posts = postRepository.getPostsByNotCurrentUser(user, communities, pageable);
         }
@@ -285,17 +288,17 @@ public class PostService {
     }
 
     public List<PostDto> getPostDtoListByCommunity(String groupname, int pageNumber, int pageSize) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         var posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
 
-        var user = userMethodsService.isContextUser() ? userMethodsService.getCurrentUser() : null;
+        var user = userHelper.isContextUser() ? userHelper.getCurrentUser() : null;
 
         return posts.stream().map(post -> {
             var dto = setPostItemInfo(post, false, !post.isAnonymous());
             dto.isCurrentUserAuthor(post.getUser().equals(user));
             if (!post.isAnonymous()) {
-                var membership = membershipMethodsService
+                var membership = membershipHelper
                         .getOptionalMembershipOfUser(post.getCommunity(), post.getUser());
                 if (membership.isPresent() && membership.get().getRole() != null) {
                     var role = membership.get().getRole();
@@ -310,8 +313,8 @@ public class PostService {
     }
 
     public List<PostDto> getPostDtoListHome(int pageNumber, int pageSize) {
-        var user = userMethodsService.getCurrentUser();
-        var memberships = membershipMethodsService.getMembershipsByUser(user, false);
+        var user = userHelper.getCurrentUser();
+        var memberships = membershipHelper.getMembershipsByUser(user, false);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         var communities = memberships

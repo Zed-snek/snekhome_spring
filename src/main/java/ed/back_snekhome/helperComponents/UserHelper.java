@@ -1,4 +1,4 @@
-package ed.back_snekhome.services;
+package ed.back_snekhome.helperComponents;
 
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.FriendshipType;
@@ -10,11 +10,11 @@ import ed.back_snekhome.repositories.user.UserImageRepository;
 import ed.back_snekhome.repositories.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class UserMethodsService {
+public class UserHelper {
 
     private final CommunityRepository communityRepository;
     private final UserRepository userRepository;

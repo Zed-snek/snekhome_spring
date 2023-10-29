@@ -16,11 +16,13 @@ import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.community.CommunityRoleRepository;
 import ed.back_snekhome.repositories.community.JoinRequestRepository;
 import ed.back_snekhome.repositories.community.MembershipRepository;
+import ed.back_snekhome.helperComponents.CommunityHelper;
+import ed.back_snekhome.helperComponents.MembershipHelper;
+import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,9 +30,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MembershipService {
 
-    private final MembershipMethodsService membershipMethodsService;
-    private final UserMethodsService userMethodsService;
-    private final CommunityMethodsService communityMethodsService;
+    private final MembershipHelper membershipHelper;
+    private final UserHelper userHelper;
+    private final CommunityHelper communityHelper;
     private final CommunityLogService communityLogService;
     private final DemocracyService democracyService;
 
@@ -39,8 +41,8 @@ public class MembershipService {
     private final JoinRequestRepository joinRequestRepository;
 
     public void joinCommunity(String groupname) {
-        var current = userMethodsService.getCurrentUser();
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var current = userHelper.getCurrentUser();
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         var optional = membershipRepository.findByCommunityAndUser(community, current);
 
         optional.ifPresent(m -> {
@@ -60,37 +62,37 @@ public class MembershipService {
     }
 
     public void leaveCommunity(String groupname) {
-        var membership = membershipMethodsService.getMembershipOrThrowErr(
-                userMethodsService.getCurrentUser(),
-                communityMethodsService.getCommunityByNameOrThrowErr(groupname)
+        var membership = membershipHelper.getMembershipOrThrowErr(
+                userHelper.getCurrentUser(),
+                communityHelper.getCommunityByNameOrThrowErr(groupname)
         );
         membershipRepository.delete(membership);
     }
 
     public ArrayList<PublicCommunityCardDto> getJoinedCommunitiesByNickname(String nickname) {
-        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
-        var memberships = membershipMethodsService.getMembershipsByUser(user, false);
+        var user = userHelper.getUserByNicknameOrThrowErr(nickname);
+        var memberships = membershipHelper.getMembershipsByUser(user, false);
         var array = new ArrayList<PublicCommunityCardDto>();
         memberships.forEach(
                 m -> array.add(PublicCommunityCardDto.builder()
-                        .image(communityMethodsService.getTopCommunityImage(m.getCommunity()))
+                        .image(communityHelper.getTopCommunityImage(m.getCommunity()))
                         .name( m.getCommunity().getName() )
                         .groupname( m.getCommunity().getGroupname() )
                         .description( m.getCommunity().getDescription() )
-                        .members( communityMethodsService.countMembers(m.getCommunity()) )
+                        .members( communityHelper.countMembers(m.getCommunity()) )
                         .build())
         );
         return array;
     }
 
     public MembersDto getMembersByCommunity(String groupname, boolean isBanned) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        if (community.isClosed() && !communityMethodsService.isContextUserMember(community)) {
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        if (community.isClosed() && !communityHelper.isContextUserMember(community)) {
             return MembersDto.builder()
                     .isContextUserAccess(false)
                     .build();
         }
-        var memberships = membershipMethodsService.getMembershipsByCommunity(community, isBanned);
+        var memberships = membershipHelper.getMembershipsByCommunity(community, isBanned);
         var users = new ArrayList<UserPublicDto>();
         for (Membership m : memberships) {
             var user = m.getUser();
@@ -98,7 +100,7 @@ public class MembershipService {
                             .name(user.getName())
                             .surname(user.getSurname())
                             .nickname(user.getNickname())
-                            .image(userMethodsService.getTopUserImage(user))
+                            .image(userHelper.getTopUserImage(user))
                             .communityRole(m.getRole())
                             .build());
         }
@@ -118,9 +120,9 @@ public class MembershipService {
     }
 
     private Membership canBanUser(Community community, UserEntity userEntity) {
-        var userMembership = membershipMethodsService.getMembershipOrThrowErr(userEntity, community);
-        var admin = userMethodsService.getCurrentUser();
-        var adminMembership = membershipMethodsService.getMembershipOrThrowErr(admin, community);
+        var userMembership = membershipHelper.getMembershipOrThrowErr(userEntity, community);
+        var admin = userHelper.getCurrentUser();
+        var adminMembership = membershipHelper.getMembershipOrThrowErr(admin, community);
 
         if ((userMembership.getRole() == null && adminMembership.getRole().isBanUser())
                 || (userMembership.getRole().isCitizen() && adminMembership.getRole().isBanCitizen())
@@ -133,8 +135,8 @@ public class MembershipService {
 
     @Transactional
     public void banUser(String groupname, String user) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var userEntity = userMethodsService.getUserByNicknameOrThrowErr(user);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        var userEntity = userHelper.getUserByNicknameOrThrowErr(user);
         var userMembership = canBanUser(community, userEntity);
         userMembership.setBanned(true);
 
@@ -151,8 +153,8 @@ public class MembershipService {
 
     @Transactional
     public void unbanUser(String groupname, String user) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var userEntity = userMethodsService.getUserByNicknameOrThrowErr(user);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        var userEntity = userHelper.getUserByNicknameOrThrowErr(user);
         var userMembership = canBanUser(community, userEntity);
         communityLogService.createLogUnbanUser(community, userEntity);
         membershipRepository.delete(userMembership);
@@ -160,12 +162,12 @@ public class MembershipService {
 
     @Transactional
     public void grantRole(String nickname, String groupname, String roleName) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        if (communityMethodsService.isCurrentUserOwner(community)) {
-            var role = communityMethodsService.findRoleOrThrowErr(community, roleName);
-            var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        if (communityHelper.isCurrentUserOwner(community)) {
+            var role = communityHelper.findRoleOrThrowErr(community, roleName);
+            var user = userHelper.getUserByNicknameOrThrowErr(nickname);
             var membership
-                    = membershipMethodsService.getMembershipOrThrowErr(user, community);
+                    = membershipHelper.getMembershipOrThrowErr(user, community);
             membership.setRole(role);
             membershipRepository.save(membership);
             communityLogService.createLogGrantRole(community, user, roleName);
@@ -174,11 +176,11 @@ public class MembershipService {
 
     @Transactional
     public void revokeRole(String nickname, String groupname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        if (communityMethodsService.isCurrentUserOwner(community)) {
-            var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        if (communityHelper.isCurrentUserOwner(community)) {
+            var user = userHelper.getUserByNicknameOrThrowErr(nickname);
             var membership
-                    = membershipMethodsService.getMembershipOrThrowErr(user, community);
+                    = membershipHelper.getMembershipOrThrowErr(user, community);
             String roleTitle = membership.getRole().getTitle();
             membership.setRole(null);
             membershipRepository.save(membership);
@@ -187,8 +189,8 @@ public class MembershipService {
     }
 
     public String manageJoinRequest(String groupname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getCurrentUser();
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        var user = userHelper.getCurrentUser();
 
         var membership = membershipRepository.findByCommunityAndUser(community, user);
         if (!community.isClosed() || membership.isPresent())
@@ -208,17 +210,17 @@ public class MembershipService {
     }
 
     public List<UserPublicDto> getAllJoinRequests(String groupname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getCurrentUser();
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        var user = userHelper.getCurrentUser();
 
-        var membership = membershipMethodsService.getMembershipOrThrowErr(user, community);
+        var membership = membershipHelper.getMembershipOrThrowErr(user, community);
         var array = new ArrayList<UserPublicDto>();
         if (membership.getRole().isInviteUsers() || community.getType() == CommunityType.ANARCHY) {
             Iterable<JoinRequest> list = joinRequestRepository.findAllByCommunity(community);
             for (JoinRequest r : list) {
                 array.add(UserPublicDto.builder()
                         .nickname(r.getUser().getNickname())
-                        .image(userMethodsService.getTopUserImage(r.getUser()))
+                        .image(userHelper.getTopUserImage(r.getUser()))
                         .build()
                 );
             }
@@ -238,8 +240,8 @@ public class MembershipService {
 
     @Transactional
     public void acceptJoinRequest(String groupname, String nickname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        var user = userHelper.getUserByNicknameOrThrowErr(nickname);
         deleteJoinRequest(community, user);
 
         var membership = Membership.builder()
@@ -251,8 +253,8 @@ public class MembershipService {
     }
 
     public void cancelJoinRequest(String groupname, String nickname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        var user = userHelper.getUserByNicknameOrThrowErr(nickname);
         deleteJoinRequest(community, user);
     }
 

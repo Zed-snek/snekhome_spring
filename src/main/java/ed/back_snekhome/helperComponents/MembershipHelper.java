@@ -1,4 +1,4 @@
-package ed.back_snekhome.services;
+package ed.back_snekhome.helperComponents;
 
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.community.Membership;
@@ -6,16 +6,16 @@ import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.exceptionHandler.exceptions.EntityNotFoundException;
 import ed.back_snekhome.repositories.community.MembershipRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class MembershipMethodsService {
+public class MembershipHelper {
 
-    private final UserMethodsService userMethodsService;
+    private final UserHelper userHelper;
     private final MembershipRepository membershipRepository;
 
     public Membership getMembershipOrThrowErr(UserEntity user, Community community) {
@@ -23,7 +23,7 @@ public class MembershipMethodsService {
                 .orElseThrow(() -> new EntityNotFoundException("User is not a member"));
     }
     public Membership getMembershipOfCurrentUserOrThrowErr(Community community) {
-        return getMembershipOrThrowErr(userMethodsService.getCurrentUser(), community);
+        return getMembershipOrThrowErr(userHelper.getCurrentUser(), community);
     }
 
     public List<Membership> getMembershipsByUser(UserEntity user, boolean isBanned) {
@@ -35,8 +35,8 @@ public class MembershipMethodsService {
     }
 
     public Optional<Membership> getOptionalMembershipOfCurrentUser(Community community) {
-        if (userMethodsService.isContextUser())
-            return getOptionalMembershipOfUser(community, userMethodsService.getCurrentUser());
+        if (userHelper.isContextUser())
+            return getOptionalMembershipOfUser(community, userHelper.getCurrentUser());
         return Optional.empty();
     }
 

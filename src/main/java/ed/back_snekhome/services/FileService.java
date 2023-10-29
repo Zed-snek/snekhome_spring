@@ -9,6 +9,8 @@ import ed.back_snekhome.repositories.community.CommunityImageRepository;
 import ed.back_snekhome.repositories.post.PostImageRepository;
 import ed.back_snekhome.repositories.user.UserImageRepository;
 import ed.back_snekhome.utils.MyFunctions;
+import ed.back_snekhome.helperComponents.MembershipHelper;
+import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,8 +32,8 @@ public class FileService {
     @Value("${upload.path}")
     private String uploadPath;
 
-    private final MembershipMethodsService membershipMethodsService;
-    private final UserMethodsService userMethodsService;
+    private final MembershipHelper membershipHelper;
+    private final UserHelper userHelper;
     private final CommunityLogService communityLogService;
     private final PostImageRepository postImageRepository;
     private final CommunityImageRepository communityImageRepository;
@@ -42,7 +44,7 @@ public class FileService {
     public String deleteCommunityOrUserImageByName(String name) throws FileNotFoundException {
         var userImage = userImageRepository.findByName(name);
         if (userImage.isPresent()) {
-            if (!userMethodsService.isCurrentUserEqual(userImage.get().getUser()))
+            if (!userHelper.isCurrentUserEqual(userImage.get().getUser()))
                 throw new UnauthorizedException("No permissions to delete image");
             userImageRepository.delete(userImage.get());
             deleteImageFromStorage(name);
@@ -51,8 +53,8 @@ public class FileService {
 
         var communityImage = communityImageRepository.findByName(name);
         if (communityImage.isPresent()) {
-            var membership = membershipMethodsService.getMembershipOrThrowErr(
-                    userMethodsService.getCurrentUser(),
+            var membership = membershipHelper.getMembershipOrThrowErr(
+                    userHelper.getCurrentUser(),
                     communityImage.get().getCommunity()
             );
             if (membership.getRole() == null || !membership.getRole().isEditDescription())

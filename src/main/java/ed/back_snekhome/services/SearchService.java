@@ -4,6 +4,8 @@ import ed.back_snekhome.dto.searchDTOs.SearchItemDto;
 import ed.back_snekhome.dto.searchDTOs.SearchUserCommunityDto;
 import ed.back_snekhome.repositories.community.CommunityRepository;
 import ed.back_snekhome.repositories.user.UserRepository;
+import ed.back_snekhome.helperComponents.CommunityHelper;
+import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,8 +20,8 @@ public class SearchService {
 
     private final UserRepository userRepository;
     private final CommunityRepository communityRepository;
-    private final UserMethodsService userMethodsService;
-    private final CommunityMethodsService communityMethodsService;
+    private final UserHelper userHelper;
+    private final CommunityHelper communityHelper;
 
     public List<SearchItemDto> findCommunitiesByRequest(String request, int pageNumber, int pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
@@ -28,7 +30,7 @@ public class SearchService {
         return list.stream().map(community -> SearchItemDto
                         .builder()
                         .idName(community.getGroupname())
-                        .image(communityMethodsService.getTopCommunityImage(community))
+                        .image(communityHelper.getTopCommunityImage(community))
                         .title(community.getName())
                         .build())
                 .collect(Collectors.toList());
@@ -40,7 +42,7 @@ public class SearchService {
         return list.stream().map(user -> SearchItemDto
                         .builder()
                         .idName(user.getNickname())
-                        .image(userMethodsService.getTopUserImage(user))
+                        .image(userHelper.getTopUserImage(user))
                         .title(user.getName() + " " + user.getSurname())
                         .build())
                 .collect(Collectors.toList());

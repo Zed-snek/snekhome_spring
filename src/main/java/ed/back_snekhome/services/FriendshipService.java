@@ -4,6 +4,7 @@ import ed.back_snekhome.dto.userDTOs.UserPublicDto;
 import ed.back_snekhome.entities.user.Friendship;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.repositories.user.FriendshipRepository;
+import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class FriendshipService {
 
-    private final UserMethodsService userMethodsService;
+    private final UserHelper userHelper;
     private final FriendshipRepository friendshipRepository;
 
     public void addFriend(String nickname) {
@@ -26,8 +27,8 @@ public class FriendshipService {
     }
     private void manageFriend(String nickname, boolean isAdd) {
 
-        var requestUser = userMethodsService.getCurrentUser();
-        var secondUser = userMethodsService.getUserByNicknameOrThrowErr(nickname);
+        var requestUser = userHelper.getCurrentUser();
+        var secondUser = userHelper.getUserByNicknameOrThrowErr(nickname);
         var friendship = getFriendshipOrCreate(requestUser.getIdAccount(), secondUser.getIdAccount());
 
         if (Objects.equals(friendship.getIdFirstUser(), requestUser.getIdAccount()))
@@ -56,20 +57,20 @@ public class FriendshipService {
     }
 
     public List<UserPublicDto> getFriends(String nickname) {
-        var user = userMethodsService.getUserByNicknameOrThrowErr(nickname);
+        var user = userHelper.getUserByNicknameOrThrowErr(nickname);
         var friendships = getFriendshipsByUserId(user.getIdAccount());
         var array = new ArrayList<UserPublicDto>();
         for (Friendship f : friendships) {
             UserEntity friend;
             if (f.getIdFirstUser().equals(user.getIdAccount()))
-                friend = userMethodsService.getUserByIdOrThrowErr(f.getIdSecondUser());
+                friend = userHelper.getUserByIdOrThrowErr(f.getIdSecondUser());
             else
-                friend = userMethodsService.getUserByIdOrThrowErr(f.getIdFirstUser());
+                friend = userHelper.getUserByIdOrThrowErr(f.getIdFirstUser());
             array.add(UserPublicDto.builder()
-                    .image(userMethodsService.getTopUserImage(friend))
+                    .image(userHelper.getTopUserImage(friend))
                     .nickname(friend.getNickname())
                     .friendshipType(
-                            userMethodsService.getFriendshipType(user.getIdAccount(), friend.getIdAccount())
+                            userHelper.getFriendshipType(user.getIdAccount(), friend.getIdAccount())
                     )
                     .name(friend.getName())
                     .surname(friend.getSurname())

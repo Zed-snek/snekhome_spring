@@ -21,6 +21,9 @@ import ed.back_snekhome.repositories.community.MembershipRepository;
 import ed.back_snekhome.repositories.democracy.*;
 import ed.back_snekhome.repositories.post.CommentaryRatingRepository;
 import ed.back_snekhome.repositories.post.PostRatingRepository;
+import ed.back_snekhome.helperComponents.CommunityHelper;
+import ed.back_snekhome.helperComponents.MembershipHelper;
+import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -50,9 +52,9 @@ public class DemocracyService {
     private final CommunityRepository communityRepository;
     private final ElectionsParticipationRepository electionsParticipationRepository;
 
-    private final MembershipMethodsService membershipMethodsService;
-    private final UserMethodsService userMethodsService;
-    private final CommunityMethodsService communityMethodsService;
+    private final MembershipHelper membershipHelper;
+    private final UserHelper userHelper;
+    private final CommunityHelper communityHelper;
 
     @Value("${democracy.elections.duration}")
     private int electionsDuration;
@@ -77,7 +79,7 @@ public class DemocracyService {
     }
 
     public boolean isCitizenRight(Community community, UserEntity user) {
-        var optionalMembership = membershipMethodsService
+        var optionalMembership = membershipHelper
                 .getOptionalMembershipOfUser(community, user);
 
         if (optionalMembership.isPresent()) {
@@ -165,19 +167,19 @@ public class DemocracyService {
 
     @Transactional
     public GeneralDemocracyDto getGeneralDemocracyData(String groupname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         throwErrIfNotDemocracy(community);
 
         Optional<Membership> optMembership;
         UserEntity user = null;
-        if (userMethodsService.isContextUser()) {
-            user = userMethodsService.getCurrentUser();
-            optMembership = membershipMethodsService.getOptionalMembershipOfUser(community, user);
+        if (userHelper.isContextUser()) {
+            user = userHelper.getCurrentUser();
+            optMembership = membershipHelper.getOptionalMembershipOfUser(community, user);
         }
         else {
             optMembership = Optional.empty();
         }
-        communityMethodsService.throwErrIfNoAccessToCommunity(community, optMembership);
+        communityHelper.throwErrIfNoAccessToCommunity(community, optMembership);
 
         var elections = community.getElections();
 
@@ -256,10 +258,10 @@ public class DemocracyService {
     }
 
     public void makeVote(String groupname, String candidateNickname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var userCandidate = userMethodsService.getUserByNicknameOrThrowErr(candidateNickname);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        var userCandidate = userHelper.getUserByNicknameOrThrowErr(candidateNickname);
         var candidate = findCandidateOrThrowErr(community, userCandidate);
-        var voter = userMethodsService.getCurrentUser();
+        var voter = userHelper.getCurrentUser();
 
         throwErrIfNotCitizenRight(community, voter);
         var electionsParticipation = findCurrentElectionsParticipationOrThrowErr(candidate, community);
@@ -278,8 +280,8 @@ public class DemocracyService {
     }
 
     private Candidate getCandidateAfterCheck(BiConsumer<Community, UserEntity> checkFunction, String groupname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
-        var user = userMethodsService.getCurrentUser();
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
+        var user = userHelper.getCurrentUser();
         throwErrIfNotCitizenRight(community, user);
         checkFunction.accept(community, user);
         return findCandidateOrThrowErr(community, user);
@@ -312,8 +314,8 @@ public class DemocracyService {
 
     @Transactional
     public void becomeCandidate(NewCandidateDto dto) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(dto.getGroupname());
-        var user = userMethodsService.getCurrentUser();
+        var community = communityHelper.getCommunityByNameOrThrowErr(dto.getGroupname());
+        var user = userHelper.getCurrentUser();
         throwErrIfNotDemocracy(community);
         throwErrIfNotCitizenRight(community, user);
         if (getElectionsStatus(community.getElections()) != ElectionsStatus.NOT_STARTED)
@@ -331,16 +333,16 @@ public class DemocracyService {
 
     @Transactional
     public CandidateListDto getListOfCandidates(String groupname) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         throwErrIfNotDemocracy(community);
-        var membership = membershipMethodsService.getOptionalMembershipOfCurrentUser(community);
-        communityMethodsService.throwErrIfNoAccessToCommunity(community, membership);
+        var membership = membershipHelper.getOptionalMembershipOfCurrentUser(community);
+        communityHelper.throwErrIfNoAccessToCommunity(community, membership);
 
         Long votedId = (long) -1;
-        if (userMethodsService.isContextUser()) {
+        if (userHelper.isContextUser()) {
             var candidate = voteRepository.getCandidateByCommunityAndVoter(
                     community,
-                    userMethodsService.getCurrentUser()
+                    userHelper.getCurrentUser()
             );
 
             if (candidate.isPresent())
@@ -359,7 +361,7 @@ public class DemocracyService {
                                             .id(candidate.getId())
                                             .name(user.getName())
                                             .surname(user.getSurname())
-                                            .image(userMethodsService.getTopUserImage(user))
+                                            .image(userHelper.getTopUserImage(user))
                                             .nickname(user.getNickname())
                                             .program(candidate.getProgram())
                                             .build();

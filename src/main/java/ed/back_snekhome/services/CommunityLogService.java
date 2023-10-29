@@ -9,10 +9,12 @@ import ed.back_snekhome.enums.LogType;
 import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import ed.back_snekhome.repositories.community.CommunityLogRepository;
 import ed.back_snekhome.repositories.community.MembershipRepository;
+import ed.back_snekhome.helperComponents.CommunityHelper;
+import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,8 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommunityLogService {
 
-    private final UserMethodsService userMethodsService;
-    private final CommunityMethodsService communityMethodsService;
+    private final UserHelper userHelper;
+    private final CommunityHelper communityHelper;
     private final MembershipRepository membershipRepository;
     private final CommunityLogRepository communityLogRepository;
 
@@ -37,7 +39,7 @@ public class CommunityLogService {
     }
 
     private CommunityLog.CommunityLogBuilder builderWithCurrentUser(Community community) {
-        return builder(userMethodsService.getCurrentUser(), community);
+        return builder(userHelper.getCurrentUser(), community);
     }
 
     private <T> void createLogWithMessage(Community community, T value, LogType type) {
@@ -47,9 +49,9 @@ public class CommunityLogService {
     }
 
     public List<CommunityLogDto> getLogsByGroupname(String groupname, int pageNumber, int pageSize) {
-        var community = communityMethodsService.getCommunityByNameOrThrowErr(groupname);
+        var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         var membership
-                = membershipRepository.findByCommunityAndUser(community, userMethodsService.getCurrentUser())
+                = membershipRepository.findByCommunityAndUser(community, userHelper.getCurrentUser())
                 .orElseThrow(() -> new UnauthorizedException("User has no permissions"));
 
         if (community.getType() == CommunityType.DEMOCRACY ||

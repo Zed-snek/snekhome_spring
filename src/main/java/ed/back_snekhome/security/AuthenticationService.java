@@ -15,7 +15,7 @@ import ed.back_snekhome.exceptionHandler.exceptions.TokenExpiredException;
 import ed.back_snekhome.exceptionHandler.exceptions.UserAlreadyExistsException;
 import ed.back_snekhome.repositories.user.UserRepository;
 import ed.back_snekhome.response.AuthenticationResponse;
-import ed.back_snekhome.services.UserMethodsService;
+import ed.back_snekhome.helperComponents.UserHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final ConfirmationTokenService confirmationTokenService;
     private final EmailSendService emailSendService;
-    private final UserMethodsService userMethodsService;
+    private final UserHelper userHelper;
     private final UserRepository userRepository;
 
     public AuthenticationResponse loginUser(LoginDto loginDto) {
@@ -84,7 +84,7 @@ public class AuthenticationService {
 
     public void saveNewAccount(RegisterDto registerDto) {
         throwErrIfExistsByEmail(registerDto.getEmail());
-        userMethodsService.throwErrIfExistsByNickname(registerDto.getNickname());
+        userHelper.throwErrIfExistsByNickname(registerDto.getNickname());
 
         var userEntity = UserEntity.builder()
                 .password(passwordEncoder.encode(registerDto.getPassword()))
@@ -129,7 +129,7 @@ public class AuthenticationService {
 
 
     private void activateAccountIfVerified(ConfirmationToken token) {
-        var account = userMethodsService.getUserByIdOrThrowErr( token.getIdUser() );
+        var account = userHelper.getUserByIdOrThrowErr( token.getIdUser() );
         if (!token.isNotExpired()){
             sendVerificationMail(account);
             throw new TokenExpiredException("Verification token is expired, new one is sent on your e-mail");
@@ -139,7 +139,7 @@ public class AuthenticationService {
     }
 
     private void changeEmailActionConfirmation(ConfirmationToken token) { //confirms action "change email"
-        var account = userMethodsService.getUserByIdOrThrowErr(token.getIdUser());
+        var account = userHelper.getUserByIdOrThrowErr(token.getIdUser());
         throwErrIfTokenExpired(token);
 
         var newToken = new ConfirmationToken(
@@ -158,7 +158,7 @@ public class AuthenticationService {
     }
 
     private void changeEmailLastConfirmation(ConfirmationToken token) { //new email confirmation
-        var account = userMethodsService.getUserByIdOrThrowErr(token.getIdUser());
+        var account = userHelper.getUserByIdOrThrowErr(token.getIdUser());
         throwErrIfTokenExpired(token);
 
         account.setEmail(token.getMessage());
@@ -192,7 +192,7 @@ public class AuthenticationService {
     public void changeEmail(String email) { //sends email list on old email to confirm action
 
         throwErrIfExistsByEmail(email);
-        var user = userMethodsService.getCurrentUser();
+        var user = userHelper.getCurrentUser();
         var confirmationToken = new ConfirmationToken(
                 user.getIdAccount(),
                 ConfirmationType.CHANGE_EMAIL,
@@ -208,7 +208,7 @@ public class AuthenticationService {
     }
 
     public void changePassword(ChangePasswordDto dto) {
-        var user = userMethodsService.getCurrentUser();
+        var user = userHelper.getCurrentUser();
         if (!passwordEncoder.matches(dto.getOldPass(), user.getPassword())) {
             throw new PasswordDoesntMatchException("Invalid old password, please try again");
         }
