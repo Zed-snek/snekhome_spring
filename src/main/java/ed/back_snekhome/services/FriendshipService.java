@@ -18,18 +18,24 @@ public class FriendshipService {
 
     private final UserHelper userHelper;
     private final FriendshipRepository friendshipRepository;
+    private final NotificationService notificationService;
 
     public void addFriend(String nickname) {
         manageFriend(nickname, true);
     }
+
     public void delFriend(String nickname) {
         manageFriend(nickname, false);
     }
+
     private void manageFriend(String nickname, boolean isAdd) {
 
         var requestUser = userHelper.getCurrentUser();
         var secondUser = userHelper.getUserByNicknameOrThrowErr(nickname);
         var friendship = getFriendshipOrCreate(requestUser.getIdAccount(), secondUser.getIdAccount());
+
+        if (isAdd)
+            notificationService.createAddFriendNotification(secondUser, requestUser);
 
         if (Objects.equals(friendship.getIdFirstUser(), requestUser.getIdAccount()))
             friendship.setFirstUser(isAdd);

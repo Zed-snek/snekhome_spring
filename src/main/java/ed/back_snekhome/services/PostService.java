@@ -45,6 +45,7 @@ public class PostService {
     private final MembershipHelper membershipHelper;
     private final CommunityLogService communityLogService;
     private final DemocracyService democracyService;
+    private final NotificationService notificationService;
 
     private final MembershipRepository membershipRepository;
     private final PostRepository postRepository;
@@ -87,6 +88,7 @@ public class PostService {
         return post.getIdPost();
     }
 
+
     @Transactional
     public void updatePost(EditPostDto dto, Long id) throws IOException {
         var post = getPostById(id);
@@ -116,15 +118,22 @@ public class PostService {
             throw new UnauthorizedException("No access to edit the post");
     }
 
+
     public Post getPostById(Long id) {
         return postRepository.getByIdPost(id)
                 .orElseThrow(() -> new EntityNotFoundException("There is no post"));
     }
 
-    private int countRating(Post post) {
-        return postRatingRepository.countByPostAndType(post, RatingType.UPVOTE)
-                - postRatingRepository.countByPostAndType(post, RatingType.DOWNVOTE);
+
+    private int countUpvotes(Post post) {
+        return postRatingRepository.countByPostAndType(post, RatingType.UPVOTE);
     }
+
+
+    private int countRating(Post post) {
+        return countUpvotes(post) - postRatingRepository.countByPostAndType(post, RatingType.DOWNVOTE);
+    }
+
 
     private RatingType getRatedType(Post post) {
         if (userHelper.isContextUser()) {
@@ -136,12 +145,14 @@ public class PostService {
         return RatingType.NONE;
     }
 
+
     private PostDto.PostDtoBuilder setMainInfo(Post post) {
         return PostDto.builder()
                 .post(post)
                 .rating(countRating(post))
                 .ratedType(getRatedType(post));
     }
+
 
     public PostDto getPostPage(Long id) {
         var post = getPostById(id);
@@ -167,6 +178,7 @@ public class PostService {
         return postDto.build();
     }
 
+
     private PostRating findPostRatingOrCreate(Post post) {
         var currentUser = userHelper.getCurrentUser();
 
@@ -177,12 +189,16 @@ public class PostService {
                         .build());
     }
 
+
     public void ratePost(Long id, RatingType newStatus) {
         var post = getPostById(id);
         var rating = findPostRatingOrCreate(post);
         rating.setType(newStatus);
         postRatingRepository.save(rating);
+
+        notificationService.createUpvotesNotification(post, countUpvotes(post));
     }
+
 
     @Transactional
     public void deletePost(Long id) throws FileNotFoundException {
@@ -216,9 +232,11 @@ public class PostService {
             throw new UnauthorizedException("No access to delete post");
     }
 
+
     private int countComments(Post post) {
         return commentaryRepository.countAllByPost(post);
     }
+
 
     private List<CommentaryDto> get2CommentsByPost(Post post) {
         Long ref = (long) -1;
@@ -240,6 +258,7 @@ public class PostService {
         return array;
     }
 
+
     private PostDto.PostDtoBuilder setPostItemInfo(Post post, boolean isCommunity, boolean isUser) {
         var builder = setMainInfo(post)
                     .comments(countComments(post))
@@ -257,6 +276,7 @@ public class PostService {
         }
         return builder;
     }
+
 
     public List<PostDto> getPostDtoListByUser(String nickname, int pageNumber, int pageSize) {
         var user = userHelper.getUserByNicknameOrThrowErr(nickname);
@@ -287,6 +307,7 @@ public class PostService {
                 .toList();
     }
 
+
     public List<PostDto> getPostDtoListByCommunity(String groupname, int pageNumber, int pageSize) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
@@ -311,6 +332,7 @@ public class PostService {
             return dto.build();
         }).toList();
     }
+
 
     public List<PostDto> getPostDtoListHome(int pageNumber, int pageSize) {
         var user = userHelper.getCurrentUser();

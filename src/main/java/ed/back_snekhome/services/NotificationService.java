@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
@@ -24,6 +26,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final CandidateRepository candidateRepository;
 
+    private final List<Integer> upvoteCounts = List.of(2, 5, 10, 25, 50);
 
 
     private void saveAndSendToUser(Notification.NotificationBuilder builder) {
@@ -46,10 +49,10 @@ public class NotificationService {
     }
 
 
-    public void createUserSubscribeNotification(UserEntity toUser) {
+    public void createAddFriendNotification(UserEntity toUser, UserEntity fromUser) {
         saveAndSendToUser(
-                builder(toUser, NotificationType.USER_SUBSCRIBE)
-                        .secondUser(userHelper.getCurrentUser())
+                builder(toUser, NotificationType.ADD_FRIEND)
+                        .secondUser(fromUser)
         );
     }
 
@@ -90,7 +93,18 @@ public class NotificationService {
     }
 
 
-    public void createUpvotesNotification(Post post, int upvotesCount) {
+    public <T> void createUpvotesNotification(T obj, int upvotesCount) {
+        if (upvoteCounts.contains(upvotesCount)) {
+            if (obj instanceof Post)
+                createPostUpvotesNotification((Post) obj, upvotesCount);
+            else if (obj instanceof Commentary)
+                createCommentUpvotesNotification((Commentary) obj, upvotesCount);
+            else
+                throw new RuntimeException("Method doesn't allow this type of class");
+        }
+    }
+
+    private void createPostUpvotesNotification(Post post, int upvotesCount) {
         saveAndSendToUser(
                 builder(post.getUser(), NotificationType.POST_UPVOTES)
                         .message(String.valueOf(upvotesCount))
@@ -98,8 +112,7 @@ public class NotificationService {
         );
     }
 
-
-    public void createUpvotesNotification(Commentary commentary, int upvotesCount) {
+    private void createCommentUpvotesNotification(Commentary commentary, int upvotesCount) {
         saveAndSendToUser(
                 builder(commentary.getUser(), NotificationType.COMMENT_UPVOTES)
                         .message(String.valueOf(upvotesCount))

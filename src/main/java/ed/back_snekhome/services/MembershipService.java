@@ -35,6 +35,7 @@ public class MembershipService {
     private final CommunityHelper communityHelper;
     private final CommunityLogService communityLogService;
     private final DemocracyService democracyService;
+    private final NotificationService notificationService;
 
     private final MembershipRepository membershipRepository;
     private final CommunityRoleRepository communityRoleRepository;
@@ -61,6 +62,7 @@ public class MembershipService {
         membershipRepository.save(membership);
     }
 
+
     public void leaveCommunity(String groupname) {
         var membership = membershipHelper.getMembershipOrThrowErr(
                 userHelper.getCurrentUser(),
@@ -68,6 +70,7 @@ public class MembershipService {
         );
         membershipRepository.delete(membership);
     }
+
 
     public ArrayList<PublicCommunityCardDto> getJoinedCommunitiesByNickname(String nickname) {
         var user = userHelper.getUserByNicknameOrThrowErr(nickname);
@@ -84,6 +87,7 @@ public class MembershipService {
         );
         return array;
     }
+
 
     public MembersDto getMembersByCommunity(String groupname, boolean isBanned) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -119,6 +123,7 @@ public class MembershipService {
                 .build();
     }
 
+
     private Membership canBanUser(Community community, UserEntity userEntity) {
         var userMembership = membershipHelper.getMembershipOrThrowErr(userEntity, community);
         var admin = userHelper.getCurrentUser();
@@ -133,10 +138,11 @@ public class MembershipService {
         throw new UnauthorizedException("No permissions to ban user");
     }
 
+
     @Transactional
-    public void banUser(String groupname, String user) {
+    public void banUser(String groupname, String nickname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
-        var userEntity = userHelper.getUserByNicknameOrThrowErr(user);
+        var userEntity = userHelper.getUserByNicknameOrThrowErr(nickname);
         var userMembership = canBanUser(community, userEntity);
         userMembership.setBanned(true);
 
@@ -147,8 +153,9 @@ public class MembershipService {
 
         userMembership.setRole(null);
         membershipRepository.save(userMembership);
-        communityLogService.createLogBanUser(community, userEntity);
 
+        communityLogService.createLogBanUser(community, userEntity);
+        notificationService.createBannedInCommunityNotification(userEntity, community);
     }
 
     @Transactional
@@ -159,6 +166,7 @@ public class MembershipService {
         communityLogService.createLogUnbanUser(community, userEntity);
         membershipRepository.delete(userMembership);
     }
+
 
     @Transactional
     public void grantRole(String nickname, String groupname, String roleName) {
@@ -174,6 +182,7 @@ public class MembershipService {
         }
     }
 
+
     @Transactional
     public void revokeRole(String nickname, String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -187,6 +196,7 @@ public class MembershipService {
             communityLogService.createLogRevokeRole(community, user, roleTitle);
         }
     }
+
 
     public String manageJoinRequest(String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -209,6 +219,7 @@ public class MembershipService {
         return "Request is sent successfully";
     }
 
+
     public List<UserPublicDto> getAllJoinRequests(String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         var user = userHelper.getCurrentUser();
@@ -230,6 +241,7 @@ public class MembershipService {
         throw new UnauthorizedException("No access to data");
     }
 
+
     private void deleteJoinRequest(Community community, UserEntity user) {
         var request = joinRequestRepository.findTopByCommunityAndUser(community, user);
         if (request.isPresent())
@@ -237,6 +249,7 @@ public class MembershipService {
         else
             throw new EntityNotFoundException("There is no request by user @" + user.getNickname());
     }
+
 
     @Transactional
     public void acceptJoinRequest(String groupname, String nickname) {
@@ -251,6 +264,7 @@ public class MembershipService {
         membershipRepository.save(membership);
         communityLogService.createLogAcceptJoinRequest(community, user);
     }
+
 
     public void cancelJoinRequest(String groupname, String nickname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);

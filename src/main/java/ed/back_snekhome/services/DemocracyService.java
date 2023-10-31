@@ -52,6 +52,7 @@ public class DemocracyService {
     private final CommunityRepository communityRepository;
     private final ElectionsParticipationRepository electionsParticipationRepository;
 
+    private final NotificationService notificationService;
     private final MembershipHelper membershipHelper;
     private final UserHelper userHelper;
     private final CommunityHelper communityHelper;
@@ -155,6 +156,9 @@ public class DemocracyService {
 
             electionsParticipationRepository.updateElectionsParticipationWithVotes(elections);
             voteRepository.deleteAllByCommunity(elections.getCommunity());
+
+            //method sends to all current candidates, so it must be processed before "updateElectionsData()" method
+            notificationService.createElectionsEndedNotification(community);
 
             electionsRepository.save(updateElectionsDate(elections, candidate));
             clearPresidencyDataByCommunity(community);
