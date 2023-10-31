@@ -54,15 +54,19 @@ public class Notification {
     @JoinColumn(name = "commentary_id")
     private Commentary commentary;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "post_id")
+    private Post post;
 
     public NotificationDto createDto() {
          var builder = NotificationDto.builder()
-                .isRead(isRead)
-                .type(type)
-                .date(date)
-                .message(message)
-                .nickname(secondUser == null ? null : secondUser.getNickname())
-                .groupname(community == null ? null : community.getGroupname());
+                 .isRead(isRead)
+                 .type(type)
+                 .date(date)
+                 .message(message)
+                 .nickname(secondUser == null ? null : secondUser.getNickname())
+                 .groupname(community == null ? null : community.getGroupname())
+                 .postId(post == null ? null : post.getIdPost());
 
          if (commentary != null) {
              var s = commentary.getText();

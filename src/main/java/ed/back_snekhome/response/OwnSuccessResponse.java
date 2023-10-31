@@ -1,9 +1,7 @@
 package ed.back_snekhome.response;
 
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
