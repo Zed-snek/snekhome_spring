@@ -101,15 +101,18 @@ public class CommunityController {
         return membershipService.getJoinedCommunitiesByNickname(nickname);
     }
 
+
     @GetMapping("/members/{groupname}")
     public MembersDto getMembers(@PathVariable String groupname) {
         return membershipService.getMembersByCommunity(groupname, false);
     }
 
+
     @GetMapping("/banned_users/{groupname}")
     public MembersDto getBannedUsers(@PathVariable String groupname) {
         return membershipService.getMembersByCommunity(groupname, true);
     }
+
 
     @PostMapping("/auth/community/role/{groupname}")
     public ResponseEntity<OwnSuccessResponse> newRole(@Valid @RequestBody CommunityRoleDto dto,
@@ -119,6 +122,7 @@ public class CommunityController {
         var response = new OwnSuccessResponse("Role is created");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @PutMapping("/auth/community/role/{groupname}/{oldRoleName}")
     public ResponseEntity<OwnSuccessResponse> updateRole(
@@ -131,6 +135,7 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @DeleteMapping("/auth/community/role/{groupname}/{roleName}")
     public ResponseEntity<OwnSuccessResponse> deleteRole(
             @PathVariable String groupname,
@@ -141,10 +146,12 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @GetMapping("/community/roles/{groupname}")
     public List<CommunityRole> getRoles(@PathVariable String groupname) {
         return communityService.getRoles(groupname);
     }
+
 
     @PostMapping("/auth/community/{groupname}/ban/{username}")
     public ResponseEntity<OwnSuccessResponse> banUser(
@@ -156,6 +163,7 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @DeleteMapping("/auth/community/{groupname}/unban/{username}")
     public ResponseEntity<OwnSuccessResponse> unbanUser(
             @PathVariable String groupname,
@@ -165,6 +173,7 @@ public class CommunityController {
         var response = new OwnSuccessResponse("User is unbanned");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @PostMapping("/auth/community/{groupname}/role/{roleName}/set/{username}")
     public ResponseEntity<OwnSuccessResponse> grantRole(
@@ -177,6 +186,7 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @DeleteMapping("/auth/community/{groupname}/role/revoke/{username}")
     public ResponseEntity<OwnSuccessResponse> revokeRole(
             @PathVariable String groupname,
@@ -186,6 +196,7 @@ public class CommunityController {
         var response = new OwnSuccessResponse("Role is revoked");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @PutMapping("/auth/community/{groupname}/settings")
     public ResponseEntity<OwnSuccessResponse> updateCommunitySettings(
@@ -197,6 +208,7 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @PutMapping("/auth/community/{groupname}/democracy")
     public ResponseEntity<OwnSuccessResponse> updateDemocracySettings(
             @PathVariable String groupname,
@@ -207,17 +219,20 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @PostMapping("/auth/community/{groupname}/request")
     public ResponseEntity<OwnSuccessResponse> sendJoinRequest(@PathVariable String groupname) {
         var response = new OwnSuccessResponse(membershipService.manageJoinRequest(groupname));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @GetMapping("/auth/community/{groupname}/request")
     public List<UserPublicDto> getJoinRequests(@PathVariable String groupname) {
 
         return membershipService.getAllJoinRequests(groupname);
     }
+
 
     @PostMapping("/auth/community/{groupname}/request/{nickname}")
     public ResponseEntity<OwnSuccessResponse> acceptJoinRequest(
@@ -228,6 +243,7 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @DeleteMapping("/auth/community/{groupname}/request/{nickname}")
     public ResponseEntity<OwnSuccessResponse> cancelJoinRequest(
             @PathVariable String groupname, @PathVariable String nickname
@@ -236,6 +252,7 @@ public class CommunityController {
         var response = new OwnSuccessResponse("Join request is cancelled");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @GetMapping("/auth/community/{groupname}/logs")
     public List<CommunityLogDto> getCommunityLogs(

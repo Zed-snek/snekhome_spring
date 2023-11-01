@@ -1,9 +1,7 @@
 package ed.back_snekhome.manualTest;
 
 import ed.back_snekhome.response.OwnSuccessResponse;
-import ed.back_snekhome.helperComponents.CommunityHelper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     private final TestRepository testRepository;
-    private final CommunityHelper communityHelper;
 
     private final SimpMessagingTemplate simpMessagingTemplate;
 
@@ -24,7 +21,7 @@ public class TestController {
         simpMessagingTemplate.convertAndSendToUser("Bwahsteins_Monster", "/receive-notification", "DAMN WEBSOCKECTS");
 
         var response = new OwnSuccessResponse("it worked: ");
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
 }

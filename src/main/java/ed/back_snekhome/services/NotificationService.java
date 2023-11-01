@@ -1,6 +1,7 @@
 package ed.back_snekhome.services;
 
 
+import ed.back_snekhome.dto.userDTOs.NotificationDto;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.post.Commentary;
 import ed.back_snekhome.entities.post.Post;
@@ -11,8 +12,10 @@ import ed.back_snekhome.helperComponents.UserHelper;
 import ed.back_snekhome.repositories.democracy.CandidateRepository;
 import ed.back_snekhome.repositories.user.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -129,8 +132,28 @@ public class NotificationService {
                 ));
     }
 
-    //get last 5 notifications
-    //get notifications for notification list with pagination
-    //read notifications
+
+    @Transactional
+    public List<NotificationDto> getLast5NotificationsOfCurrentUser() {
+        return notificationRepository.findTop5ByNotifiedUserOrderByIdDesc(userHelper.getCurrentUser())
+                .map(Notification::createDto)
+                .toList();
+    }
+
+
+    @Transactional
+    public void readNotificationsOfCurrentUser() {
+        notificationRepository.readNotificationsOfUser(userHelper.getCurrentUser());
+    }
+
+
+    @Transactional
+    public List<NotificationDto> getNotificationsWithPagination(int page, int size) {
+        var pageable = PageRequest.of(page, size);
+        return notificationRepository.getAllByNotifiedUser(userHelper.getCurrentUser(), pageable)
+                .map(Notification::createDto)
+                .toList();
+    }
+
 
 }
