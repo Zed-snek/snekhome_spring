@@ -4,6 +4,7 @@ import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.communityDemocracy.Candidate;
 import ed.back_snekhome.entities.communityDemocracy.Elections;
 import ed.back_snekhome.entities.communityDemocracy.ElectionsParticipation;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -29,13 +30,15 @@ public interface ElectionsParticipationRepository extends JpaRepository<Election
             "AND eP.electionsNumber = eP.elections.electionsNumber")
     Optional<ElectionsParticipation> findByCandidateIfActive(@Param("candidate") Candidate candidate);
 
+
     @Query("SELECT ep FROM ElectionsParticipation ep " +
             "JOIN ep.votes v " +
             "WHERE ep.candidate.community = :community " +
             "GROUP BY ep " +
             "ORDER BY COUNT(v) DESC")
-    Optional<ElectionsParticipation> findParticipantWithMostVotes(
-            @Param("community") Community community
+    List<ElectionsParticipation> findParticipantWithMostVotes(
+            @Param("community") Community community,
+            Pageable pageable
     );
 
 
@@ -48,7 +51,7 @@ public interface ElectionsParticipationRepository extends JpaRepository<Election
     @Modifying
     @Query("UPDATE ElectionsParticipation ep SET ep.numberOfVotes = " +
             "(SELECT COUNT(v) FROM Vote v WHERE v.electionsParticipation = ep) " +
-            "WHERE ep.electionsNumber = ep.elections.electionsNumber")
-    void updateElectionsParticipationWithVotes(@Param("elections") Elections elections);
+            "WHERE ep.electionsNumber = :electionsNumber")
+    void updateElectionsParticipationWithVotes(@Param("electionsNumber") int electionsNumber);
 
 }

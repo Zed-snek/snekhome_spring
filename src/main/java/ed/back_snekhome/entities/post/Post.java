@@ -3,6 +3,7 @@ package ed.back_snekhome.entities.post;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.community.Community;
+import ed.back_snekhome.entities.user.Notification;
 import ed.back_snekhome.entities.user.UserEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
@@ -57,5 +58,10 @@ public class Post {
 
     @CreatedDate
     private LocalDateTime date;
+
+
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Notification> notifications;
 
 }

@@ -26,6 +26,7 @@ import ed.back_snekhome.helperComponents.MembershipHelper;
 import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -144,18 +145,23 @@ public class DemocracyService {
         if (status == ElectionsStatus.FINISHED) {
             var community = elections.getCommunity();
 
-            var winner = electionsParticipationRepository.findParticipantWithMostVotes(community);
+            var winner = electionsParticipationRepository.findParticipantWithMostVotes(
+                    community,
+                    PageRequest.of(0, 1)
+            );
 
             //(if 0 votes, leaves the same president)
-            var candidate = winner
-                    .map(ElectionsParticipation::getCandidate)
-                    .orElse(elections.getCurrentPresident());
+            Candidate candidate;
+            if (winner.isEmpty())
+                candidate = elections.getCurrentPresident();
+            else
+                candidate = winner.get(0).getCandidate();
 
             community.setOwner(candidate.getUser());
             communityRepository.save(community);
 
-            electionsParticipationRepository.updateElectionsParticipationWithVotes(elections);
-            voteRepository.deleteAllByCommunity(elections.getCommunity());
+            electionsParticipationRepository.updateElectionsParticipationWithVotes(elections.getElectionsNumber());
+            voteRepository.deleteAllByElectionsParticipation_Elections(elections);
 
             //method sends to all current candidates, so it must be processed before "updateElectionsData()" method
             notificationService.createElectionsEndedNotification(community);

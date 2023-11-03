@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 
 @Entity
@@ -35,6 +36,9 @@ public class Elections {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_current_president")
     private Candidate currentPresident;
+
+    @OneToMany(mappedBy = "elections", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<ElectionsParticipation> electionsParticipations;
 
 
     public ElectionsParticipation createElectionsParticipation(Candidate candidate) {

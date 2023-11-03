@@ -8,16 +8,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.stream.Stream;
+import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    Stream<Notification> findTop5ByNotifiedUserOrderByIdDesc(UserEntity notifiedUser);
+    List<Notification> findTop5ByNotifiedUserOrderByIdDesc(UserEntity notifiedUser);
 
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.notifiedUser = :user")
     void readNotificationsOfUser(@Param("user") UserEntity notifiedUser);
 
-    Stream<Notification> getAllByNotifiedUser(UserEntity notifiedUser, Pageable pageable);
+    List<Notification> getAllByNotifiedUser(UserEntity notifiedUser, Pageable pageable);
+
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.notifiedUser = :user AND n.isRead = false")
+    int countUnreadNotificationsByUser(@Param("user") UserEntity user);
 
 }

@@ -6,7 +6,6 @@ import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.security.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -64,10 +63,27 @@ public class UserEntity implements UserDetails {
     @JsonIgnore
     private List<Membership> memberships;
 
+
+    @OneToMany(mappedBy = "notifiedUser", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Notification> ownNotification;
+
+    @OneToMany(mappedBy = "secondUser", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Notification> otherNotifications;
+
+
+
+    public boolean isTheSameUserEntity(UserEntity secondUser) {
+        return nickname.equals(secondUser.getNickname());
+    }
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return role.getAuthorities();
     }
+
 
     @Override
     public String getUsername() {

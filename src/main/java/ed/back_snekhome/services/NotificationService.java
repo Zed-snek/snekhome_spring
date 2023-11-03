@@ -69,21 +69,32 @@ public class NotificationService {
     }
 
 
-    public void createNewCommentNotification(Commentary comment) {
+    private void createPostRepliedCommentNotification(Commentary comment, UserEntity commentator) {
+
+    }
+
+    public void createNewCommentNotification(Commentary comment, Commentary repliedComment) {
         var commentator = userHelper.getCurrentUser();
-        if (!commentator.equals(comment.getUser())) { //if user replies on his own commentary, no notification will be sent
+
+        //if user replies on his own commentary, no notification will be sent
+        if (!commentator.isTheSameUserEntity(repliedComment.getUser())) {
             saveAndSendToUser(
-                    builder(comment.getUser(), NotificationType.COMMENT_REPLY)
+                    builder(repliedComment.getUser(), NotificationType.COMMENT_REPLY)
                             .commentary(comment)
                             .secondUser(commentator)
             );
-            if (!comment.getUser().equals(comment.getPost().getUser())) { //post creator will not get 2 notifications for 1 replied commentary
-                saveAndSendToUser(
-                        builder(comment.getPost().getUser(), NotificationType.POST_REPLY)
-                                .commentary(comment)
-                                .secondUser(commentator)
-                );
-            }
+        }
+
+        //sends notification to post creator
+        var postCreator = comment.getPost().getUser();
+        if (!commentator.isTheSameUserEntity(postCreator) &&
+                !repliedComment.getUser().isTheSameUserEntity(postCreator)
+        ) {
+            saveAndSendToUser(
+                    builder(comment.getPost().getUser(), NotificationType.POST_REPLY)
+                            .commentary(comment)
+                            .secondUser(commentator)
+            );
         }
     }
 
@@ -133,9 +144,9 @@ public class NotificationService {
     }
 
 
-    @Transactional
     public List<NotificationDto> getLast5NotificationsOfCurrentUser() {
         return notificationRepository.findTop5ByNotifiedUserOrderByIdDesc(userHelper.getCurrentUser())
+                .stream()
                 .map(Notification::createDto)
                 .toList();
     }
@@ -147,12 +158,16 @@ public class NotificationService {
     }
 
 
-    @Transactional
     public List<NotificationDto> getNotificationsWithPagination(int page, int size) {
         var pageable = PageRequest.of(page, size);
         return notificationRepository.getAllByNotifiedUser(userHelper.getCurrentUser(), pageable)
+                .stream()
                 .map(Notification::createDto)
                 .toList();
+    }
+
+    public int countUnreadNotifications(UserEntity user) {
+        return notificationRepository.countUnreadNotificationsByUser(user);
     }
 
 

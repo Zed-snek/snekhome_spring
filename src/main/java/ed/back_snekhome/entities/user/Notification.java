@@ -58,6 +58,7 @@ public class Notification {
     @JoinColumn(name = "post_id")
     private Post post;
 
+
     public NotificationDto createDto() {
          var builder = NotificationDto.builder()
                  .isRead(isRead)
@@ -72,7 +73,7 @@ public class Notification {
              var s = commentary.getText();
              builder
                      .postId(commentary.getPost().getIdPost())
-                     .message(s.length() > 100 ? s.substring(0, 100) : s);
+                     .message(message == null ? (s.length() > 100 ? s.substring(0, 100) : s) : message);
          }
          return builder.build();
     }

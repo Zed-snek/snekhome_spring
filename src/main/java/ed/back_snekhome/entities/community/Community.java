@@ -3,6 +3,7 @@ package ed.back_snekhome.entities.community;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.communityDemocracy.*;
+import ed.back_snekhome.entities.user.Notification;
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.enums.CommunityType;
 import jakarta.persistence.*;
@@ -93,6 +94,7 @@ public class Community {
     private Elections elections;
 
 
-
-
+    @OneToMany(mappedBy = "community", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Notification> notifications;
 }

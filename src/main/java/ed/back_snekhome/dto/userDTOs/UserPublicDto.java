@@ -26,6 +26,7 @@ public class UserPublicDto {
 
     private int friends;
     private int communities;
+    private int notifications;
 
     private List<InfoTag> tags;
 

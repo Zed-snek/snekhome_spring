@@ -48,13 +48,19 @@ public class CommentaryService {
                 .build();
         commentaryRatingRepository.save(rating);
 
-        notificationService.createNewCommentNotification(comment);
+        notificationService.createNewCommentNotification(
+                comment,
+                comment.getReferenceId() == -1L
+                        ? null
+                        : getCommentaryByIdOrThrowErr(comment.getReferenceId())
+        );
         return comment.getIdCommentary();
     }
 
 
+    @Transactional
     public void deleteComment(Long id) {
-        var comment = getCommentaryById(id);
+        var comment = getCommentaryByIdOrThrowErr(id);
         var user = userHelper.getCurrentUser();
         var membership = membershipHelper
                 .getOptionalMembershipOfCurrentUser(comment.getPost().getCommunity());
@@ -73,7 +79,7 @@ public class CommentaryService {
 
 
     public void rateComment(Long id, RatingType newStatus) {
-        var comment = getCommentaryById(id);
+        var comment = getCommentaryByIdOrThrowErr(id);
         var rating = findCommentaryRatingOrCreate(comment);
         rating.setType(newStatus);
         commentaryRatingRepository.save(rating);
@@ -82,7 +88,7 @@ public class CommentaryService {
     }
 
 
-    private Commentary findCommentaryOrException(Long id) {
+    private Commentary getCommentaryByIdOrThrowErr(Long id) {
         return commentaryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("There is no commentary"));
     }
@@ -119,12 +125,6 @@ public class CommentaryService {
     }
 
 
-    private Commentary getCommentaryById(Long id) {
-        return commentaryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("There is no commentary"));
-    }
-
-
     public List<CommentaryDto> getCommentariesByPostId(Long id) {
         var post = postService.getPostById(id);
         var membership = membershipHelper
@@ -155,7 +155,7 @@ public class CommentaryService {
 
 
     public void updateCommentary(String text, Long id) {
-        var comment = findCommentaryOrException(id);
+        var comment = getCommentaryByIdOrThrowErr(id);
         var currentUser = userHelper.getCurrentUser();
         if (comment.getUser().equals(currentUser)) {
             comment.setText(text);

@@ -1,6 +1,7 @@
 package ed.back_snekhome.entities.post;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ed.back_snekhome.entities.user.Notification;
 import ed.back_snekhome.entities.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,5 +48,10 @@ public class Commentary {
 
     @CreatedDate
     private LocalDateTime date;
+
+
+    @OneToMany(mappedBy = "commentary", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Notification> notifications;
 
 }

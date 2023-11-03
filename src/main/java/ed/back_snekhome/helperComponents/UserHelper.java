@@ -21,29 +21,36 @@ public class UserHelper {
     private final UserImageRepository userImageRepository;
     private final FriendshipRepository friendshipRepository;
 
+
+
     public UserEntity getUserByIdOrThrowErr(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
+
 
     public UserEntity getUserByNicknameOrThrowErr(String nickname) {
         return userRepository.findByNicknameIgnoreCase(nickname)
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
 
+
     public UserEntity getCurrentUser() {
         return userRepository.findByEmailIgnoreCase(SecurityContextHolder.getContext().getAuthentication().getName())
                 .orElseThrow(() -> new EntityNotFoundException("User is not found"));
     }
+
 
     public boolean isContextUser() {
         String s = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toArray()[0].toString();
         return !s.equals("ROLE_ANONYMOUS");
     }
 
+
     public boolean isCurrentUserEqual(UserEntity user2) {
-        return isContextUser() && getCurrentUser().equals(user2);
+        return isContextUser() && getCurrentUser().isTheSameUserEntity(user2);
     }
+
 
     public void throwErrIfExistsByNickname(String nickname) {
         if (userRepository.existsByNicknameIgnoreCase(nickname)
@@ -51,6 +58,7 @@ public class UserHelper {
             throw new UserAlreadyExistsException("Nickname: " + nickname + " is already taken");
         }
     }
+
 
     public FriendshipType getFriendshipType(Long idUser1, Long idUser2) {
         var friendship
@@ -72,6 +80,7 @@ public class UserHelper {
         else
             return FriendshipType.NOT_FRIENDS;
     }
+
 
     public String getTopUserImage(UserEntity user) {
         var img = userImageRepository.findTopByUserOrderByIdImageDesc(user);

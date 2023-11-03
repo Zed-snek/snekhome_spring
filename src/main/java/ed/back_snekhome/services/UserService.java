@@ -24,10 +24,12 @@ import java.io.IOException;
 public class UserService {
 
 
+    private final FileService fileService;
+    private final NotificationService notificationService;
     private final UserHelper userHelper;
+
     private final UserRepository userRepository;
     private final InfoTagRepository infoTagRepository;
-    private final FileService fileService;
     private final UserImageRepository userImageRepository;
     private final FriendshipRepository friendshipRepository;
     private final MembershipRepository membershipRepository;
@@ -53,6 +55,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+
     public OwnSuccessResponse uploadUserImage(MultipartFile file) throws IOException {
 
         String newName = fileService.uploadImageNameReturned(file);
@@ -72,8 +75,10 @@ public class UserService {
                 .image(userHelper.getTopUserImage(currentUser))
                 .nickname(currentUser.getNickname())
                 .nicknameColor(currentUser.getNicknameColor())
+                .notifications(notificationService.countUnreadNotifications(currentUser))
                 .build();
     }
+
 
     private int countFriends(Long id) {
         int friends = 0;
@@ -81,6 +86,7 @@ public class UserService {
         friends += friendshipRepository.countAllByIdSecondUserAndIsFirstUserAndIsSecondUser(id, true, true);
         return friends;
     }
+
 
     private int countCommunities(UserEntity user) {
         int communities = 0;
@@ -112,6 +118,7 @@ public class UserService {
         return dto;
     }
 
+
     public UserPrivateDto getCurrentUserInfo() {
         var currentUser = userHelper.getCurrentUser();
 
@@ -123,6 +130,7 @@ public class UserService {
                 .build();
     }
 
+
     public void newTag(TagDto tagDto) {
         var infoTag = InfoTag.builder()
                 .title(tagDto.getTitle())
@@ -131,6 +139,7 @@ public class UserService {
         infoTagRepository.save(infoTag);
     }
 
+
     public void updateTag(TagDto tagDto) {
         var tag = infoTagRepository.findById(tagDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
@@ -138,6 +147,7 @@ public class UserService {
         tag.setTitle(tagDto.getTitle());
         infoTagRepository.save(tag);
     }
+
 
     public void delTag(Long id) {
         var tag = infoTagRepository.findById(id)
