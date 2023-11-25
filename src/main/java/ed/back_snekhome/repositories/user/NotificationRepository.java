@@ -12,8 +12,6 @@ import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    List<Notification> findTop5ByNotifiedUserOrderByIdDesc(UserEntity notifiedUser);
-
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.notifiedUser = :user")
     void readNotificationsOfUser(@Param("user") UserEntity notifiedUser);

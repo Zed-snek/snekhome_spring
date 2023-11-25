@@ -61,24 +61,29 @@ public class DemocracyService {
     @Value("${democracy.elections.duration}")
     private int electionsDuration;
 
+
     private void throwErrIfNotDemocracy(Community community) {
         if (community.getType() != CommunityType.DEMOCRACY)
             throw new BadRequestException("Community is not democracy");
     }
+
 
     private CommunityRole getCitizenRole(Community community) {
         return communityRoleRepository.findTopByCommunityAndIsCitizen(community, true)
                 .orElseThrow(() -> new BadRequestException("Role is not found"));
     }
 
+
     private int getRating(Community community, UserEntity user) {
         return postRatingRepository.countAllByCommunityAndUser(community, user) +
                 commentaryRatingRepository.countAllByCommunityAndUser(community, user);
     }
 
+
     private int getDaysAfterJoining(Membership membership) {
         return (int) ChronoUnit.DAYS.between(membership.getJoined(), LocalDate.now());
     }
+
 
     public boolean isCitizenRight(Community community, UserEntity user) {
         var optionalMembership = membershipHelper
@@ -104,21 +109,25 @@ public class DemocracyService {
         return false;
     }
 
+
     public void throwErrIfNotCitizenRight(Community community, UserEntity user) {
         if (!isCitizenRight(community, user))
             throw new UnauthorizedException("No citizen rights");
     }
+
 
     private PresidencyData getPresidencyDataByCommunity(Community community) {
         return presidencyDataRepository.findById(community.getIdCommunity())
                 .orElseThrow(() -> new BadRequestException("Community is not Democracy"));
     }
 
+
     private void clearPresidencyDataByCommunity(Community community) {
         var data = getPresidencyDataByCommunity(community);
         data.clearData();
         presidencyDataRepository.save(data);
     }
+
 
     public void addStatsToPresidency(Community community, PresidencyDataType type) {
         var data = getPresidencyDataByCommunity(community);
@@ -130,6 +139,7 @@ public class DemocracyService {
         presidencyDataRepository.save(data);
     }
 
+
     private ElectionsStatus getElectionsStatus(Elections elections) {
         var nowDate = LocalDate.now();
         if (elections.getEndDate().isBefore(nowDate))
@@ -138,6 +148,7 @@ public class DemocracyService {
             return ElectionsStatus.IN_PROGRESS;
         return ElectionsStatus.NOT_STARTED;
     }
+
 
     private boolean processDemocracy(Elections elections) { //method to start/finish elections | works only when someone checks community
         var status = getElectionsStatus(elections);
@@ -166,7 +177,7 @@ public class DemocracyService {
             //method sends to all current candidates, so it must be processed before "updateElectionsData()" method
             notificationService.createElectionsEndedNotification(community);
 
-            electionsRepository.save(updateElectionsDate(elections, candidate));
+            electionsRepository.save(updateElectionsDate(elections, candidate, winner.isEmpty()));
             clearPresidencyDataByCommunity(community);
 
             return false;
@@ -174,6 +185,7 @@ public class DemocracyService {
 
         return status == ElectionsStatus.IN_PROGRESS;
     }
+
 
     @Transactional
     public GeneralDemocracyDto getGeneralDemocracyData(String groupname) {
@@ -219,6 +231,8 @@ public class DemocracyService {
             }
         }
 
+        dtoBuilder.electionsNumber(elections.getElectionsNumber());
+
         boolean isElectionsNow = processDemocracy(elections);
         dtoBuilder
                 .isElectionsNow(isElectionsNow)
@@ -234,29 +248,37 @@ public class DemocracyService {
         return dtoBuilder.build();
     }
 
-    private Elections updateElectionsDate(Elections elections, Candidate newPresident) {
+
+    private Elections updateElectionsDate(Elections elections, Candidate newPresident, boolean isIterate) {
         var date = LocalDate.now().plusDays(
                 elections.getCommunity().getCitizenParameters().getElectionDays()
         );
         elections.setStartDate(date);
         elections.setEndDate(date.plusDays(electionsDuration));
         elections.setCurrentPresident(newPresident);
-        elections.setElectionsNumber(elections.getElectionsNumber() + 1);
+        if (isIterate)
+            elections.setElectionsNumber(elections.getElectionsNumber() + 1);
         return elections;
     }
 
-    public Elections createElections(Candidate currentPresident, Community community) {
+
+    public Elections createElections(
+            Candidate currentPresident,
+            Community community
+    ) {
         var elections = new Elections();
         elections.setCommunity(community);
-        elections.setElectionsNumber(0);
-        electionsRepository.save(updateElectionsDate(elections, currentPresident));
+        elections.setElectionsNumber(1);
+        electionsRepository.save(updateElectionsDate(elections, currentPresident, false));
         return elections;
     }
+
 
     private Candidate findCandidateOrThrowErr(Community community, UserEntity user) {
         return candidateRepository.findTopByUserAndCommunity(user, community)
                 .orElseThrow(() -> new EntityNotFoundException(user.getNickname() + " is not a candidate"));
     }
+
 
     private ElectionsParticipation findCurrentElectionsParticipationOrThrowErr(Candidate candidate, Community community) {
         return electionsParticipationRepository
@@ -266,6 +288,7 @@ public class DemocracyService {
                 )
                 .orElseThrow(() -> new BadRequestException("A candidate doesn't take part in elections"));
     }
+
 
     public void makeVote(String groupname, String candidateNickname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -289,6 +312,7 @@ public class DemocracyService {
         voteRepository.save(vote);
     }
 
+
     private Candidate getCandidateAfterCheck(BiConsumer<Community, UserEntity> checkFunction, String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         var user = userHelper.getCurrentUser();
@@ -296,6 +320,7 @@ public class DemocracyService {
         checkFunction.accept(community, user);
         return findCandidateOrThrowErr(community, user);
     }
+
 
     public void activateCandidate(String groupname) {
         var candidate = getCandidateAfterCheck((c, u) -> {
@@ -313,6 +338,7 @@ public class DemocracyService {
         electionsParticipationRepository.save(electionsParticipation);
     }
 
+
     public void updateCandidateProgram(NewCandidateDto dto) {
         var candidate = getCandidateAfterCheck(
                 this::throwErrIfNotCitizenRight,
@@ -321,6 +347,7 @@ public class DemocracyService {
         candidate.setProgram(dto.getProgram());
         candidateRepository.save(candidate);
     }
+
 
     @Transactional
     public void becomeCandidate(NewCandidateDto dto) {
@@ -340,6 +367,7 @@ public class DemocracyService {
         var electionsParticipation = community.getElections().createElectionsParticipation(candidate);
         electionsParticipationRepository.save(electionsParticipation);
     }
+
 
     @Transactional
     public CandidateListDto getListOfCandidates(String groupname) {

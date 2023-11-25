@@ -19,6 +19,7 @@ public class GeneralDemocracyDto {
     private int bannedCitizensStats;
     private int deletedPostsStats;
 
+    private int electionsNumber;
     private LocalDate electionsDate;
     private boolean isElectionsNow;
 

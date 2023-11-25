@@ -68,11 +68,6 @@ public class NotificationService {
         );
     }
 
-
-    private void createPostRepliedCommentNotification(Commentary comment, UserEntity commentator) {
-
-    }
-
     public void createNewCommentNotification(Commentary comment, Commentary repliedComment) {
         var commentator = userHelper.getCurrentUser();
 
@@ -143,15 +138,6 @@ public class NotificationService {
                 ));
     }
 
-
-    public List<NotificationDto> getLast5NotificationsOfCurrentUser() {
-        return notificationRepository.findTop5ByNotifiedUserOrderByIdDesc(userHelper.getCurrentUser())
-                .stream()
-                .map(Notification::createDto)
-                .toList();
-    }
-
-
     @Transactional
     public void readNotificationsOfCurrentUser() {
         notificationRepository.readNotificationsOfUser(userHelper.getCurrentUser());
@@ -160,11 +146,13 @@ public class NotificationService {
 
     public List<NotificationDto> getNotificationsWithPagination(int page, int size) {
         var pageable = PageRequest.of(page, size);
+
         return notificationRepository.getAllByNotifiedUser(userHelper.getCurrentUser(), pageable)
                 .stream()
                 .map(Notification::createDto)
                 .toList();
     }
+
 
     public int countUnreadNotifications(UserEntity user) {
         return notificationRepository.countUnreadNotificationsByUser(user);

@@ -105,6 +105,7 @@ public class CommunityService {
             createStartDemocracyData(community, dto);
     }
 
+
     public void createStartDemocracyData(
             Community community,
             NewCommunityDto dto
@@ -138,7 +139,8 @@ public class CommunityService {
                 .build();
         candidateRepository.save(currentPresident);
 
-        var elections = democracyService.createElections(currentPresident, community);
+        community.setCitizenParameters(citizenParameters);
+        var elections = democracyService.createElections(currentPresident, community); //community needs this field to be to create elections
         var electionsParticipation = ElectionsParticipation.builder()
                 .candidate(currentPresident)
                 .electionsNumber(0)
@@ -146,6 +148,7 @@ public class CommunityService {
                 .build();
         electionsParticipationRepository.save(electionsParticipation);
     }
+
 
     public void deleteCommunity(String name) {
         var community = communityHelper.getCommunityByNameOrThrowErr(name);
@@ -155,6 +158,7 @@ public class CommunityService {
         else
             throw new UnauthorizedException("User doesn't have permissions to delete the community");
     }
+
 
     public boolean isNameTaken(String name) {
         userHelper.throwErrIfExistsByNickname(name);
@@ -205,6 +209,7 @@ public class CommunityService {
         return dto;
     }
 
+
     public List<PublicCommunityCardDto> getHomeCards() {
         var list =
                 membershipRepository.findTop4ByUserAndIsBanned(userHelper.getCurrentUser(), false);
@@ -215,6 +220,7 @@ public class CommunityService {
                         .build())
                 .collect(Collectors.toList());
     }
+
 
     public void updateCommunity(UpdateCommunityDto dto) {
         var user = userHelper.getCurrentUser();
@@ -249,6 +255,7 @@ public class CommunityService {
         }
     }
 
+
     public OwnSuccessResponse uploadCommunityImage(MultipartFile file, String groupname) throws IOException {
 
         String newName = fileService.uploadImageNameReturned(file);
@@ -261,6 +268,7 @@ public class CommunityService {
         communityLogService.createLogUpdateImage(community, false);
         return new OwnSuccessResponse(newName); //returns new name of uploaded file
     }
+
 
     public void newRole(CommunityRoleDto dto, String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -287,6 +295,7 @@ public class CommunityService {
             throw new UnauthorizedException("User doesn't have permissions to create new roles");
         }
     }
+
 
     public void updateRole(CommunityRoleDto dto, String groupname, String oldRoleName) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -317,10 +326,12 @@ public class CommunityService {
         }
     }
 
+
     public List<CommunityRole> getRoles(String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         return communityRoleRepository.findAllByCommunity(community);
     }
+
 
     @Transactional
     public void deleteRole(String groupname, String roleName) {
@@ -342,6 +353,7 @@ public class CommunityService {
         }
     }
 
+
     private <V> void setIfNotEqualsWithLog(V value, V value2, Consumer<V> setter,
                                            Community community, BiConsumer<Community, V> logger
     ) {
@@ -350,6 +362,7 @@ public class CommunityService {
             logger.accept(community, value2);
         }
     }
+
 
     public void updateCommunitySettings(String groupname, NewCommunityDto dto) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -367,6 +380,7 @@ public class CommunityService {
             communityRepository.save(community);
         }
     }
+
 
     public void updateCommunityDemocracySettings(String groupname, NewCommunityDto dto) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
