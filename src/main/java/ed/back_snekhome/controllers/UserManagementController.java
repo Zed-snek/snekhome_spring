@@ -56,12 +56,21 @@ public class UserManagementController {
 
 
     @PostMapping("/user/reset_password")
-    public ResponseEntity<OwnSuccessResponse> resetPassword(@RequestBody EmailDto dto) {
+    public ResponseEntity<OwnSuccessResponse> sendResetPasswordMail(@RequestBody EmailDto dto) {
 
-        System.out.println(dto.getEmail());
         authenticationService.sendResetPasswordMail(dto.getEmail());
 
         var response = new OwnSuccessResponse("Email is successfully sent");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+    @PutMapping("/user/reset_password")
+    public ResponseEntity<OwnSuccessResponse> resetPassword(@RequestBody ResetPasswordDto dto) {
+
+        authenticationService.resetPassword(dto);
+
+        var response = new OwnSuccessResponse("Password has been changed");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

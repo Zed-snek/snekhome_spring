@@ -69,9 +69,9 @@ public class ConfirmationToken {
     }
 
 
-    public boolean isNotExpired() {
+    public boolean isExpired() {
         Timestamp timestamp = new Timestamp(Calendar.getInstance().getTime().getTime());
-        return timestamp.before(expiresAt);
+        return timestamp.after(expiresAt);
     }
 
 }

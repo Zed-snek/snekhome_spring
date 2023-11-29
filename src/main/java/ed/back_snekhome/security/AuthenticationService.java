@@ -4,15 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ed.back_snekhome.dto.userDTOs.ChangePasswordDto;
 import ed.back_snekhome.dto.userDTOs.LoginDto;
 import ed.back_snekhome.dto.userDTOs.RegisterDto;
+import ed.back_snekhome.dto.userDTOs.ResetPasswordDto;
 import ed.back_snekhome.email.ConfirmationToken;
 import ed.back_snekhome.email.ConfirmationTokenService;
 import ed.back_snekhome.email.ConfirmationType;
 import ed.back_snekhome.email.EmailSendService;
 import ed.back_snekhome.entities.user.UserEntity;
-import ed.back_snekhome.exceptionHandler.exceptions.LoginNotFoundException;
-import ed.back_snekhome.exceptionHandler.exceptions.PasswordDoesntMatchException;
-import ed.back_snekhome.exceptionHandler.exceptions.TokenExpiredException;
-import ed.back_snekhome.exceptionHandler.exceptions.UserAlreadyExistsException;
+import ed.back_snekhome.exceptionHandler.exceptions.*;
 import ed.back_snekhome.repositories.user.UserRepository;
 import ed.back_snekhome.response.AuthenticationResponse;
 import ed.back_snekhome.helperComponents.UserHelper;
@@ -38,6 +36,7 @@ public class AuthenticationService {
     private final EmailSendService emailSendService;
     private final UserHelper userHelper;
     private final UserRepository userRepository;
+
 
     public AuthenticationResponse loginUser(LoginDto loginDto) {
 
@@ -111,7 +110,7 @@ public class AuthenticationService {
         var type = token.getConfirmationType();
         switch (type) {
             case REGISTRATION -> activateAccountIfVerified(token);
-            case PASSWORD_RESET -> passwordReset(token);
+            case PASSWORD_RESET -> throwErrIfTokenExpired(token);
             case CHANGE_EMAIL -> changeEmailActionConfirmation(token);
             case CHANGE_EMAIL_LAST -> changeEmailLastConfirmation(token);
         }
@@ -121,7 +120,7 @@ public class AuthenticationService {
 
     private void activateAccountIfVerified(ConfirmationToken token) {
         var account = token.getUser();
-        if (!token.isNotExpired()){
+        if (token.isExpired()) {
             sendVerificationMail(account);
             throw new TokenExpiredException("Verification token is expired, new one is sent on your e-mail");
         }
@@ -166,13 +165,20 @@ public class AuthenticationService {
 
 
     private void throwErrIfTokenExpired(ConfirmationToken token) {
-        if (!token.isNotExpired())
+        if (token.isExpired())
             throw new TokenExpiredException("Confirmation token is expired");
     }
 
 
-    private void passwordReset(ConfirmationToken token) {
+    public void resetPassword(ResetPasswordDto dto) {
+        var token = confirmationTokenService.findByToken(dto.getToken());
+        if (token.getConfirmationType() != ConfirmationType.PASSWORD_RESET)
+            throw new BadRequestException("Token type doesn't match");
+        throwErrIfTokenExpired(token);
 
+        var user = token.getUser();
+        user.setPassword(passwordEncoder.encode(dto.getNewPass()));
+        userRepository.save(user);
     }
 
 
@@ -216,9 +222,8 @@ public class AuthenticationService {
 
     public void changePassword(ChangePasswordDto dto) {
         var user = userHelper.getCurrentUser();
-        if (!passwordEncoder.matches(dto.getOldPass(), user.getPassword())) {
+        if (!passwordEncoder.matches(dto.getOldPass(), user.getPassword()))
             throw new PasswordDoesntMatchException("Invalid old password, please try again");
-        }
 
         user.setPassword(passwordEncoder.encode(dto.getNewPass()));
         userRepository.save(user);
