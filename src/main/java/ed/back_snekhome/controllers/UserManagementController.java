@@ -34,6 +34,7 @@ public class UserManagementController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @PostMapping("/user/refresh-token")
     public void refreshToken(
             HttpServletRequest request,
@@ -54,10 +55,21 @@ public class UserManagementController {
     }
 
 
+    @PostMapping("/user/reset_password")
+    public ResponseEntity<OwnSuccessResponse> resetPassword(@RequestBody EmailDto dto) {
+
+        System.out.println(dto.getEmail());
+        authenticationService.sendResetPasswordMail(dto.getEmail());
+
+        var response = new OwnSuccessResponse("Email is successfully sent");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
     @PostMapping("/user/confirmation")
     public ResponseEntity<OwnSuccessResponse> confirmationManager(@RequestParam String token) {
 
-        var response = new OwnSuccessResponse(authenticationService.confirmToken(token)); //method confirmToken() returns a message
+        var response = new OwnSuccessResponse(authenticationService.confirmToken(token).name()); //method confirmToken() returns a message
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -72,8 +84,9 @@ public class UserManagementController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @PutMapping("/auth/user/email")
-    public ResponseEntity<OwnSuccessResponse> updateEmail(@RequestBody ChangeEmailDto dto) {
+    public ResponseEntity<OwnSuccessResponse> updateEmail(@RequestBody EmailDto dto) {
 
         authenticationService.changeEmail(dto.getEmail());
         var response = new OwnSuccessResponse("Check your email address to change to confirm action");
@@ -90,7 +103,6 @@ public class UserManagementController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
 
 
     @PostMapping(path = "/auth/user/current/image", consumes = "multipart/form-data")
@@ -111,6 +123,7 @@ public class UserManagementController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @PutMapping("/auth/tag")
     public ResponseEntity<OwnSuccessResponse> updateTag(@Valid @RequestBody TagDto tagDto) {
 
@@ -119,6 +132,7 @@ public class UserManagementController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @DeleteMapping("/auth/tag/{id}")
     public ResponseEntity<OwnSuccessResponse> delTag(@PathVariable Long id) {

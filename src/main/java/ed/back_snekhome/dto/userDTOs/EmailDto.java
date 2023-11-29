@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ChangeEmailDto {
+public class EmailDto {
 
     @Email(message = "The provided value is not e-mail")
     private String email;

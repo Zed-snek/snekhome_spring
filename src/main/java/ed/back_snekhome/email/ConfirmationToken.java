@@ -1,5 +1,7 @@
 package ed.back_snekhome.email;
 
+
+import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.utils.MyFunctions;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -19,7 +21,12 @@ public class ConfirmationToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idToken;
 
-    private Long idUser;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_user")
+    private UserEntity user;
+
+
     private String token;
     private Timestamp expiresAt;
     private String message;
@@ -28,15 +35,29 @@ public class ConfirmationToken {
     @Enumerated(EnumType.STRING)
     private ConfirmationType confirmationType;
 
-    public ConfirmationToken( Long idAccount, ConfirmationType confirmationType, int tokenLength, int expiresAtMinutes ) {
-        idUser = idAccount;
+
+
+    public ConfirmationToken(
+            UserEntity user,
+            ConfirmationType confirmationType,
+            int tokenLength,
+            int expiresAtMinutes
+    ) {
+        this.user = user;
         this.confirmationType = confirmationType;
         token = MyFunctions.generateCode(tokenLength) + System.currentTimeMillis();
         expiresAt = expiresAt(expiresAtMinutes);
     }
 
-    public ConfirmationToken( Long idAccount, ConfirmationType confirmationType, int tokenLength, int expiresAtMinutes, String message ){
-        this(idAccount, confirmationType, tokenLength, expiresAtMinutes);
+
+    public ConfirmationToken(
+            UserEntity user,
+            ConfirmationType confirmationType,
+            int tokenLength,
+            int expiresAtMinutes,
+            String message
+    ){
+        this(user, confirmationType, tokenLength, expiresAtMinutes);
         this.message = message;
     }
 
@@ -47,8 +68,9 @@ public class ConfirmationToken {
         return new Timestamp( calendar.getTime().getTime() );
     }
 
-    public boolean isNotExpired(){
-        Timestamp timestamp = new Timestamp( Calendar.getInstance().getTime().getTime() );
+
+    public boolean isNotExpired() {
+        Timestamp timestamp = new Timestamp(Calendar.getInstance().getTime().getTime());
         return timestamp.before(expiresAt);
     }
 

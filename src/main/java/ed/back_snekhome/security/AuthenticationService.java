@@ -57,6 +57,7 @@ public class AuthenticationService {
                 .build();
     }
 
+
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer "))
@@ -77,10 +78,12 @@ public class AuthenticationService {
         }
     }
 
+
     private UserEntity getUserByEmailOrThrowErr(String email) {
         return userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new LoginNotFoundException("Account with given email is not found"));
     }
+
 
     public void saveNewAccount(RegisterDto registerDto) {
         throwErrIfExistsByEmail(registerDto.getEmail());
@@ -101,35 +104,23 @@ public class AuthenticationService {
         sendVerificationMail(userEntity);
     }
 
-    public String confirmToken(String tokenValue) {
+
+    public ConfirmationType confirmToken(String tokenValue) {
         var token = confirmationTokenService.findByToken(tokenValue);
 
         var type = token.getConfirmationType();
-        String message = "";
         switch (type) {
-            case REGISTRATION -> {
-                activateAccountIfVerified(token);
-                message = "Account is activated";
-            }
-            case PASSWORD_RESET -> {
-                passwordReset(token);
-                message = "Reset password email is sent";
-            }
-            case CHANGE_EMAIL -> {
-                changeEmailActionConfirmation(token);
-                message = "Verification is sent on new email address";
-            }
-            case CHANGE_EMAIL_LAST -> {
-                changeEmailLastConfirmation(token);
-                message = "Email changed successfully";
-            }
+            case REGISTRATION -> activateAccountIfVerified(token);
+            case PASSWORD_RESET -> passwordReset(token);
+            case CHANGE_EMAIL -> changeEmailActionConfirmation(token);
+            case CHANGE_EMAIL_LAST -> changeEmailLastConfirmation(token);
         }
-        return message;
+        return type;
     }
 
 
     private void activateAccountIfVerified(ConfirmationToken token) {
-        var account = userHelper.getUserByIdOrThrowErr( token.getIdUser() );
+        var account = token.getUser();
         if (!token.isNotExpired()){
             sendVerificationMail(account);
             throw new TokenExpiredException("Verification token is expired, new one is sent on your e-mail");
@@ -138,12 +129,13 @@ public class AuthenticationService {
         userRepository.save(account);
     }
 
+
     private void changeEmailActionConfirmation(ConfirmationToken token) { //confirms action "change email"
-        var account = userHelper.getUserByIdOrThrowErr(token.getIdUser());
+        var account = token.getUser();
         throwErrIfTokenExpired(token);
 
         var newToken = new ConfirmationToken(
-                account.getIdAccount(),
+                account,
                 ConfirmationType.CHANGE_EMAIL_LAST,
                 15,
                 45,
@@ -157,47 +149,61 @@ public class AuthenticationService {
         );
     }
 
+
     private void changeEmailLastConfirmation(ConfirmationToken token) { //new email confirmation
-        var account = userHelper.getUserByIdOrThrowErr(token.getIdUser());
+        var account = token.getUser();
         throwErrIfTokenExpired(token);
 
         account.setEmail(token.getMessage());
         userRepository.save(account);
     }
 
+
     private void throwErrIfExistsByEmail(String email) {
-        if (userRepository.existsByEmailIgnoreCase(email)) {
+        if (userRepository.existsByEmailIgnoreCase(email))
             throw new UserAlreadyExistsException("User with email: " + email + " exists");
-        }
     }
+
+
     private void throwErrIfTokenExpired(ConfirmationToken token) {
-        if (!token.isNotExpired()) {
+        if (!token.isNotExpired())
             throw new TokenExpiredException("Confirmation token is expired");
-        }
     }
+
 
     private void passwordReset(ConfirmationToken token) {
 
     }
 
 
-    public void sendVerificationMail( UserEntity user ) {
+    public void sendResetPasswordMail(String email) {
+        var user = getUserByEmailOrThrowErr(email);
 
-        var confirmationToken = new ConfirmationToken(user.getIdAccount(), ConfirmationType.REGISTRATION, 15, 45);
+        var confirmationToken = new ConfirmationToken(user, ConfirmationType.PASSWORD_RESET, 15, 45);
         confirmationTokenService.save(confirmationToken);
 
-        emailSendService.sendVerificationMail( user.getEmail(), user.getName(), confirmationToken.getToken() );
+        emailSendService.sendResetPasswordMail(user.getEmail(), user.getName(), confirmationToken.getToken());
     }
 
-    public void changeEmail(String email) { //sends email list on old email to confirm action
 
+    public void sendVerificationMail(UserEntity user) {
+
+        var confirmationToken = new ConfirmationToken(user, ConfirmationType.REGISTRATION, 15, 45);
+        confirmationTokenService.save(confirmationToken);
+
+        emailSendService.sendVerificationMail(user.getEmail(), user.getName(), confirmationToken.getToken());
+    }
+
+
+    public void changeEmail(String email) { //sends email list on old email to confirm action
         throwErrIfExistsByEmail(email);
         var user = userHelper.getCurrentUser();
         var confirmationToken = new ConfirmationToken(
-                user.getIdAccount(),
+                user,
                 ConfirmationType.CHANGE_EMAIL,
                 15, 45,
                 email);
+
         confirmationTokenService.save(confirmationToken);
         emailSendService.sendChangeEmailMail(
                 user.getEmail(),
@@ -206,6 +212,7 @@ public class AuthenticationService {
                 confirmationToken.getToken()
         );
     }
+
 
     public void changePassword(ChangePasswordDto dto) {
         var user = userHelper.getCurrentUser();

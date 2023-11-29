@@ -104,6 +104,16 @@ public class EmailTemplates { // verification mail template, change password tem
         );
     }
 
+
+    public static String resetPasswordTemplate(String name, String link) {
+        return standardTemplate(
+                "Hello, " + name + ", if you requested to change your password, click below. Otherwise, ignore this mail.",
+                link,
+                "Reset password"
+        );
+    }
+
+
     public static String changeEmailTemplate(String name, String link, String email) {
         return standardTemplate(
                 "Hello, " + name + ", if you requested to change your email to " + email + ", click a button below. Otherwise, don't do anything",

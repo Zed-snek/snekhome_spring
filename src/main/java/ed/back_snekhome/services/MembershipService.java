@@ -57,7 +57,7 @@ public class MembershipService {
                 .community(community)
                 .build();
         if (community.getOwner().equals(current))
-            membership.setRole(communityRoleRepository.findTopByCommunityAndIsCreator(community, true)
+            membership.setRole(communityRoleRepository.findCreatorRoleOfCommunity(community)
                     .orElse(null));
         membershipRepository.save(membership);
     }

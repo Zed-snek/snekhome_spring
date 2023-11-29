@@ -43,18 +43,26 @@ public class EmailSendService {
 
     }
 
-    public void sendVerificationMail(String email, String name, String codeValue)  {
-        String body = EmailTemplates.verificationTemplate(name, domain + "/confirmation/" + codeValue);
+    public void sendResetPasswordMail(String email, String name, String tokenValue) {
+        String body = EmailTemplates.resetPasswordTemplate(name, domain + "/password_reset/" + tokenValue);
+        sendEmail(email, "Reset password confirmation", body);
+    }
+
+
+    public void sendVerificationMail(String email, String name, String tokenValue)  {
+        String body = EmailTemplates.verificationTemplate(name, domain + "/confirmation/" + tokenValue);
         sendEmail(email, "Verify your registration", body);
     }
 
-    public void sendChangeEmailMail(String oldEmail, String newEmail, String name, String codeValue) {
-        String body = EmailTemplates.changeEmailTemplate(name, domain + "/resetMail/" + codeValue, newEmail);
+
+    public void sendChangeEmailMail(String oldEmail, String newEmail, String name, String tokenValue) {
+        String body = EmailTemplates.changeEmailTemplate(name, domain + "/reset_mail/" + tokenValue, newEmail);
         sendEmail(oldEmail, "Change e-mail on new one", body);
     }
 
+
     public void sendNewEmailConfirmationMail(String email, String name, String codeValue) {
-        String body = EmailTemplates.changeEmailConfirmationNewTemplate(name, domain + "/newMail/" + codeValue );
+        String body = EmailTemplates.changeEmailConfirmationNewTemplate(name, domain + "/new_mail/" + codeValue );
         sendEmail(email, "Confirm e-mail changing", body);
     }
 

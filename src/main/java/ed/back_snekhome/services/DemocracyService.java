@@ -69,7 +69,7 @@ public class DemocracyService {
 
 
     private CommunityRole getCitizenRole(Community community) {
-        return communityRoleRepository.findTopByCommunityAndIsCitizen(community, true)
+        return communityRoleRepository.findCitizenRoleOfCommunity(community)
                 .orElseThrow(() -> new BadRequestException("Role is not found"));
     }
 
@@ -168,8 +168,24 @@ public class DemocracyService {
             else
                 candidate = winner.get(0).getCandidate();
 
-            community.setOwner(candidate.getUser());
-            communityRepository.save(community);
+            if (!candidate.getUser().isTheSameUserEntity(community.getOwner())) {
+                var prevPresident = membershipHelper.getOptionalMembershipOfUser(
+                        community,
+                        community.getOwner()
+                );
+                prevPresident.ifPresent(m -> m.setRole(null));
+
+                var newPresident = membershipHelper.getOptionalMembershipOfUser(
+                        community,
+                        candidate.getUser()
+                );
+                newPresident.ifPresent(m -> m.setRole(
+                        communityRoleRepository.findCreatorRoleOfCommunity(community)
+                                .orElseThrow(() -> new BadRequestException("No president role in this community")))
+                );
+                community.setOwner(candidate.getUser());
+                communityRepository.save(community);
+            }
 
             electionsParticipationRepository.updateElectionsParticipationWithVotes(elections.getElectionsNumber());
             voteRepository.deleteAllByElectionsParticipation_Elections(elections);
