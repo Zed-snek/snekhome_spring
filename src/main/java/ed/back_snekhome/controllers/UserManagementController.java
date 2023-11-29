@@ -41,7 +41,7 @@ public class UserManagementController {
             HttpServletResponse response
     ) throws IOException {
 
-        authenticationService.refreshToken(request, response);
+        authenticationService.refreshJwtToken(request, response);
     }
 
 

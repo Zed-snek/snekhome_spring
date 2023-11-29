@@ -3,6 +3,7 @@ package ed.back_snekhome.email;
 
 import ed.back_snekhome.entities.user.UserEntity;
 import ed.back_snekhome.utils.MyFunctions;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,9 @@ public class ConfirmationToken {
     private String token;
     private Timestamp expiresAt;
     private String message;
+
+    @Nullable
+    private boolean isActivated;
 
     @Column
     @Enumerated(EnumType.STRING)

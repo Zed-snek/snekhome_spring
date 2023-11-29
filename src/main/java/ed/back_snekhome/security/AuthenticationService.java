@@ -22,6 +22,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 
@@ -57,7 +58,7 @@ public class AuthenticationService {
     }
 
 
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void refreshJwtToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer "))
             return;
@@ -104,13 +105,14 @@ public class AuthenticationService {
     }
 
 
+    @Transactional
     public ConfirmationType confirmToken(String tokenValue) {
         var token = confirmationTokenService.findByToken(tokenValue);
 
         var type = token.getConfirmationType();
         switch (type) {
             case REGISTRATION -> activateAccountIfVerified(token);
-            case PASSWORD_RESET -> throwErrIfTokenExpired(token);
+            case PASSWORD_RESET ->  confirmationTokenService.throwErrIfTokenExpiredOrActivated(token);
             case CHANGE_EMAIL -> changeEmailActionConfirmation(token);
             case CHANGE_EMAIL_LAST -> changeEmailLastConfirmation(token);
         }
@@ -120,10 +122,12 @@ public class AuthenticationService {
 
     private void activateAccountIfVerified(ConfirmationToken token) {
         var account = token.getUser();
+        confirmationTokenService.throwErrIfTokenIsActivated(token);
         if (token.isExpired()) {
             sendVerificationMail(account);
             throw new TokenExpiredException("Verification token is expired, new one is sent on your e-mail");
         }
+        confirmationTokenService.activateToken(token);
         account.setEnabled(true);
         userRepository.save(account);
     }
@@ -131,7 +135,8 @@ public class AuthenticationService {
 
     private void changeEmailActionConfirmation(ConfirmationToken token) { //confirms action "change email"
         var account = token.getUser();
-        throwErrIfTokenExpired(token);
+        confirmationTokenService.throwErrIfTokenExpiredOrActivated(token);
+        confirmationTokenService.activateToken(token);
 
         var newToken = new ConfirmationToken(
                 account,
@@ -151,7 +156,8 @@ public class AuthenticationService {
 
     private void changeEmailLastConfirmation(ConfirmationToken token) { //new email confirmation
         var account = token.getUser();
-        throwErrIfTokenExpired(token);
+        confirmationTokenService.throwErrIfTokenExpiredOrActivated(token);
+        confirmationTokenService.activateToken(token);
 
         account.setEmail(token.getMessage());
         userRepository.save(account);
@@ -164,17 +170,13 @@ public class AuthenticationService {
     }
 
 
-    private void throwErrIfTokenExpired(ConfirmationToken token) {
-        if (token.isExpired())
-            throw new TokenExpiredException("Confirmation token is expired");
-    }
-
-
+    @Transactional
     public void resetPassword(ResetPasswordDto dto) {
         var token = confirmationTokenService.findByToken(dto.getToken());
         if (token.getConfirmationType() != ConfirmationType.PASSWORD_RESET)
             throw new BadRequestException("Token type doesn't match");
-        throwErrIfTokenExpired(token);
+        confirmationTokenService.throwErrIfTokenExpiredOrActivated(token);
+        confirmationTokenService.activateToken(token);
 
         var user = token.getUser();
         user.setPassword(passwordEncoder.encode(dto.getNewPass()));
