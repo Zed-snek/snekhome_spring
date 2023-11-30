@@ -15,6 +15,7 @@ import java.util.Optional;
 public interface PostRatingRepository extends JpaRepository<PostRating, Long> {
 
     int countByPostAndType(Post post, RatingType type);
+
     Optional<PostRating> getTopByPostAndUser(Post post, UserEntity user);
 
     @Query("SELECT COUNT(r) FROM PostRating r WHERE r.post.user = :user AND r.post.community = :community")

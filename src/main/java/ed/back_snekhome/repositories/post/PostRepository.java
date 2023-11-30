@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +22,17 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> getPostsByUserAndIsAnonymousFalseAndCommunity_IsClosedFalseOrderByIdPostDesc(UserEntity user, Pageable pageable);
 
     List<Post> getPostsByCommunityOrderByIdPostDesc(Community community, Pageable pageable);
+
+
+    @Query("SELECT p FROM Post p " +
+            "WHERE p.community = :community " +
+            "AND p.date >= :date " +
+            "ORDER BY (SELECT COUNT(r) FROM p.ratings r) DESC")
+    List<Post> getPopularPostsBeforeDateByCommunity(
+            @Param("community") Community community,
+            @Param("date") LocalDateTime date
+    );
+
 
     @Query("SELECT p FROM Post p WHERE p.community IN :communities ORDER BY p.idPost DESC")
     List<Post> getPostsByCommunitiesOrderByIdPostDesc(

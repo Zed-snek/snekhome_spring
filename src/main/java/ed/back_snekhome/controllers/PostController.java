@@ -32,6 +32,7 @@ public class PostController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @PutMapping(value = "/auth/post/{id}", consumes = "multipart/form-data")
     public ResponseEntity<OwnSuccessResponse> updatePost(
             @ModelAttribute EditPostDto dto,
@@ -44,6 +45,7 @@ public class PostController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @DeleteMapping("/auth/post/{id}")
     public ResponseEntity<OwnSuccessResponse> deletePost(@PathVariable Long id) throws FileNotFoundException {
         postService.deletePost(id);
@@ -52,10 +54,12 @@ public class PostController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @GetMapping("/post/{id}")
     public PostDto getPostPage(@PathVariable Long id) {
         return postService.getPostPage(id);
     }
+
 
     @PostMapping("/auth/post/{id}/rate/{newStatus}")
     public ResponseEntity<OwnSuccessResponse> ratePost(@PathVariable Long id, @PathVariable RatingType newStatus) {
@@ -64,12 +68,14 @@ public class PostController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @PostMapping("/auth/commentary/{id}/rate/{newStatus}")
     public ResponseEntity<OwnSuccessResponse> rateComment(@PathVariable Long id, @PathVariable RatingType newStatus) {
         commentaryService.rateComment(id, newStatus);
         var response = new OwnSuccessResponse("Success");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @PostMapping("/auth/post/{id}/commentary")
     public ResponseEntity<OwnSuccessResponse> newComment(@PathVariable Long id,
@@ -79,10 +85,12 @@ public class PostController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @GetMapping("/post/{id}/commentaries")
     public List<CommentaryDto> getComments(@PathVariable Long id) {
         return commentaryService.getCommentariesByPostId(id);
     }
+
 
     @PutMapping("/auth/commentary/{id}")
     public ResponseEntity<OwnSuccessResponse> updateComment(@PathVariable Long id,
@@ -94,6 +102,7 @@ public class PostController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @DeleteMapping("/auth/commentary/{id}")
     public ResponseEntity<OwnSuccessResponse> deleteComment(@PathVariable Long id) {
         commentaryService.deleteComment(id);
@@ -101,6 +110,7 @@ public class PostController {
         var response = new OwnSuccessResponse("Commentary has been deleted successfully");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @GetMapping("/user/posts/{nickname}")
     public List<PostDto> getPostsUser(
@@ -111,14 +121,17 @@ public class PostController {
         return postService.getPostDtoListByUser(nickname, page, pageSize);
     }
 
+
     @GetMapping("/community/posts/{groupname}")
     public List<PostDto> getPostsCommunity(
             @PathVariable String groupname,
             @RequestParam(defaultValue = "0", required = false) int page,
-            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE, required = false) int pageSize
+            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE, required = false) int pageSize,
+            @RequestParam(defaultValue = "new", required = false) String type
     ) {
-        return postService.getPostDtoListByCommunity(groupname, page, pageSize);
+        return postService.getPostDtoListByCommunity(groupname, page, pageSize, type);
     }
+
 
     @GetMapping("/auth/user/posts/home")
     public List<PostDto> getPostsHome(

@@ -32,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -308,10 +310,18 @@ public class PostService {
     }
 
 
-    public List<PostDto> getPostDtoListByCommunity(String groupname, int pageNumber, int pageSize) {
+    public List<PostDto> getPostDtoListByCommunity(String groupname, int pageNumber, int pageSize, String type) { //types: hot/new
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        var posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
+
+        List<Post> posts;
+        if (type.equals("hot")) {
+            var startDate = LocalDateTime.now().minusDays(30);
+            posts = postRepository.getPopularPostsBeforeDateByCommunity(community, startDate);
+        }
+        else { //if "new"
+            posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
+        }
 
         var user = userHelper.isContextUser() ? userHelper.getCurrentUser() : null;
 

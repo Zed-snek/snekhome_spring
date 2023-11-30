@@ -15,9 +15,6 @@ public interface CommunityRepository extends JpaRepository<Community, Long> {
     boolean existsByGroupnameIgnoreCase(String groupname);
     Optional<Community> findByGroupnameIgnoreCase(String groupname);
 
-    @Query("SELECT c FROM Community c, Membership m WHERE m.user = :user AND m.isBanned = false AND m.community = c")
-    List<Community> getCommunitiesByUser(@Param("user") UserEntity user);
-
     @Query("SELECT c FROM Community c, Membership m WHERE m.user = :user " +
             "AND m.isBanned = false AND m.community = c AND c.isClosed = true")
     List<Community> getClosedCommunitiesByUser(@Param("user") UserEntity user);
