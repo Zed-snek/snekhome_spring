@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +29,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "ORDER BY (SELECT COUNT(r) FROM p.ratings r) DESC")
     List<Post> getPopularPostsBeforeDateByCommunity(
             @Param("community") Community community,
-            @Param("date") LocalDateTime date
+            @Param("date") LocalDateTime date,
+            Pageable pageable
     );
 
 

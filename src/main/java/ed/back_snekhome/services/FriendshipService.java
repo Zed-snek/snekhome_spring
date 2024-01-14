@@ -65,14 +65,14 @@ public class FriendshipService {
     public List<UserPublicDto> getFriends(String nickname) {
         var user = userHelper.getUserByNicknameOrThrowErr(nickname);
         var friendships = getFriendshipsByUserId(user.getIdAccount());
-        var array = new ArrayList<UserPublicDto>();
-        for (Friendship f : friendships) {
+
+        return friendships.stream().map(u -> {
             UserEntity friend;
-            if (f.getIdFirstUser().equals(user.getIdAccount()))
-                friend = userHelper.getUserByIdOrThrowErr(f.getIdSecondUser());
+            if (u.getIdFirstUser().equals(user.getIdAccount()))
+                friend = userHelper.getUserByIdOrThrowErr(u.getIdSecondUser());
             else
-                friend = userHelper.getUserByIdOrThrowErr(f.getIdFirstUser());
-            array.add(UserPublicDto.builder()
+                friend = userHelper.getUserByIdOrThrowErr(u.getIdFirstUser());
+            return UserPublicDto.builder()
                     .image(userHelper.getTopUserImage(friend))
                     .nickname(friend.getNickname())
                     .friendshipType(
@@ -80,9 +80,8 @@ public class FriendshipService {
                     )
                     .name(friend.getName())
                     .surname(friend.getSurname())
-                    .build());
-        }
-        return array;
+                    .build();
+        }).toList();
     }
 
 }

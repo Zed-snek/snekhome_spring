@@ -55,6 +55,8 @@ public class PostService {
     private final CommentaryRepository commentaryRepository;
     private final CommunityRepository communityRepository;
 
+
+
     @Transactional
     public Long newPost(NewPostDto dto) throws IOException {
         boolean isAnon = dto.getIsAnonymous().equals("true");
@@ -315,11 +317,11 @@ public class PostService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         List<Post> posts;
-        if (type.equals("hot")) {
+        if (type.equals("HOT")) {
             var startDate = LocalDateTime.now().minusDays(30);
-            posts = postRepository.getPopularPostsBeforeDateByCommunity(community, startDate);
+            posts = postRepository.getPopularPostsBeforeDateByCommunity(community, startDate, pageable);
         }
-        else { //if "new"
+        else { //if "NEW"
             posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
         }
 
