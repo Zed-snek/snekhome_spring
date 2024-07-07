@@ -71,15 +71,6 @@ public class NotificationService {
     public void createNewCommentNotification(Commentary comment, Commentary repliedComment) {
         var commentator = userHelper.getCurrentUser();
 
-        //if user replies on his own commentary, no notification will be sent
-        if (!commentator.isTheSameUserEntity(repliedComment.getUser())) {
-            saveAndSendToUser(
-                    builder(repliedComment.getUser(), NotificationType.COMMENT_REPLY)
-                            .commentary(comment)
-                            .secondUser(commentator)
-            );
-        }
-
         //sends notification to post creator
         var postCreator = comment.getPost().getUser();
         if (!commentator.isTheSameUserEntity(postCreator) &&
@@ -91,6 +82,16 @@ public class NotificationService {
                             .secondUser(commentator)
             );
         }
+
+        //if user replies on his own commentary, no notification will be sent
+        if (repliedComment != null && !commentator.isTheSameUserEntity(repliedComment.getUser())) {
+            saveAndSendToUser(
+                    builder(repliedComment.getUser(), NotificationType.COMMENT_REPLY)
+                            .commentary(comment)
+                            .secondUser(commentator)
+            );
+        }
+
     }
 
 

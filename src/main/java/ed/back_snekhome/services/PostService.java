@@ -54,6 +54,8 @@ public class PostService {
     private final CommentaryRepository commentaryRepository;
     private final CommunityRepository communityRepository;
 
+
+
     @Transactional
     @SneakyThrows
     public Long newPost(NewPostDto dto) {
