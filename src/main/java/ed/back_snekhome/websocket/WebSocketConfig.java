@@ -19,6 +19,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Value("${domain.address}")
     private String address;
 
+    @Value("${jwt.key}")
+    private String secretKey;
+
     private final JwtService jwtService;
 
     @Override

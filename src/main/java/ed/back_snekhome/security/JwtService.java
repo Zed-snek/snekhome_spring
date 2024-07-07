@@ -1,5 +1,6 @@
 package ed.back_snekhome.security;
 
+import ed.back_snekhome.exceptionHandler.exceptions.UnauthorizedException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -12,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
+import javax.security.sasl.AuthenticationException;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;

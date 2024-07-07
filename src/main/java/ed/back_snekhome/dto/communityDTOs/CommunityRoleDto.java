@@ -4,12 +4,10 @@ import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 @Getter
 @Setter
 @Builder
-@ToString
 public class CommunityRoleDto {
 
     @Size(max = 12, message = "The length of title should not exceed 12 symbols")

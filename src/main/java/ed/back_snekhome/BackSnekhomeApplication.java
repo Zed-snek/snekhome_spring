@@ -9,9 +9,7 @@ import java.util.TimeZone;
 @SpringBootApplication
 public class BackSnekhomeApplication {
 
-
     public static void main(String[] args) {
-
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         SpringApplication.run(BackSnekhomeApplication.class, args);
     }

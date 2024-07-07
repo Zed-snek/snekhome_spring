@@ -56,7 +56,7 @@ public class UserService {
     }
 
 
-    public String uploadUserImage(MultipartFile file) throws IOException {
+    public OwnSuccessResponse uploadUserImage(MultipartFile file) throws IOException {
 
         String newName = fileService.uploadImageNameReturned(file);
         var userImage = UserImage.builder()
@@ -64,7 +64,7 @@ public class UserService {
                 .build();
         userImageRepository.save(userImage);
 
-        return newName; //returns new name of uploaded file
+        return new OwnSuccessResponse(newName); //returns new name of uploaded file
     }
 
 

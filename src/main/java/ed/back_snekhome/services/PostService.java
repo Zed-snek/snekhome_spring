@@ -54,8 +54,6 @@ public class PostService {
     private final CommentaryRepository commentaryRepository;
     private final CommunityRepository communityRepository;
 
-
-
     @Transactional
     @SneakyThrows
     public Long newPost(NewPostDto dto) {
@@ -140,8 +138,7 @@ public class PostService {
 
     private RatingType getRatedType(Post post) {
         if (userHelper.isContextUser()) {
-            var rating =
-                    postRatingRepository.getTopByPostAndUser(post, userHelper.getCurrentUser());
+            var rating = postRatingRepository.getTopByPostAndUser(post, userHelper.getCurrentUser());
             if (rating.isPresent())
                 return rating.get().getType();
         }
@@ -169,8 +166,7 @@ public class PostService {
                 .groupTitle(post.getCommunity().getName())
                 .communityDate(post.getCommunity().getCreation());
         if (!post.isAnonymous()) {
-            postDto
-                    .userImage(userHelper.getTopUserImage(post.getUser()))
+            postDto.userImage(userHelper.getTopUserImage(post.getUser()))
                     .userNickname(post.getUser().getNickname())
                     .userName(post.getUser().getName())
                     .userSurname(post.getUser().getSurname());
@@ -184,11 +180,8 @@ public class PostService {
     private PostRating findPostRatingOrCreate(Post post) {
         var currentUser = userHelper.getCurrentUser();
 
-        return postRatingRepository
-                .getTopByPostAndUser(post, currentUser)
-                .orElse(PostRating.builder()
-                        .post(post)
-                        .build());
+        return postRatingRepository.getTopByPostAndUser(post, currentUser)
+                .orElseGet(() -> PostRating.builder().post(post).build());
     }
 
 
@@ -313,9 +306,9 @@ public class PostService {
         List<Post> posts;
         if (type.equals("HOT")) {
             var startDate = LocalDateTime.now().minusDays(30);
-            posts = postRepository.getPopularPostsBeforeDateByCommunity(community, startDate, pageable);
+            posts = postRepository.getPopularPostsBeforeDateByCommunity(community, startDate);
         }
-        else { //if "NEW"
+        else { //if "new"
             posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
         }
 
@@ -351,8 +344,7 @@ public class PostService {
 
         return postRepository.getPostsByCommunitiesOrderByIdPostDesc(communities, pageable)
                 .stream()
-                .map(post -> setPostItemInfo(post, true, !post.isAnonymous())
-                        .build())
+                .map(post -> setPostItemInfo(post, true, !post.isAnonymous()).build())
                 .toList();
     }
 
