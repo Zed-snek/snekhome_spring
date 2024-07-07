@@ -17,6 +17,7 @@ import ed.back_snekhome.helperComponents.UserHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,7 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -57,8 +57,8 @@ public class AuthenticationService {
                 .build();
     }
 
-
-    public void refreshJwtToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @SneakyThrows
+    public void refreshJwtToken(HttpServletRequest request, HttpServletResponse response) {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer "))
             return;

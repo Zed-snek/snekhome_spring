@@ -27,12 +27,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -191,9 +191,7 @@ public class CommunityService {
                     .image(communityHelper.getTopCommunityImage(community))
                     .type(community.getType())
                     .isAccess(false)
-                    .isRequestSent(joinRequestRepository
-                            .existsByCommunityAndUser(community, userHelper.getCurrentUser())
-                    )
+                    .isRequestSent(joinRequestRepository.existsByCommunityAndUser(community, userHelper.getCurrentUser()))
                     .build();
         }
 
@@ -209,10 +207,8 @@ public class CommunityService {
         return dto;
     }
 
-
     public List<PublicCommunityCardDto> getHomeCards() {
-        var list =
-                membershipRepository.findTop4ByUserAndIsBanned(userHelper.getCurrentUser(), false);
+        var list = membershipRepository.findTop4ByUserAndIsBanned(userHelper.getCurrentUser(), false);
 
         return list.stream().map(m -> PublicCommunityCardDto.builder()
                         .image(communityHelper.getTopCommunityImage(m.getCommunity()))
@@ -220,7 +216,6 @@ public class CommunityService {
                         .build())
                 .collect(Collectors.toList());
     }
-
 
     public void updateCommunity(UpdateCommunityDto dto) {
         var user = userHelper.getCurrentUser();
@@ -255,8 +250,7 @@ public class CommunityService {
         }
     }
 
-
-    public OwnSuccessResponse uploadCommunityImage(MultipartFile file, String groupname) throws IOException {
+    public OwnSuccessResponse uploadCommunityImage(MultipartFile file, String groupname) {
 
         String newName = fileService.uploadImageNameReturned(file);
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -353,16 +347,13 @@ public class CommunityService {
         }
     }
 
-
     private <V> void setIfNotEqualsWithLog(V value, V value2, Consumer<V> setter,
-                                           Community community, BiConsumer<Community, V> logger
-    ) {
+                                           Community community, BiConsumer<Community, V> logger) {
         if (!Objects.equals(value, value2)) {
             setter.accept(value2);
             logger.accept(community, value2);
         }
     }
-
 
     public void updateCommunitySettings(String groupname, NewCommunityDto dto) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);

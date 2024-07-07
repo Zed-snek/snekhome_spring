@@ -7,12 +7,11 @@ import ed.back_snekhome.services.CommentaryService;
 import ed.back_snekhome.services.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -26,7 +25,8 @@ public class PostController {
     private final CommentaryService commentaryService;
 
     @PostMapping(value = "/auth/post", consumes = "multipart/form-data")
-    public ResponseEntity<OwnSuccessResponse> newPost(@ModelAttribute NewPostDto dto) throws IOException {
+    @SneakyThrows
+    public ResponseEntity<OwnSuccessResponse> newPost(@ModelAttribute NewPostDto dto) {
 
         var response = new OwnSuccessResponse(postService.newPost(dto) + "");
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -37,8 +37,7 @@ public class PostController {
     public ResponseEntity<OwnSuccessResponse> updatePost(
             @ModelAttribute EditPostDto dto,
             @PathVariable Long id
-    ) throws IOException {
-
+    ) {
         postService.updatePost(dto, id);
 
         var response = new OwnSuccessResponse("Post has been updated successfully");
@@ -47,7 +46,7 @@ public class PostController {
 
 
     @DeleteMapping("/auth/post/{id}")
-    public ResponseEntity<OwnSuccessResponse> deletePost(@PathVariable Long id) throws FileNotFoundException {
+    public ResponseEntity<OwnSuccessResponse> deletePost(@PathVariable Long id) {
         postService.deletePost(id);
 
         var response = new OwnSuccessResponse("Post has been deleted successfully");

@@ -50,8 +50,7 @@ public class CommunityLogService {
 
     public List<CommunityLogDto> getLogsByGroupname(String groupname, int pageNumber, int pageSize) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
-        var membership
-                = membershipRepository.findByCommunityAndUser(community, userHelper.getCurrentUser())
+        var membership = membershipRepository.findByCommunityAndUser(community, userHelper.getCurrentUser())
                 .orElseThrow(() -> new UnauthorizedException("User has no permissions"));
 
         if (community.getType() == CommunityType.DEMOCRACY ||
@@ -59,8 +58,7 @@ public class CommunityLogService {
                 && membership.getRole() != null
         ) {
             var pageable = PageRequest.of(pageNumber, pageSize);
-            var list
-                    = communityLogRepository.getCommunityLogsByCommunityOrderByIdDesc(community, pageable);
+            var list = communityLogRepository.getCommunityLogsByCommunityOrderByIdDesc(community, pageable);
             var dtoList = new ArrayList<CommunityLogDto>();
             list.forEach(log -> dtoList.add(CommunityLogDto.builder()
                     .date(log.getDate())
@@ -160,11 +158,7 @@ public class CommunityLogService {
     }
 
     public void createLogUpdateImage(Community community, boolean isDeleted) {
-        saveLog(builderWithCurrentUser(community)
-                .logType(isDeleted ? LogType.DELETE_IMAGE : LogType.NEW_IMAGE));
+        saveLog(builderWithCurrentUser(community).logType(isDeleted ? LogType.DELETE_IMAGE : LogType.NEW_IMAGE));
     }
-
-
-
 
 }

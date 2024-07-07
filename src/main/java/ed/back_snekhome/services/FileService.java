@@ -12,7 +12,8 @@ import ed.back_snekhome.utils.MyFunctions;
 import ed.back_snekhome.helperComponents.MembershipHelper;
 import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.IOUtils;;
+import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -41,7 +41,8 @@ public class FileService {
 
 
     @Transactional
-    public String deleteCommunityOrUserImageByName(String name) throws FileNotFoundException {
+    @SneakyThrows
+    public String deleteCommunityOrUserImageByName(String name) {
         var userImage = userImageRepository.findByName(name);
         if (userImage.isPresent()) {
             if (!userHelper.isCurrentUserEqual(userImage.get().getUser()))
@@ -69,14 +70,15 @@ public class FileService {
     }
 
     @Transactional
-    public void deletePostImageByName(String name) throws FileNotFoundException {
+    @SneakyThrows
+    public void deletePostImageByName(String name) {
         var postImage = postImageRepository.findByName(name)
                 .orElseThrow(() -> new EntityNotFoundException("Image is not found"));
         postImageRepository.delete(postImage);
         deleteImageFromStorage(name);
     }
 
-    public void uploadPostImages(List<MultipartFile> images, Post post) throws IOException {
+    public void uploadPostImages(List<MultipartFile> images, Post post) {
         for (MultipartFile image : images) {
             var img = PostImage.builder()
                     .name(uploadImageNameReturned(image))
@@ -87,7 +89,8 @@ public class FileService {
     }
 
     //Universal methods:
-    public byte[] getImageByName(String imageName) throws IOException {
+    @SneakyThrows
+    public byte[] getImageByName(String imageName) {
 
         Path destination;
         if (imageName.length() < 10) {
@@ -100,19 +103,20 @@ public class FileService {
         return IOUtils.toByteArray(destination.toUri());
     }
 
-    public String uploadImageNameReturned(MultipartFile file) throws IOException { //returns new file name
+    @SneakyThrows
+    public String uploadImageNameReturned(MultipartFile file) { //returns new file name
 
         String name = MyFunctions.generateCode(5) + System.currentTimeMillis();
 
         name += getFileExtension(file.getOriginalFilename());
 
-        file.transferTo( new File(uploadPath + name) );
+        file.transferTo(new File(uploadPath + name));
 
         return name;
     }
 
-
-    public void deleteImageFromStorage(String fileName) throws FileNotFoundException {
+    @SneakyThrows
+    public void deleteImageFromStorage(String fileName) {
         File file = new File(uploadPath + fileName);
         if (file.exists()) {
             if (!file.delete()) {
@@ -132,6 +136,5 @@ public class FileService {
         else
             return fileName.substring( lastDot );
     }
-
 
 }

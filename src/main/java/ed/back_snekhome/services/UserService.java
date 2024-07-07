@@ -10,14 +10,11 @@ import ed.back_snekhome.repositories.user.FriendshipRepository;
 import ed.back_snekhome.repositories.user.InfoTagRepository;
 import ed.back_snekhome.repositories.user.UserImageRepository;
 import ed.back_snekhome.repositories.user.UserRepository;
-import ed.back_snekhome.response.OwnSuccessResponse;
 import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-
 
 @Service
 @RequiredArgsConstructor
@@ -55,8 +52,8 @@ public class UserService {
         userRepository.save(user);
     }
 
-
-    public OwnSuccessResponse uploadUserImage(MultipartFile file) throws IOException {
+    @SneakyThrows
+    public String uploadUserImage(MultipartFile file) {
 
         String newName = fileService.uploadImageNameReturned(file);
         var userImage = UserImage.builder()
@@ -64,9 +61,8 @@ public class UserService {
                 .build();
         userImageRepository.save(userImage);
 
-        return new OwnSuccessResponse(newName); //returns new name of uploaded file
+        return newName; //returns new name of uploaded file
     }
-
 
     public UserPublicDto getNavbarInfo() {
         var currentUser = userHelper.getCurrentUser();
@@ -79,7 +75,6 @@ public class UserService {
                 .build();
     }
 
-
     private int countFriends(Long id) {
         int friends = 0;
         friends += friendshipRepository.countAllByIdFirstUserAndIsFirstUserAndIsSecondUser(id, true, true);
@@ -87,13 +82,11 @@ public class UserService {
         return friends;
     }
 
-
     private int countCommunities(UserEntity user) {
         int communities = 0;
         communities += membershipRepository.countAllByUserAndIsBanned(user, false);
         return communities;
     }
-
 
     public UserPublicDto getUserInfo(String nickname) {
         var user = userHelper.getUserByNicknameOrThrowErr(nickname);
@@ -118,7 +111,6 @@ public class UserService {
         return dto;
     }
 
-
     public UserPrivateDto getCurrentUserInfo() {
         var currentUser = userHelper.getCurrentUser();
 
@@ -130,7 +122,6 @@ public class UserService {
                 .build();
     }
 
-
     public void newTag(TagDto tagDto) {
         var infoTag = InfoTag.builder()
                 .title(tagDto.getTitle())
@@ -139,7 +130,6 @@ public class UserService {
         infoTagRepository.save(infoTag);
     }
 
-
     public void updateTag(TagDto tagDto) {
         var tag = infoTagRepository.findById(tagDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
@@ -147,7 +137,6 @@ public class UserService {
         tag.setTitle(tagDto.getTitle());
         infoTagRepository.save(tag);
     }
-
 
     public void delTag(Long id) {
         var tag = infoTagRepository.findById(id)
@@ -158,7 +147,6 @@ public class UserService {
         else
             throw new UnauthorizedException("Entity is not belonged to authorized user");
     }
-
 
 }
 

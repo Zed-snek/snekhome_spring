@@ -9,12 +9,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 
 @RestController
@@ -36,10 +35,11 @@ public class UserManagementController {
 
 
     @PostMapping("/user/refresh-token")
+    @SneakyThrows
     public void refreshToken(
             HttpServletRequest request,
             HttpServletResponse response
-    ) throws IOException {
+    ) {
 
         authenticationService.refreshJwtToken(request, response);
     }
@@ -115,11 +115,10 @@ public class UserManagementController {
 
 
     @PostMapping(path = "/auth/user/current/image", consumes = "multipart/form-data")
-    public ResponseEntity<OwnSuccessResponse> newImage(@RequestParam("image") MultipartFile image) throws IOException {
+    @SneakyThrows
+    public String newImage(@RequestParam("image") MultipartFile image) {
 
-        var response = userService.uploadUserImage(image);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return userService.uploadUserImage(image);
     }
 
 

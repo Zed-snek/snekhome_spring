@@ -9,14 +9,13 @@ import ed.back_snekhome.services.CommunityService;
 import ed.back_snekhome.services.MembershipService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
-
 
 @RestController
 @RequiredArgsConstructor
@@ -85,10 +84,11 @@ public class CommunityController {
     }
 
     @PostMapping(path = "/auth/community/image/{groupname}", consumes = "multipart/form-data")
+    @SneakyThrows
     public ResponseEntity<OwnSuccessResponse> newImage(
             @RequestParam("image") MultipartFile image,
             @PathVariable String groupname
-    ) throws IOException {
+    ) {
 
         var response = communityService.uploadCommunityImage(image, groupname);
 

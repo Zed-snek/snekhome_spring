@@ -61,33 +61,27 @@ public class DemocracyService {
     @Value("${democracy.elections.duration}")
     private int electionsDuration;
 
-
     private void throwErrIfNotDemocracy(Community community) {
         if (community.getType() != CommunityType.DEMOCRACY)
             throw new BadRequestException("Community is not democracy");
     }
-
 
     private CommunityRole getCitizenRole(Community community) {
         return communityRoleRepository.findCitizenRoleOfCommunity(community)
                 .orElseThrow(() -> new BadRequestException("Role is not found"));
     }
 
-
     private int getRating(Community community, UserEntity user) {
         return postRatingRepository.countAllByCommunityAndUser(community, user) +
                 commentaryRatingRepository.countAllByCommunityAndUser(community, user);
     }
 
-
     private int getDaysAfterJoining(Membership membership) {
         return (int) ChronoUnit.DAYS.between(membership.getJoined(), LocalDate.now());
     }
 
-
     public boolean isCitizenRight(Community community, UserEntity user) {
-        var optionalMembership = membershipHelper
-                .getOptionalMembershipOfUser(community, user);
+        var optionalMembership = membershipHelper.getOptionalMembershipOfUser(community, user);
 
         if (optionalMembership.isPresent()) {
             var membership = optionalMembership.get();
@@ -109,25 +103,21 @@ public class DemocracyService {
         return false;
     }
 
-
     public void throwErrIfNotCitizenRight(Community community, UserEntity user) {
         if (!isCitizenRight(community, user))
             throw new UnauthorizedException("No citizen rights");
     }
-
 
     private PresidencyData getPresidencyDataByCommunity(Community community) {
         return presidencyDataRepository.findById(community.getIdCommunity())
                 .orElseThrow(() -> new BadRequestException("Community is not Democracy"));
     }
 
-
     private void clearPresidencyDataByCommunity(Community community) {
         var data = getPresidencyDataByCommunity(community);
         data.clearData();
         presidencyDataRepository.save(data);
     }
-
 
     public void addStatsToPresidency(Community community, PresidencyDataType type) {
         var data = getPresidencyDataByCommunity(community);
@@ -139,7 +129,6 @@ public class DemocracyService {
         presidencyDataRepository.save(data);
     }
 
-
     private ElectionsStatus getElectionsStatus(Elections elections) {
         var nowDate = LocalDate.now();
         if (elections.getEndDate().isBefore(nowDate))
@@ -148,7 +137,6 @@ public class DemocracyService {
             return ElectionsStatus.IN_PROGRESS;
         return ElectionsStatus.NOT_STARTED;
     }
-
 
     private boolean processDemocracy(Elections elections) { //method to start/finish elections | works only when someone checks community
         var status = getElectionsStatus(elections);
@@ -202,7 +190,6 @@ public class DemocracyService {
         return status == ElectionsStatus.IN_PROGRESS;
     }
 
-
     @Transactional
     public GeneralDemocracyDto getGeneralDemocracyData(String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -241,8 +228,7 @@ public class DemocracyService {
                         });
             }
             else {
-                dtoBuilder
-                        .currentUserRating(getRating(community, user))
+                dtoBuilder.currentUserRating(getRating(community, user))
                         .currentUserDays(getDaysAfterJoining(membership));
             }
         }
@@ -250,8 +236,7 @@ public class DemocracyService {
         dtoBuilder.electionsNumber(elections.getElectionsNumber());
 
         boolean isElectionsNow = processDemocracy(elections);
-        dtoBuilder
-                .isElectionsNow(isElectionsNow)
+        dtoBuilder.isElectionsNow(isElectionsNow)
                 .electionsDate(isElectionsNow ? elections.getEndDate() : elections.getStartDate());
 
         var presidencyData = getPresidencyDataByCommunity(community);
@@ -266,9 +251,7 @@ public class DemocracyService {
 
 
     private Elections updateElectionsDate(Elections elections, Candidate newPresident, boolean isIterate) {
-        var date = LocalDate.now().plusDays(
-                elections.getCommunity().getCitizenParameters().getElectionDays()
-        );
+        var date = LocalDate.now().plusDays(elections.getCommunity().getCitizenParameters().getElectionDays());
         elections.setStartDate(date);
         elections.setEndDate(date.plusDays(electionsDuration));
         elections.setCurrentPresident(newPresident);
@@ -298,10 +281,7 @@ public class DemocracyService {
 
     private ElectionsParticipation findCurrentElectionsParticipationOrThrowErr(Candidate candidate, Community community) {
         return electionsParticipationRepository
-                .findCurrentByElectionsAndCandidate(
-                        community.getElections(),
-                        candidate
-                )
+                .findCurrentByElectionsAndCandidate(community.getElections(), candidate)
                 .orElseThrow(() -> new BadRequestException("A candidate doesn't take part in elections"));
     }
 
@@ -408,19 +388,17 @@ public class DemocracyService {
 
         var dto = CandidateListDto.builder()
                 .currentCandidates(
-                        candidates
-                                .map(candidate -> {
-                                    var user = candidate.getUser();
-                                    return CandidateDto.builder()
-                                            .id(candidate.getId())
-                                            .name(user.getName())
-                                            .surname(user.getSurname())
-                                            .image(userHelper.getTopUserImage(user))
-                                            .nickname(user.getNickname())
-                                            .program(candidate.getProgram())
-                                            .build();
-                                    })
-                                .collect(Collectors.toList())
+                        candidates.map(candidate -> {
+                            var user = candidate.getUser();
+                            return CandidateDto.builder()
+                                    .id(candidate.getId())
+                                    .name(user.getName())
+                                    .surname(user.getSurname())
+                                    .image(userHelper.getTopUserImage(user))
+                                    .nickname(user.getNickname())
+                                    .program(candidate.getProgram())
+                                    .build();
+                        }).collect(Collectors.toList())
                 )
                 .totalVotes(status == ElectionsStatus.IN_PROGRESS
                         ? 0
@@ -429,8 +407,7 @@ public class DemocracyService {
                 .votedId(votedId);
 
         if (status != ElectionsStatus.IN_PROGRESS) {
-            var previousCandidates = electionsParticipationRepository
-                    .getAllPreviousElectionsCandidates(community.getElections());
+            var previousCandidates = electionsParticipationRepository.getAllPreviousElectionsCandidates(community.getElections());
 
             dto.previousCandidates(
                     previousCandidates.stream()
@@ -443,10 +420,7 @@ public class DemocracyService {
                             .collect(Collectors.toList())
             );
         }
-
         return dto.build();
     }
-
-
 
 }

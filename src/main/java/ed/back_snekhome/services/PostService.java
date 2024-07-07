@@ -31,7 +31,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +52,8 @@ public class PostService {
     private final PostRatingRepository postRatingRepository;
     private final CommentaryRepository commentaryRepository;
     private final CommunityRepository communityRepository;
+
+
 
     @Transactional
     @SneakyThrows
@@ -92,7 +93,8 @@ public class PostService {
 
 
     @Transactional
-    public void updatePost(EditPostDto dto, Long id) throws IOException {
+    @SneakyThrows
+    public void updatePost(EditPostDto dto, Long id) {
         var post = getPostById(id);
         var user = userHelper.getCurrentUser();
 
@@ -306,9 +308,9 @@ public class PostService {
         List<Post> posts;
         if (type.equals("HOT")) {
             var startDate = LocalDateTime.now().minusDays(30);
-            posts = postRepository.getPopularPostsBeforeDateByCommunity(community, startDate);
+            posts = postRepository.getPopularPostsBeforeDateByCommunity(community, startDate, pageable);
         }
-        else { //if "new"
+        else { //if "NEW"
             posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
         }
 
@@ -318,8 +320,7 @@ public class PostService {
             var dto = setPostItemInfo(post, false, !post.isAnonymous());
             dto.isCurrentUserAuthor(post.getUser().equals(user));
             if (!post.isAnonymous()) {
-                var membership = membershipHelper
-                        .getOptionalMembershipOfUser(post.getCommunity(), post.getUser());
+                var membership = membershipHelper.getOptionalMembershipOfUser(post.getCommunity(), post.getUser());
                 if (membership.isPresent() && membership.get().getRole() != null) {
                     var role = membership.get().getRole();
                     dto.roleBannerColor(role.getBannerColor())
