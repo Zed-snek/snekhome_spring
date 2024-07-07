@@ -25,14 +25,13 @@ import ed.back_snekhome.helperComponents.CommunityHelper;
 import ed.back_snekhome.helperComponents.MembershipHelper;
 import ed.back_snekhome.helperComponents.UserHelper;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +55,8 @@ public class PostService {
     private final CommunityRepository communityRepository;
 
     @Transactional
-    public Long newPost(NewPostDto dto) throws IOException {
+    @SneakyThrows
+    public Long newPost(NewPostDto dto) {
         boolean isAnon = dto.getIsAnonymous().equals("true");
         var community = communityHelper.getCommunityByNameOrThrowErr(dto.getGroupname());
         var user = userHelper.getCurrentUser();
@@ -122,8 +122,7 @@ public class PostService {
 
 
     public Post getPostById(Long id) {
-        return postRepository.getByIdPost(id)
-                .orElseThrow(() -> new EntityNotFoundException("There is no post"));
+        return postRepository.getByIdPost(id).orElseThrow(() -> new EntityNotFoundException("There is no post"));
     }
 
 
@@ -158,8 +157,7 @@ public class PostService {
 
     public PostDto getPostPage(Long id) {
         var post = getPostById(id);
-        var membership =
-                membershipHelper.getOptionalMembershipOfCurrentUser(post.getCommunity());
+        var membership = membershipHelper.getOptionalMembershipOfCurrentUser(post.getCommunity());
 
         communityHelper.throwErrIfNoAccessToCommunity(post.getCommunity(), membership);
 
@@ -203,11 +201,11 @@ public class PostService {
 
 
     @Transactional
-    public void deletePost(Long id) throws FileNotFoundException {
+    @SneakyThrows
+    public void deletePost(Long id) {
         var post = getPostById(id);
         var user = userHelper.getCurrentUser();
-        var membership =
-                membershipHelper.getOptionalMembershipOfCurrentUser(post.getCommunity());
+        var membership = membershipHelper.getOptionalMembershipOfCurrentUser(post.getCommunity());
         boolean isCurrentUserAuthor = post.getUser().equals(user);
         boolean isDeletePermit = membership.isPresent() && membership.get().getRole().isDeletePosts();
 
@@ -243,7 +241,7 @@ public class PostService {
     private List<CommentaryDto> get2CommentsByPost(Post post) {
         Long ref = (long) -1;
         List<Commentary> list;
-        if (post.getImages().size() > 0 || post.getText().length() > 700)
+        if (!post.getImages().isEmpty() || post.getText().length() > 700)
             list = commentaryRepository.findTop2ByPostAndReferenceIdOrderByIdCommentaryAsc(post, ref);
         else if (post.getText().length() > 350)
             list = commentaryRepository.findTopByPostAndReferenceIdOrderByIdCommentaryAsc(post, ref);
@@ -262,18 +260,15 @@ public class PostService {
 
 
     private PostDto.PostDtoBuilder setPostItemInfo(Post post, boolean isCommunity, boolean isUser) {
-        var builder = setMainInfo(post)
-                    .comments(countComments(post))
-                    .commentaries(get2CommentsByPost(post));
+        var builder = setMainInfo(post).comments(countComments(post))
+                .commentaries(get2CommentsByPost(post));
         if (isCommunity) {
-            builder
-                    .groupname(post.getCommunity().getGroupname())
+            builder.groupname(post.getCommunity().getGroupname())
                     .groupTitle(post.getCommunity().getName())
                     .groupImage(communityHelper.getTopCommunityImage(post.getCommunity()));
         }
         if (isUser) {
-            builder
-                    .userNickname(post.getUser().getNickname())
+            builder.userNickname(post.getUser().getNickname())
                     .userImage(userHelper.getTopUserImage(post.getUser()));
         }
         return builder;
@@ -297,8 +292,7 @@ public class PostService {
             posts = postRepository.getPostsByNotCurrentUser(user, communities, pageable);
         }
         else {
-            posts = postRepository
-                    .getPostsByUserAndIsAnonymousFalseAndCommunity_IsClosedFalseOrderByIdPostDesc(user, pageable);
+            posts = postRepository.getPostsByUserAndIsAnonymousFalseAndCommunity_IsClosedFalseOrderByIdPostDesc(user, pageable);
         }
 
         return posts.stream()
@@ -315,11 +309,11 @@ public class PostService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         List<Post> posts;
-        if (type.equals("hot")) {
+        if (type.equals("HOT")) {
             var startDate = LocalDateTime.now().minusDays(30);
-            posts = postRepository.getPopularPostsBeforeDateByCommunity(community, startDate);
+            posts = postRepository.getPopularPostsBeforeDateByCommunity(community, startDate, pageable);
         }
-        else { //if "new"
+        else { //if "NEW"
             posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
         }
 
@@ -333,8 +327,7 @@ public class PostService {
                         .getOptionalMembershipOfUser(post.getCommunity(), post.getUser());
                 if (membership.isPresent() && membership.get().getRole() != null) {
                     var role = membership.get().getRole();
-                    dto
-                            .roleBannerColor(role.getBannerColor())
+                    dto.roleBannerColor(role.getBannerColor())
                             .roleTextColor(role.getTextColor())
                             .roleTitle(role.getTitle());
                 }
