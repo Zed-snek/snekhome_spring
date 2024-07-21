@@ -95,7 +95,6 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
     @GetMapping("/community_list/{nickname}")
     public List<PublicCommunityCardDto> getCommunityList(@PathVariable String nickname) {
         return membershipService.getJoinedCommunitiesByNickname(nickname);

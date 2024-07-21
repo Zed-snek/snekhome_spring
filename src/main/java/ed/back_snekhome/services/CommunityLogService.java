@@ -115,12 +115,6 @@ public class CommunityLogService {
                 .secondUser(newMember));
     }
 
-    public void createLogJoinByInvite(Community community, UserEntity actor, UserEntity joinedUser) {
-        saveLog(builder(joinedUser, community)
-                .logType(LogType.JOIN_BY_INVITE)
-                .secondUser(actor));
-    }
-
     public void createLogNewCommunityTitle(Community community, String newTitle) {
         createLogWithMessage(community, newTitle, LogType.NEW_COMMUNITY_TITLE);
     }
