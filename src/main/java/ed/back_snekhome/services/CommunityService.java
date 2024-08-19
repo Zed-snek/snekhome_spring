@@ -87,8 +87,7 @@ public class CommunityService {
                     .banUser(true)
                     .editId(true)
                     .inviteUsers(true);
-        }
-        else {
+        } else {
             ownerRoleBuilder.title("creator");
         }
 
@@ -152,8 +151,7 @@ public class CommunityService {
 
     public void deleteCommunity(String name) {
         var community = communityHelper.getCommunityByNameOrThrowErr(name);
-        if (community.getOwner().equals(userHelper.getCurrentUser())
-                && community.getType() != CommunityType.DEMOCRACY)
+        if (community.getOwner().equals(userHelper.getCurrentUser()) && community.getType() != CommunityType.DEMOCRACY)
             communityRepository.delete(community);
         else
             throw new UnauthorizedException("User doesn't have permissions to delete the community");
@@ -164,7 +162,6 @@ public class CommunityService {
         userHelper.throwErrIfExistsByNickname(name);
         return true;
     }
-
 
     public PublicCommunityDto getPublicCommunityDto(String name) {
         var community = communityHelper.getCommunityByNameOrThrowErr(name);
@@ -182,8 +179,7 @@ public class CommunityService {
 
             if (community.isClosed())
                 dto.setJoinRequests(joinRequestRepository.countAllByCommunity(community));
-        }
-        else { //Limited information, if user has no permissions:
+        } else { //Limited information, if user has no permissions:
             dto = PublicCommunityDto.builder()
                     .name(community.getName())
                     .groupname(community.getGroupname())
@@ -198,8 +194,7 @@ public class CommunityService {
         if (membership.isPresent()) {
             if (membership.get().isBanned()) {
                 dto.setBanned(true);
-            }
-            else {
+            } else {
                 dto.setMember(true);
                 dto.setCurrentUserRole(membership.get().getRole());
             }
@@ -229,23 +224,20 @@ public class CommunityService {
                     isNameTaken(dto.getGroupname());
                     community.setGroupname(dto.getGroupname());
                     communityLogService.createLogNewGroupname(community, dto.getGroupname());
-                }
-                else
+                } else {
                     throw new UnauthorizedException("User doesn't have permissions");
-            }
-            else if (role.isEditDescription()) {
+                }
+            } else if (role.isEditDescription()) {
                 if (dto.getDescription() != null) {
                     community.setDescription(dto.getDescription());
                     communityLogService.createLogNewDescription(community, dto.getDescription());
-                }
-                else if (dto.getName() != null) {
+                } else if (dto.getName() != null) {
                     community.setName(dto.getName());
                     communityLogService.createLogNewCommunityTitle(community, dto.getName());
                 }
-
-            }
-            else
+            } else {
                 throw new UnauthorizedException("User doesn't have permissions");
+            }
             communityRepository.save(community);
         }
     }
@@ -269,8 +261,7 @@ public class CommunityService {
         if (communityHelper.isCurrentUserOwner(community) || community.getType() == CommunityType.ANARCHY) {
             if (communityRoleRepository.existsByCommunityAndTitle(community, dto.getTitle())) {
                 throw new EntityAlreadyExistsException("Role with entered name is already exists");
-            }
-            else {
+            } else {
                 var role = CommunityRole.builder()
                         .community(community)
                         .title(dto.getTitle())
@@ -284,8 +275,7 @@ public class CommunityService {
                         .build();
                 communityRoleRepository.save(role);
             }
-        }
-        else {
+        } else {
             throw new UnauthorizedException("User doesn't have permissions to create new roles");
         }
     }
@@ -294,12 +284,9 @@ public class CommunityService {
     public void updateRole(CommunityRoleDto dto, String groupname, String oldRoleName) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         if (communityHelper.isCurrentUserOwner(community)) {
-            if (!dto.getTitle().equals(oldRoleName)
-                    && communityRoleRepository.existsByCommunityAndTitle(community, dto.getTitle())
-            ) {
+            if (!dto.getTitle().equals(oldRoleName) && communityRoleRepository.existsByCommunityAndTitle(community, dto.getTitle())) {
                 throw new EntityAlreadyExistsException("Role with entered name is already exists");
-            }
-            else {
+            } else {
                 var role = communityHelper.findRoleOrThrowErr(community, oldRoleName);
 
                 MyFunctions.setIfNotEquals(role.getTitle(), dto.getTitle(), role::setTitle);
@@ -314,7 +301,6 @@ public class CommunityService {
                     MyFunctions.setIfNotEquals(role.isEditId(), dto.isEditId(), role::setEditId);
                     MyFunctions.setIfNotEquals(role.isInviteUsers(), dto.isInviteUsers(), role::setInviteUsers);
                 }
-
                 communityRoleRepository.save(role);
             }
         }
@@ -341,8 +327,7 @@ public class CommunityService {
                 membershipRepository.save(m);
             });
             communityRoleRepository.delete(role);
-        }
-        else {
+        } else {
             throw new UnauthorizedException("No permission to delete role");
         }
     }

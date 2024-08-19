@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -62,8 +61,5 @@ public class UserController {
     public List<UserPublicDto> getFriends(@PathVariable String nickname) {
         return friendshipService.getFriends(nickname);
     }
-
-
-
 
 }

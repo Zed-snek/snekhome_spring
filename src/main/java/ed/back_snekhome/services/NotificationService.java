@@ -1,6 +1,5 @@
 package ed.back_snekhome.services;
 
-
 import ed.back_snekhome.dto.userDTOs.NotificationDto;
 import ed.back_snekhome.entities.community.Community;
 import ed.back_snekhome.entities.post.Commentary;
@@ -29,8 +28,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final CandidateRepository candidateRepository;
 
-    private final List<Integer> upvoteCounts = List.of(2, 5, 10, 25, 50);
-
+    private final static List<Integer> upvoteCounts = List.of(2, 5, 10, 25, 50);
 
     private void saveAndSendToUser(Notification.NotificationBuilder builder) {
         var notification = builder.build();
@@ -43,7 +41,6 @@ public class NotificationService {
         );
     }
 
-
     private Notification.NotificationBuilder builder(UserEntity notifiedUser, NotificationType type) {
         return Notification.builder()
                 .notifiedUser(notifiedUser)
@@ -51,23 +48,11 @@ public class NotificationService {
                 .isRead(false);
     }
 
-
     public void createAddFriendNotification(UserEntity toUser, UserEntity fromUser) {
-        saveAndSendToUser(
-                builder(toUser, NotificationType.ADD_FRIEND)
-                        .secondUser(fromUser)
+        saveAndSendToUser(builder(toUser, NotificationType.ADD_FRIEND)
+                .secondUser(fromUser)
         );
     }
-
-
-    public void createJoinInviteNotification(UserEntity toUser, Community toCommunity) {
-        saveAndSendToUser(
-                builder(toUser, NotificationType.JOIN_INVITE)
-                        .community(toCommunity)
-                        .secondUser(userHelper.getCurrentUser())
-        );
-    }
-
     public void createNewCommentNotification(Commentary comment, Commentary repliedComment) {
         var commentator = userHelper.getCurrentUser();
 
@@ -102,7 +87,6 @@ public class NotificationService {
         );
     }
 
-
     public <T> void createUpvotesNotification(T obj, int upvotesCount) {
         if (upvoteCounts.contains(upvotesCount)) {
             if (obj instanceof Post)
@@ -130,7 +114,6 @@ public class NotificationService {
         );
     }
 
-
     public void createElectionsEndedNotification(Community community) { //to all current candidates
         candidateRepository.getAllCurrentByElections(community.getElections())
                 .forEach(candidate -> saveAndSendToUser(
@@ -144,7 +127,6 @@ public class NotificationService {
         notificationRepository.readNotificationsOfUser(userHelper.getCurrentUser());
     }
 
-
     public List<NotificationDto> getNotificationsWithPagination(int page, int size) {
         var pageable = PageRequest.of(page, size);
 
@@ -154,10 +136,8 @@ public class NotificationService {
                 .toList();
     }
 
-
     public int countUnreadNotifications(UserEntity user) {
         return notificationRepository.countUnreadNotificationsByUser(user);
     }
-
 
 }

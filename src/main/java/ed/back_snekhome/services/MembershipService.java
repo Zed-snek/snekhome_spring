@@ -97,24 +97,23 @@ public class MembershipService {
                     .build();
         }
         var memberships = membershipHelper.getMembershipsByCommunity(community, isBanned);
-        var users = new ArrayList<UserPublicDto>();
-        for (Membership m : memberships) {
+        var users = memberships.stream().map(m -> {
             var user = m.getUser();
-            users.add(UserPublicDto.builder()
-                            .name(user.getName())
-                            .surname(user.getSurname())
-                            .nickname(user.getNickname())
-                            .image(userHelper.getTopUserImage(user))
-                            .communityRole(m.getRole())
-                            .build());
-        }
+            return UserPublicDto.builder()
+                    .name(user.getName())
+                    .surname(user.getSurname())
+                    .nickname(user.getNickname())
+                    .image(userHelper.getTopUserImage(user))
+                    .communityRole(m.getRole())
+                    .build();
+        }).toList();
+
         List<String> roles = null;
         if (!isBanned) {
-            roles = new ArrayList<>();
-            for (CommunityRole r : communityRoleRepository.findAllByCommunity(community)) {
-                if (!r.isCreator())
-                    roles.add(r.getTitle());
-            }
+            roles = communityRoleRepository.findAllByCommunity(community).stream()
+                    .filter(role -> !role.isCreator())
+                    .map(CommunityRole::getTitle)
+                    .toList();
         }
         return MembersDto.builder()
                 .users(users)
@@ -122,7 +121,6 @@ public class MembershipService {
                 .isContextUserAccess(true)
                 .build();
     }
-
 
     private Membership canBanUser(Community community, UserEntity userEntity) {
         var userMembership = membershipHelper.getMembershipOrThrowErr(userEntity, community);
@@ -137,7 +135,6 @@ public class MembershipService {
         }
         throw new UnauthorizedException("No permissions to ban user");
     }
-
 
     @Transactional
     public void banUser(String groupname, String nickname) {
@@ -174,8 +171,7 @@ public class MembershipService {
         if (communityHelper.isCurrentUserOwner(community)) {
             var role = communityHelper.findRoleOrThrowErr(community, roleName);
             var user = userHelper.getUserByNicknameOrThrowErr(nickname);
-            var membership
-                    = membershipHelper.getMembershipOrThrowErr(user, community);
+            var membership = membershipHelper.getMembershipOrThrowErr(user, community);
             membership.setRole(role);
             membershipRepository.save(membership);
             communityLogService.createLogGrantRole(community, user, roleName);
@@ -188,8 +184,7 @@ public class MembershipService {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         if (communityHelper.isCurrentUserOwner(community)) {
             var user = userHelper.getUserByNicknameOrThrowErr(nickname);
-            var membership
-                    = membershipHelper.getMembershipOrThrowErr(user, community);
+            var membership = membershipHelper.getMembershipOrThrowErr(user, community);
             String roleTitle = membership.getRole().getTitle();
             membership.setRole(null);
             membershipRepository.save(membership);
@@ -223,21 +218,16 @@ public class MembershipService {
     public List<UserPublicDto> getAllJoinRequests(String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         var user = userHelper.getCurrentUser();
-
         var membership = membershipHelper.getMembershipOrThrowErr(user, community);
-        var array = new ArrayList<UserPublicDto>();
-        if (membership.getRole().isInviteUsers() || community.getType() == CommunityType.ANARCHY) {
-            Iterable<JoinRequest> list = joinRequestRepository.findAllByCommunity(community);
-            for (JoinRequest r : list) {
-                array.add(UserPublicDto.builder()
-                        .nickname(r.getUser().getNickname())
-                        .image(userHelper.getTopUserImage(r.getUser()))
-                        .build()
-                );
-            }
-            return array;
-        }
 
+        if (membership.getRole().isInviteUsers() || community.getType() == CommunityType.ANARCHY) {
+            return joinRequestRepository.findAllByCommunity(community).stream()
+                    .map(joinRequest -> UserPublicDto.builder()
+                            .nickname(joinRequest.getUser().getNickname())
+                            .image(userHelper.getTopUserImage(joinRequest.getUser()))
+                            .build())
+                    .toList();
+        }
         throw new UnauthorizedException("No access to data");
     }
 

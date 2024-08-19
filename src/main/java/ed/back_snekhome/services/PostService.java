@@ -53,8 +53,6 @@ public class PostService {
     private final CommentaryRepository commentaryRepository;
     private final CommunityRepository communityRepository;
 
-
-
     @Transactional
     @SneakyThrows
     public Long newPost(NewPostDto dto) {
@@ -91,7 +89,6 @@ public class PostService {
         return post.getIdPost();
     }
 
-
     @Transactional
     @SneakyThrows
     public void updatePost(EditPostDto dto, Long id) {
@@ -122,21 +119,17 @@ public class PostService {
             throw new UnauthorizedException("No access to edit the post");
     }
 
-
     public Post getPostById(Long id) {
         return postRepository.getByIdPost(id).orElseThrow(() -> new EntityNotFoundException("There is no post"));
     }
-
 
     private int countUpvotes(Post post) {
         return postRatingRepository.countByPostAndType(post, RatingType.UPVOTE);
     }
 
-
     private int countRating(Post post) {
         return countUpvotes(post) - postRatingRepository.countByPostAndType(post, RatingType.DOWNVOTE);
     }
-
 
     private RatingType getRatedType(Post post) {
         if (userHelper.isContextUser()) {
@@ -147,14 +140,12 @@ public class PostService {
         return RatingType.NONE;
     }
 
-
     private PostDto.PostDtoBuilder setMainInfo(Post post) {
         return PostDto.builder()
                 .post(post)
                 .rating(countRating(post))
                 .ratedType(getRatedType(post));
     }
-
 
     public PostDto getPostPage(Long id) {
         var post = getPostById(id);
@@ -178,14 +169,12 @@ public class PostService {
         return postDto.build();
     }
 
-
     private PostRating findPostRatingOrCreate(Post post) {
         var currentUser = userHelper.getCurrentUser();
 
         return postRatingRepository.getTopByPostAndUser(post, currentUser)
                 .orElseGet(() -> PostRating.builder().post(post).build());
     }
-
 
     public void ratePost(Long id, RatingType newStatus) {
         var post = getPostById(id);
@@ -195,7 +184,6 @@ public class PostService {
 
         notificationService.createUpvotesNotification(post, countUpvotes(post));
     }
-
 
     @Transactional
     @SneakyThrows
@@ -224,16 +212,14 @@ public class PostService {
                 }
             }
             postRepository.delete(post);
-        }
-        else
+        } else {
             throw new UnauthorizedException("No access to delete post");
+        }
     }
-
 
     private int countComments(Post post) {
         return commentaryRepository.countAllByPost(post);
     }
-
 
     private List<CommentaryDto> get2CommentsByPost(Post post) {
         Long ref = (long) -1;
@@ -255,7 +241,6 @@ public class PostService {
         return array;
     }
 
-
     private PostDto.PostDtoBuilder setPostItemInfo(Post post, boolean isCommunity, boolean isUser) {
         var builder = setMainInfo(post).comments(countComments(post))
                 .commentaries(get2CommentsByPost(post));
@@ -271,7 +256,6 @@ public class PostService {
         return builder;
     }
 
-
     public List<PostDto> getPostDtoListByUser(String nickname, int pageNumber, int pageSize) {
         var user = userHelper.getUserByNicknameOrThrowErr(nickname);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
@@ -282,13 +266,11 @@ public class PostService {
         List<Post> posts;
         if (isCurrentUser) {
             posts = postRepository.getPostsByUserOrderByIdPostDesc(user, pageable);
-        }
-        else if (isContext) {
+        } else if (isContext) {
             var currentUser = userHelper.getCurrentUser();
             List<Community> communities = communityRepository.getClosedCommunitiesByUser(currentUser);
             posts = postRepository.getPostsByNotCurrentUser(user, communities, pageable);
-        }
-        else {
+        } else {
             posts = postRepository.getPostsByUserAndIsAnonymousFalseAndCommunity_IsClosedFalseOrderByIdPostDesc(user, pageable);
         }
 
@@ -300,7 +282,6 @@ public class PostService {
                 .toList();
     }
 
-
     public List<PostDto> getPostDtoListByCommunity(String groupname, int pageNumber, int pageSize, String type) { //types: hot/new
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
@@ -309,8 +290,7 @@ public class PostService {
         if (type.equals("HOT")) {
             var startDate = LocalDateTime.now().minusDays(30);
             posts = postRepository.getPopularPostsBeforeDateByCommunity(community, startDate, pageable);
-        }
-        else { //if "NEW"
+        } else { //if "NEW"
             posts = postRepository.getPostsByCommunityOrderByIdPostDesc(community, pageable);
         }
 
@@ -331,7 +311,6 @@ public class PostService {
             return dto.build();
         }).toList();
     }
-
 
     public List<PostDto> getPostDtoListHome(int pageNumber, int pageSize) {
         var user = userHelper.getCurrentUser();

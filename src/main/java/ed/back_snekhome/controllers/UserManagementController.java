@@ -21,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api")
 public class UserManagementController {
 
-
     private final UserService userService;
     private final AuthenticationService authenticationService;
 
@@ -33,7 +32,6 @@ public class UserManagementController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
     @PostMapping("/user/refresh-token")
     @SneakyThrows
     public void refreshToken(
@@ -44,7 +42,6 @@ public class UserManagementController {
         authenticationService.refreshJwtToken(request, response);
     }
 
-
     @PostMapping("/user/register")
     public ResponseEntity<OwnSuccessResponse> registerUser(@Valid @RequestBody RegisterDto registerDto) {
 
@@ -53,7 +50,6 @@ public class UserManagementController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
 
     @PostMapping("/user/reset_password")
     public ResponseEntity<OwnSuccessResponse> sendResetPasswordMail(@RequestBody EmailDto dto) {
@@ -64,7 +60,6 @@ public class UserManagementController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
     @PutMapping("/user/reset_password")
     public ResponseEntity<OwnSuccessResponse> resetPassword(@RequestBody ResetPasswordDto dto) {
 
@@ -74,7 +69,6 @@ public class UserManagementController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
     @PostMapping("/user/confirmation")
     public ResponseEntity<OwnSuccessResponse> confirmationManager(@RequestParam String token) {
 
@@ -82,7 +76,6 @@ public class UserManagementController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
 
     @PutMapping("/auth/user/password")
     public ResponseEntity<OwnSuccessResponse> updatePassword(@Valid @RequestBody ChangePasswordDto dto) {
@@ -93,7 +86,6 @@ public class UserManagementController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
     @PutMapping("/auth/user/email")
     public ResponseEntity<OwnSuccessResponse> updateEmail(@RequestBody EmailDto dto) {
 
@@ -102,7 +94,6 @@ public class UserManagementController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
 
     @PutMapping("/auth/user/current")
     public ResponseEntity<OwnSuccessResponse> updateUser(@RequestBody UserUpdateDto dto) {
@@ -113,14 +104,12 @@ public class UserManagementController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
     @PostMapping(path = "/auth/user/current/image", consumes = "multipart/form-data")
     @SneakyThrows
     public String newImage(@RequestParam("image") MultipartFile image) {
 
         return userService.uploadUserImage(image);
     }
-
 
     @PostMapping("/auth/tag")
     public ResponseEntity<OwnSuccessResponse> newTag(@Valid @RequestBody TagDto tagDto) {
@@ -131,7 +120,6 @@ public class UserManagementController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
     @PutMapping("/auth/tag")
     public ResponseEntity<OwnSuccessResponse> updateTag(@Valid @RequestBody TagDto tagDto) {
 
@@ -140,7 +128,6 @@ public class UserManagementController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
 
     @DeleteMapping("/auth/tag/{id}")
     public ResponseEntity<OwnSuccessResponse> delTag(@PathVariable Long id) {

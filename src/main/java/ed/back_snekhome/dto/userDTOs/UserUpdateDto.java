@@ -1,6 +1,5 @@
 package ed.back_snekhome.dto.userDTOs;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +13,5 @@ public class UserUpdateDto {
     private String surname;
     private String nicknameColor;
     private String nickname;
-
 
 }

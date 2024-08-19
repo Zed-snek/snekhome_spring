@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UserService {
 
-
     private final FileService fileService;
     private final NotificationService notificationService;
     private final UserHelper userHelper;
@@ -31,30 +30,25 @@ public class UserService {
     private final FriendshipRepository friendshipRepository;
     private final MembershipRepository membershipRepository;
 
-
     public void updateUser(UserUpdateDto userUpdateDto) {
         var user = userHelper.getCurrentUser();
 
         if (userUpdateDto.getNicknameColor() != null) {
             user.setNicknameColor(userUpdateDto.getNicknameColor());
-        }
-        else if (userUpdateDto.getName() != null) {
+        } else if (userUpdateDto.getName() != null) {
             user.setName(userUpdateDto.getName());
-        }
-        else if (userUpdateDto.getSurname() != null) {
+        } else if (userUpdateDto.getSurname() != null) {
             user.setSurname(userUpdateDto.getSurname());
-        }
-        else if (userUpdateDto.getNickname() != null) {
-            userHelper.throwErrIfExistsByNickname(userUpdateDto.getNickname());
+        } else if (userUpdateDto.getNickname() != null) {
+            if (!user.getNickname().equalsIgnoreCase(userUpdateDto.getNickname()))
+                userHelper.throwErrIfExistsByNickname(userUpdateDto.getNickname());
             user.setNickname(userUpdateDto.getNickname());
         }
-
         userRepository.save(user);
     }
 
     @SneakyThrows
     public String uploadUserImage(MultipartFile file) {
-
         String newName = fileService.uploadImageNameReturned(file);
         var userImage = UserImage.builder()
                 .name(newName)
@@ -83,9 +77,7 @@ public class UserService {
     }
 
     private int countCommunities(UserEntity user) {
-        int communities = 0;
-        communities += membershipRepository.countAllByUserAndIsBanned(user, false);
-        return communities;
+        return membershipRepository.countAllByUserAndIsBanned(user, false);
     }
 
     public UserPublicDto getUserInfo(String nickname) {
@@ -104,9 +96,7 @@ public class UserService {
 
         //Checks the relation between current user and related one: are friends/aren't friends/context user follows related/related follows context user
         if (userHelper.isContextUser() && !userHelper.getCurrentUser().getNickname().equals(nickname)) {
-            dto.setFriendshipType(
-                    userHelper.getFriendshipType(userHelper.getCurrentUser().getIdAccount(),
-                            user.getIdAccount()));
+            dto.setFriendshipType(userHelper.getFriendshipType(userHelper.getCurrentUser().getIdAccount(), user.getIdAccount()));
         }
         return dto;
     }
@@ -131,16 +121,14 @@ public class UserService {
     }
 
     public void updateTag(TagDto tagDto) {
-        var tag = infoTagRepository.findById(tagDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
+        var tag = infoTagRepository.findById(tagDto.getId()).orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
         tag.setText(tagDto.getText());
         tag.setTitle(tagDto.getTitle());
         infoTagRepository.save(tag);
     }
 
     public void delTag(Long id) {
-        var tag = infoTagRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
+        var tag = infoTagRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Info tag is not found"));
 
         if (userHelper.isCurrentUserEqual(tag.getUser()))
             infoTagRepository.delete(tag);
