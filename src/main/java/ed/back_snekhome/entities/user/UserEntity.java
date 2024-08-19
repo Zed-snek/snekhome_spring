@@ -23,6 +23,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class UserEntity implements UserDetails {
 
     @Id
@@ -44,6 +45,7 @@ public class UserEntity implements UserDetails {
 
     @NotBlank(message = "Nickname must not be blank")
     @Size(max = 18, message = "Nickname should contain not more than 18 symbols")
+    @Column(unique = true)
     private String nickname;
 
     private String nicknameColor;
