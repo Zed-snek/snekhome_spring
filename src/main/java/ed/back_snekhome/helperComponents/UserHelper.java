@@ -55,14 +55,13 @@ public class UserHelper {
     public void throwErrIfExistsByNickname(String nickname) {
         if (userRepository.existsByNicknameIgnoreCase(nickname)
                 || communityRepository.existsByGroupnameIgnoreCase(nickname)) {
-            throw new UserAlreadyExistsException("Nickname: " + nickname + " is already taken");
+            throw new UserAlreadyExistsException("Nickname or groupname: " + nickname + " is already taken");
         }
     }
 
 
     public FriendshipType getFriendshipType(Long idUser1, Long idUser2) {
-        var friendship
-                = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(idUser1, idUser2);
+        var friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(idUser1, idUser2);
         if (friendship.isEmpty()) {
             friendship = friendshipRepository.findFriendshipByIdFirstUserAndIdSecondUser(idUser2, idUser1);
         }

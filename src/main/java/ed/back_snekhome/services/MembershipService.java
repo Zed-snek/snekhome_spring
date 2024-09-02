@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -124,12 +125,16 @@ public class MembershipService {
 
     private Membership canBanUser(Community community, UserEntity userEntity) {
         var userMembership = membershipHelper.getMembershipOrThrowErr(userEntity, community);
+        var userRole = Optional.ofNullable(userMembership.getRole());
         var admin = userHelper.getCurrentUser();
-        var adminMembership = membershipHelper.getMembershipOrThrowErr(admin, community);
+        var adminRole = membershipHelper.getMembershipOrThrowErr(admin, community).getRole();
+        if (adminRole == null) {
+            throw new UnauthorizedException("User doesn't have role");
+        }
 
-        if ((userMembership.getRole() == null && adminMembership.getRole().isBanUser())
-                || (userMembership.getRole().isCitizen() && adminMembership.getRole().isBanCitizen())
-                || adminMembership.getRole().isCreator()
+        if (userRole.isEmpty() && adminRole.isBanUser()
+                || userRole.map(CommunityRole::isCitizen).orElse(false) && adminRole.isBanCitizen()
+                || adminRole.isCreator()
         ) {
             return userMembership;
         }
@@ -143,10 +148,12 @@ public class MembershipService {
         var userMembership = canBanUser(community, userEntity);
         userMembership.setBanned(true);
 
-        if (democracyService.isCitizenRight(community, userEntity))
-            democracyService.addStatsToPresidency(community, PresidencyDataType.BANNED_CITIZEN);
-        else
-            democracyService.addStatsToPresidency(community, PresidencyDataType.BANNED_USER);
+        if (community.isDemocracy()) {
+            if (democracyService.isCitizenRight(community, userEntity))
+                democracyService.addStatsToPresidency(community, PresidencyDataType.BANNED_CITIZEN);
+            else
+                democracyService.addStatsToPresidency(community, PresidencyDataType.BANNED_USER);
+        }
 
         userMembership.setRole(null);
         membershipRepository.save(userMembership);

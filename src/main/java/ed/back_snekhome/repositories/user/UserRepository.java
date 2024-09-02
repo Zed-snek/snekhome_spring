@@ -21,10 +21,12 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     Optional<UserEntity> findByNicknameIgnoreCase(String nickname);
 
-    @Query("SELECT u FROM UserEntity u WHERE " +
-            "LOWER(u.nickname) LIKE LOWER(CONCAT('%', :r, '%')) " +
-            "OR LOWER(u.surname) LIKE LOWER(CONCAT('%', :r, '%')) " +
-            "OR LOWER(u.name) LIKE LOWER(CONCAT('%', :r, '%'))")
+    @Query("""
+            SELECT u FROM UserEntity u WHERE
+            LOWER(u.nickname) LIKE LOWER(CONCAT('%', :r, '%'))
+            OR LOWER(u.surname) LIKE LOWER(CONCAT('%', :r, '%'))
+            OR LOWER(u.name) LIKE LOWER(CONCAT('%', :r, '%'))
+            """)
     List<UserEntity> searchUsersByRequest(
             @Param("r") String request,
             Pageable pageable

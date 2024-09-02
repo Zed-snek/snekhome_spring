@@ -97,4 +97,8 @@ public class Community {
     @OneToMany(mappedBy = "community", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Notification> notifications;
+
+    public boolean isDemocracy() {
+        return type == CommunityType.DEMOCRACY;
+    }
 }

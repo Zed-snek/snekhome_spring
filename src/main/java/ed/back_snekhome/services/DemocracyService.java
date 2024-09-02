@@ -9,7 +9,6 @@ import ed.back_snekhome.entities.community.CommunityRole;
 import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.entities.communityDemocracy.*;
 import ed.back_snekhome.entities.user.UserEntity;
-import ed.back_snekhome.enums.CommunityType;
 import ed.back_snekhome.enums.ElectionsStatus;
 import ed.back_snekhome.enums.PresidencyDataType;
 import ed.back_snekhome.exceptionHandler.exceptions.BadRequestException;
@@ -62,7 +61,7 @@ public class DemocracyService {
     private int electionsDuration;
 
     private void throwErrIfNotDemocracy(Community community) {
-        if (community.getType() != CommunityType.DEMOCRACY)
+        if (!community.isDemocracy())
             throw new BadRequestException("Community is not democracy");
     }
 

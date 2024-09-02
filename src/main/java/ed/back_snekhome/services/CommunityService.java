@@ -78,12 +78,11 @@ public class CommunityService {
                 .bannerColor("#15151D")
                 .textColor("#E3E3E3")
                 .isCreator(true);
-        if (!(dto.getType() == CommunityType.ANARCHY)) {
+        if (dto.getType() != CommunityType.ANARCHY) {
             ownerRoleBuilder
                     .title(dto.getType() == CommunityType.DEMOCRACY ? "president" : "owner")
                     .banCitizen(true)
                     .deletePosts(true)
-                    .editDescription(true)
                     .banUser(true)
                     .editId(true)
                     .inviteUsers(true);
@@ -91,7 +90,8 @@ public class CommunityService {
             ownerRoleBuilder.title("creator");
         }
 
-        var ownerRole = ownerRoleBuilder.build();
+        var ownerRole = ownerRoleBuilder.editDescription(true)
+                .build();
         communityRoleRepository.save(ownerRole);
 
         var membership = Membership.builder()
@@ -151,7 +151,7 @@ public class CommunityService {
 
     public void deleteCommunity(String name) {
         var community = communityHelper.getCommunityByNameOrThrowErr(name);
-        if (community.getOwner().equals(userHelper.getCurrentUser()) && community.getType() != CommunityType.DEMOCRACY)
+        if (community.getOwner().equals(userHelper.getCurrentUser()) && !community.isDemocracy())
             communityRepository.delete(community);
         else
             throw new UnauthorizedException("User doesn't have permissions to delete the community");

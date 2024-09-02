@@ -207,7 +207,7 @@ public class PostService {
                         text.length() > 100 ? text.substring(0, 100) : text
                 );
 
-                if (post.getCommunity().getType() == CommunityType.DEMOCRACY) {
+                if (post.getCommunity().isDemocracy()) {
                     democracyService.addStatsToPresidency(post.getCommunity(), PresidencyDataType.DELETED_POST);
                 }
             }

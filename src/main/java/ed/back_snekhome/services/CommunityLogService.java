@@ -53,8 +53,7 @@ public class CommunityLogService {
         var membership = membershipRepository.findByCommunityAndUser(community, userHelper.getCurrentUser())
                 .orElseThrow(() -> new UnauthorizedException("User has no permissions"));
 
-        if (community.getType() == CommunityType.DEMOCRACY ||
-                (community.getType() == CommunityType.CORPORATE || community.getType() == CommunityType.NEWSPAPER)
+        if (community.isDemocracy() || (community.getType() == CommunityType.CORPORATE || community.getType() == CommunityType.NEWSPAPER)
                 && membership.getRole() != null
         ) {
             var pageable = PageRequest.of(pageNumber, pageSize);
