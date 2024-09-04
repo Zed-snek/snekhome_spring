@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -54,26 +55,27 @@ public class NotificationService {
         );
     }
     public void createNewCommentNotification(Commentary comment, Commentary repliedComment) {
-        var commentator = userHelper.getCurrentUser();
+        var currentCommentator = userHelper.getCurrentUser();
 
         //sends notification to post creator
         var postCreator = comment.getPost().getUser();
-        if (!commentator.isTheSameUserEntity(postCreator) &&
-                !repliedComment.getUser().isTheSameUserEntity(postCreator)
+        var repliedCommentaryCreator = Optional.ofNullable(repliedComment).map(Commentary::getUser);
+        if (!currentCommentator.isTheSameUserEntity(postCreator) &&
+                repliedCommentaryCreator.filter(c -> c.isTheSameUserEntity(postCreator)).isEmpty()
         ) {
             saveAndSendToUser(
                     builder(comment.getPost().getUser(), NotificationType.POST_REPLY)
                             .commentary(comment)
-                            .secondUser(commentator)
+                            .secondUser(currentCommentator)
             );
         }
 
         //if user replies on his own commentary, no notification will be sent
-        if (repliedComment != null && !commentator.isTheSameUserEntity(repliedComment.getUser())) {
+        if (repliedCommentaryCreator.isPresent() && !currentCommentator.isTheSameUserEntity(repliedCommentaryCreator.get())) {
             saveAndSendToUser(
                     builder(repliedComment.getUser(), NotificationType.COMMENT_REPLY)
                             .commentary(comment)
-                            .secondUser(commentator)
+                            .secondUser(currentCommentator)
             );
         }
 

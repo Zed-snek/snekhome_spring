@@ -1,6 +1,5 @@
 package ed.back_snekhome.entities.user;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ed.back_snekhome.entities.community.Membership;
 import ed.back_snekhome.security.Role;
@@ -23,7 +22,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class UserEntity implements UserDetails {
 
     @Id

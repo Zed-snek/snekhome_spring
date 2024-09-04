@@ -35,12 +35,12 @@ public class CommentaryService {
 
     @Transactional
     public Long newComment(Long id, NewCommentaryDto dto) {
-        var comment = Commentary.builder()
-                .post(postService.getPostById(id))
+        var post = postService.getPostById(id);
+        var comment = commentaryRepository.saveAndFlush(Commentary.builder()
+                .post(post)
                 .text(dto.getText())
                 .referenceId(dto.getReferenceId())
-                .build();
-        commentaryRepository.save(comment);
+                .build());
 
         var rating = CommentaryRating.builder()
                 .commentary(comment)

@@ -1,6 +1,5 @@
 package ed.back_snekhome.entities.community;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +12,6 @@ import java.util.List;
 @Builder
 @Getter
 @Setter
-@ToString
 public class CommunityRole {
 
     @Id
