@@ -8,8 +8,7 @@ import lombok.Setter;
 @Setter
 @Builder
 public class NewCandidateDto {
-
     private String groupname;
     private String program;
-
 }
+

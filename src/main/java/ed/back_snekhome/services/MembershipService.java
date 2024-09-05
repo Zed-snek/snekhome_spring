@@ -56,6 +56,7 @@ public class MembershipService {
 
         var membership = Membership.builder()
                 .community(community)
+                .user(userHelper.getCurrentUser())
                 .build();
         if (community.getOwner().equals(current))
             membership.setRole(communityRoleRepository.findCreatorRoleOfCommunity(community)
@@ -171,7 +172,6 @@ public class MembershipService {
         membershipRepository.delete(userMembership);
     }
 
-
     @Transactional
     public void grantRole(String nickname, String groupname, String roleName) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -185,7 +185,6 @@ public class MembershipService {
         }
     }
 
-
     @Transactional
     public void revokeRole(String nickname, String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -198,7 +197,6 @@ public class MembershipService {
             communityLogService.createLogRevokeRole(community, user, roleTitle);
         }
     }
-
 
     public String manageJoinRequest(String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
@@ -221,7 +219,6 @@ public class MembershipService {
         return "Request is sent successfully";
     }
 
-
     public List<UserPublicDto> getAllJoinRequests(String groupname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);
         var user = userHelper.getCurrentUser();
@@ -238,7 +235,6 @@ public class MembershipService {
         throw new UnauthorizedException("No access to data");
     }
 
-
     private void deleteJoinRequest(Community community, UserEntity user) {
         var request = joinRequestRepository.findTopByCommunityAndUser(community, user);
         if (request.isPresent())
@@ -246,7 +242,6 @@ public class MembershipService {
         else
             throw new EntityNotFoundException("There is no request by user @" + user.getNickname());
     }
-
 
     @Transactional
     public void acceptJoinRequest(String groupname, String nickname) {
@@ -261,7 +256,6 @@ public class MembershipService {
         membershipRepository.save(membership);
         communityLogService.createLogAcceptJoinRequest(community, user);
     }
-
 
     public void cancelJoinRequest(String groupname, String nickname) {
         var community = communityHelper.getCommunityByNameOrThrowErr(groupname);

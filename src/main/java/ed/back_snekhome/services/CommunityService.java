@@ -97,6 +97,7 @@ public class CommunityService {
         var membership = Membership.builder()
                 .community(community)
                 .role(ownerRole)
+                .user(userHelper.getCurrentUser())
                 .build();
         membershipRepository.save(membership);
 

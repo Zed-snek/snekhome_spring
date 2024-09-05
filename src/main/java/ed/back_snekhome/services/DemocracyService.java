@@ -84,15 +84,15 @@ public class DemocracyService {
 
         if (optionalMembership.isPresent()) {
             var membership = optionalMembership.get();
-            var optRole = optionalMembership.map(Membership::getRole);
-            if (optRole.isPresent() && (optRole.get().isCreator() || optRole.get().isCitizen()))
+            var optionalRole = optionalMembership.map(Membership::getRole);
+            if (optionalRole.filter(role -> role.isCreator() || role.isCitizen()).isPresent())
                 return true;
 
             var citizenParameters = community.getCitizenParameters();
             if (getDaysAfterJoining(membership) >= citizenParameters.getDays()
                     && getRating(community, membership.getUser()) >= citizenParameters.getRating()
             ) {
-                if (optRole.isEmpty()) { //if citizen rights, but user doesn't have a role, grants him a role
+                if (optionalRole.isEmpty()) { //if citizen rights, but user doesn't have a role, grants him a role
                     membership.setRole(getCitizenRole(community));
                     membershipRepository.save(membership);
                 }
@@ -199,8 +199,7 @@ public class DemocracyService {
         if (userHelper.isContextUser()) {
             user = userHelper.getCurrentUser();
             optMembership = membershipHelper.getOptionalMembershipOfUser(community, user);
-        }
-        else {
+        } else {
             optMembership = Optional.empty();
         }
         communityHelper.throwErrIfNoAccessToCommunity(community, optMembership);
@@ -225,8 +224,7 @@ public class DemocracyService {
                                                     .isPresent()
                                     );
                         });
-            }
-            else {
+            } else {
                 dtoBuilder.currentUserRating(getRating(community, user))
                         .currentUserDays(getDaysAfterJoining(membership));
             }
