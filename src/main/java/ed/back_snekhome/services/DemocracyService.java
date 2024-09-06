@@ -180,7 +180,7 @@ public class DemocracyService {
             //method sends to all current candidates, so it must be processed before "updateElectionsData()" method
             notificationService.createElectionsEndedNotification(community);
 
-            electionsRepository.save(updateElectionsDate(elections, candidate, winner.isEmpty()));
+            electionsRepository.save(updateElectionsDate(elections, candidate, !winner.isEmpty()));
             clearPresidencyDataByCommunity(community);
 
             return false;
